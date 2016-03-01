@@ -61,9 +61,9 @@ public class TestEPOS extends SimulatedExperiment{
     private final static int[] v=new int[]{4};
     // EPOS Agent
     private static int treeInstances=1;
-    private static String plansLocation="input-data/test";
+    private static String plansLocation="input-data";
     private static String planConfigurations="4.5";
-    private static String TISLocation=plansLocation+"/pattern.txt";
+    private static String TISLocation="input-data/pattern.txt";
     static File dir = new File(plansLocation+"/"+planConfigurations);  
     private static String treeStamp="2BR"; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
     private static File[] agentMeterIDs = dir.listFiles(new FileFilter() {  
