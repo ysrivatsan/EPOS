@@ -45,104 +45,22 @@ import tree.centralized.server.TreeServer;
  *
  * @author Evangelos
  */
-public class TestEPOS extends SimulatedExperiment{
-    
-    private final static String expSeqNum="01";
-    private static String experimentID="Experiment "+expSeqNum+"/";
-    
-    //Simulation Parameters
-    private final static int runDuration=25;
-    private final static int N=1;
-    
-    // Tree building
-    private static final RankPriority priority=RankPriority.HIGH_RANK;
-    private static final DescriptorType descriptor=DescriptorType.RANK;
-    private static final TreeType type=TreeType.SORTED_HtL;
-    private final static int[] v=new int[]{4};
-    // EPOS Agent
-    private static int treeInstances=1;
-    private static String plansLocation="input-data";
-    private static String planConfigurations="4.5";
-    private static String TISLocation="input-data/pattern.txt";
-    static File dir = new File(plansLocation+"/"+planConfigurations);  
-    private static String treeStamp="2BR"; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
-    private static File[] agentMeterIDs = dir.listFiles(new FileFilter() {  
-        public boolean accept(File pathname) {  
-            return pathname.isDirectory();  
-        }  
-    });
-    private static DateTime aggregationPhase=DateTime.parse("0001-01-01");
-    private static String plansFormat=".plans";
-    private static EPOSAgent.FitnessFunction fitnessFunction=EPOSAgent.FitnessFunction.MINIMIZING_DEVIATIONS;
-    private static int planSize=144;
-    private static DateTime historicAggregationPhase=DateTime.parse("0001-01-01");
-    private static ArithmeticListState patternEnergyPlan;
-    private static int historySize=5;
+public class BicycleTest extends ExperimentLauncher {
     
     public static void main(String[] args) {
-        for(int i=0;i<treeInstances;i++){
-            treeStamp="3BR"+i;
-            System.out.println("Experiment "+expSeqNum+"\n");
-            Experiment.initEnvironment();
-            final TestEPOS test = new TestEPOS();
-            test.init();
-            experimentID="Experiment "+i+"/";
-            final File folder = new File("peersLog/"+experimentID);
-            clearExperimentFile(folder);
-            folder.mkdir();
-//            patternEnergyPlan=getPatternPlan(planSize);
-            patternEnergyPlan=loadPatternPlan(TISLocation);
-            PeerFactory peerFactory=new PeerFactory() {
-                public Peer createPeer(int peerIndex, Experiment experiment) {
-                    Peer newPeer = new Peer(peerIndex);
-                    if (peerIndex == 0) {
-                       newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
-                    }
-                    newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), 4)); //v[(int)(Math.random()*v.length)]
-                    newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+        ExperimentLauncher launcher = new BicycleTest();
+        launcher.treeInstances = 1;
+        launcher.runDuration = 25;
+        launcher.run();
+    }
 
-                    return newPeer;
-                }
-            };
-            test.initPeers(0,N,peerFactory);
-            test.startPeers(0,N);
-            //run the simulation
-            test.runSimulation(Time.inSeconds(runDuration));
-        }
-        
-    }
-    
-    public final static ArithmeticListState loadPatternPlan(String TISLocation){
-        ArithmeticListState patternEnergyPlan=new ArithmeticListState(new ArrayList());
-        File file = new File(TISLocation);
-        try {
-            Scanner sc = new Scanner(file);
-            while (sc.hasNextLine()) {
-                patternEnergyPlan.addArithmeticState(new ArithmeticState(sc.nextDouble()));
-            }
-            sc.close();
-        } 
-        catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch(NoSuchElementException e){
-            e.printStackTrace();
-        }
-        return patternEnergyPlan;
-    }
-        
-    public final static void clearExperimentFile(File experiment){
-        File[] files = experiment.listFiles();
-        if(files!=null) { //some JVMs return null for empty dirs
-            for(File f: files) {
-                if(f.isDirectory()) {
-                    clearExperimentFile(f);
-                } else {
-                    f.delete();
-                }
-            }
-        }
-        experiment.delete();
+    @Override
+    public EPOSExperiment createExperiment(int num) {
+        EPOSExperiment experiment = new EPOSExperiment("01",
+                RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
+                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                "3BR" + num, DateTime.parse("0001-01-01"),
+                EPOSAgent.FitnessFunction.MINIMIZING_DEVIATIONS, DateTime.parse("0001-01-01"), 5);
+        return experiment;
     }
 }
