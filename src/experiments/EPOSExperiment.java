@@ -135,10 +135,7 @@ public class EPOSExperiment extends SimulatedExperiment{
             }
             sc.close();
         } 
-        catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch(NoSuchElementException e){
+        catch (FileNotFoundException | NoSuchElementException e){
             e.printStackTrace();
         }
         return patternEnergyPlan;

@@ -65,8 +65,12 @@ public class EPOSEvaluator {
     }
 
     public void loadLogs(String directory, int minLoad, int maxLoad){
+        File folder = new File(directory);
+        if(!folder.isDirectory()) {
+            System.err.println("No dictionary " + folder.getPath());
+            return;
+        }
         try{
-            File folder = new File(directory);
             File[] listOfFiles = folder.listFiles();
             for (int i = 0; i < listOfFiles.length; i++) {
                 if (listOfFiles[i].isFile()&&!listOfFiles[i].isHidden()) {
@@ -80,11 +84,7 @@ public class EPOSEvaluator {
                     }
             }
         }
-        catch(IOException io){
-
-        }
-        catch(ClassNotFoundException ex){
-
+        catch(IOException | ClassNotFoundException ex){
         }
     }
 

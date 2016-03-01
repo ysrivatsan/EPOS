@@ -17,6 +17,7 @@
  */
 package agents;
 
+import agents.energyPlan.Plan;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.generic.state.State;
@@ -1310,5 +1311,17 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
                 log.shrink(epochNumber, epochNumber+1);
             }
         });
+    }
+    
+    public void initPlan(Plan plan) {
+        for (int i = 0; i < energyPlanSize; i++) {
+            ArithmeticState consumption = new ArithmeticState();
+            consumption.setValue(0.0);
+            plan.addArithmeticState(consumption);
+        }
+        plan.setCoordinationPhase(aggregationPhase);
+        plan.setDiscomfort(0.0);
+        plan.setAgentMeterID(agentMeterID);
+        plan.setConfiguration(planConfigurations+"-"+treeStamp);
     }
 }
