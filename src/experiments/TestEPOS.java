@@ -52,7 +52,7 @@ public class TestEPOS extends SimulatedExperiment{
     
     //Simulation Parameters
     private final static int runDuration=25;
-    private final static int N=724;
+    private final static int N=1;
     
     // Tree building
     private static final RankPriority priority=RankPriority.HIGH_RANK;
