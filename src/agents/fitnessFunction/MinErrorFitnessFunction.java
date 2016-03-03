@@ -18,11 +18,10 @@
 package agents.fitnessFunction;
 
 import agents.energyPlan.AggregatePlan;
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 import agents.energyPlan.Plan;
 import agents.energyPlan.GlobalPlan;
 import agents.HistoricPlans;
-import dsutil.generic.state.ArithmeticListState;
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public class MinErrorFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minRootMeanSquaredError = Double.MAX_VALUE;
         Plan selected = null;
 

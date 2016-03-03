@@ -17,9 +17,10 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
+import java.util.ArrayList;
 import java.util.List;
 import org.joda.time.DateTime;
 
@@ -28,63 +29,75 @@ import org.joda.time.DateTime;
  * @author Peter
  */
 public class Plan extends ArithmeticListState {
-    protected static enum Type{
+
+    protected static enum Type {
         POSSIBLE_PLAN,
         COMBINATIONAL_PLAN,
         AGGREGATE_PLAN,
         GLOBAL_PLAN
     }
-    
-    private static enum Information{
+
+    private static enum Information {
         TYPE,
         COORDINATION_PHASE,
         DISCOMFORT,
         AGENT_METER_ID,
         CONFIGURATION
     }
+    
+    public Plan() {
+        super(new ArrayList<>());
+    }
 
-    public Plan(Plan.Type type, EPOSAgent agent) {
-        this.addProperty(EPOSAgent.EnergyPlanInformation.TYPE, type);
+    public Plan(Plan.Type type, EPOSAgentNew agent) {
+        super(new ArrayList<>());
+        this.setType(type);
         agent.initPlan(this);
     }
     
+    public Plan(Plan.Type type, EPOSAgentNew agent, String planStr) {
+        super(new ArrayList<>());
+        this.setType(type);
+        agent.initPlan(this, planStr);
+    }
+
     // property getter/setter
     public Type getType() {
         return (Type) this.getProperty(Information.TYPE);
     }
-    
-    public void setType(Type type) {
+
+    private void setType(Type type) {
         this.addProperty(Information.TYPE, type);
     }
-    
+
     public DateTime getCoordinationPhase() {
         return (DateTime) this.getProperty(Information.COORDINATION_PHASE);
     }
-    
+
     public void setCoordinationPhase(DateTime coordinationPhase) {
         this.addProperty(Information.COORDINATION_PHASE, coordinationPhase);
     }
-    
+
     public double getDiscomfort() {
         return (Double) this.getProperty(Information.DISCOMFORT);
     }
-    
+
     public void setDiscomfort(double discomfort) {
         this.addProperty(Information.DISCOMFORT, discomfort);
     }
-    
+
     public String getAgentMeterID() {
         return (String) this.getProperty(Information.AGENT_METER_ID);
     }
-    
+
     public void setAgentMeterID(String agentMeterID) {
         this.addProperty(Information.AGENT_METER_ID, agentMeterID);
     }
-    
+
     public String getConfiguration() {
         return (String) this.getProperty(Information.CONFIGURATION);
     }
-    
+
     public void setConfiguration(String config) {
         this.addProperty(Information.CONFIGURATION, config);
     }
@@ -252,6 +265,13 @@ public class Plan extends ArithmeticListState {
         }
     }
 
+    public void subtract(double value) {
+        for (int i = 0; i < this.getNumberOfStates(); i++) {
+            double aggregateConsumption = this.getArithmeticState(i).getValue() - value;
+            this.setArithmeticState(i, aggregateConsumption);
+        }
+    }
+
     public void multiply(Plan other) {
         for (int i = 0; i < this.getNumberOfStates(); i++) {
             double aggregateConsumption = this.getArithmeticState(i).getValue() * other.getArithmeticState(i).getValue();
@@ -263,6 +283,15 @@ public class Plan extends ArithmeticListState {
         for (int i = 0; i < this.getNumberOfStates(); i++) {
             double aggregateConsumption = this.getArithmeticState(i).getValue() * factor;
             this.setArithmeticState(i, aggregateConsumption);
+        }
+    }
+
+    public void reverse() {
+        double average = avg();
+        for (int i = 0; i < this.getNumberOfStates(); i++) {
+            double value = this.getArithmeticState(i).getValue();
+            value = 2*average - value;
+            this.setArithmeticState(i, value);
         }
     }
 }

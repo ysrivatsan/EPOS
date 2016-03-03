@@ -17,7 +17,7 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 
 /**
  *
@@ -25,8 +25,13 @@ import agents.EPOSAgent;
  */
 public class PossiblePlan extends Plan {
     
-    public PossiblePlan(EPOSAgent agent) {
+    public PossiblePlan() {}
+
+    public PossiblePlan(EPOSAgentNew agent) {
         super(Plan.Type.POSSIBLE_PLAN, agent);
     }
-    
+
+    public PossiblePlan(EPOSAgentNew agent, String planStr) {
+        super(Plan.Type.POSSIBLE_PLAN, agent, planStr);
+    }
 }

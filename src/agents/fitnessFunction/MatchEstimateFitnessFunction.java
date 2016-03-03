@@ -20,6 +20,7 @@ package agents.fitnessFunction;
 import agents.EPOSAgentNew;
 import agents.HistoricPlans;
 import agents.energyPlan.AggregatePlan;
+import agents.energyPlan.GlobalPlan;
 import agents.energyPlan.Plan;
 import java.util.List;
 
@@ -27,29 +28,35 @@ import java.util.List;
  *
  * @author Peter
  */
-public class MaxLoadFactorFitnessFunction implements FitnessFunction {
+public class MatchEstimateFitnessFunction implements FitnessFunction {
 
     @Override
     public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
-        return globalPlan.avg() / globalPlan.max();
+        return globalPlan.rootMeanSquareError(pattern);
     }
 
     @Override
     public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        double maxLoadFactor = Double.MIN_VALUE;
+        double minRootMeanSquaredError = Double.MAX_VALUE;
         Plan selected = null;
 
         for (Plan combinationalPlan : combinationalPlans) {
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
-            double loadFactor = testAggregatePlan.avg() / testAggregatePlan.max();
-            if (loadFactor > maxLoadFactor) {
-                maxLoadFactor = loadFactor;
+
+            Plan normalizedPatternPlan = new GlobalPlan(agent);
+            normalizedPatternPlan.add(pattern);
+            normalizedPatternPlan.reverse();
+            normalizedPatternPlan.multiply(testAggregatePlan.avg() / normalizedPatternPlan.avg());
+
+            double rootMeanSquaredError = normalizedPatternPlan.rootMeanSquareError(testAggregatePlan);
+            if (rootMeanSquaredError < minRootMeanSquaredError) {
+                minRootMeanSquaredError = rootMeanSquaredError;
                 selected = combinationalPlan;
             }
         }
-        
+
         return selected;
     }
 

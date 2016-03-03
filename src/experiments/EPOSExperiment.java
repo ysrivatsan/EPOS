@@ -18,9 +18,11 @@
 package experiments;
 
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
+import agents.energyPlan.GlobalPlan;
+import agents.energyPlan.Plan;
+import agents.fitnessFunction.FitnessFunction;
 import dsutil.generic.RankPriority;
-import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
@@ -28,7 +30,7 @@ import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import org.joda.time.DateTime;
@@ -37,7 +39,6 @@ import protopeer.Peer;
 import protopeer.PeerFactory;
 import protopeer.SimulatedExperiment;
 import protopeer.servers.bootstrap.SimplePeerIdentifierGenerator;
-import protopeer.util.quantities.Time;
 import tree.centralized.client.TreeClient;
 import tree.centralized.server.TreeServer;
 
@@ -64,13 +65,14 @@ public class EPOSExperiment extends SimulatedExperiment{
     private File[] agentMeterIDs;
     private DateTime aggregationPhase;
     private String plansFormat=".plans";
-    private EPOSAgent.FitnessFunction fitnessFunction;
+    private FitnessFunction fitnessFunction;
     private int planSize;
     private DateTime historicAggregationPhase;
-    private ArithmeticListState patternEnergyPlan;
+    private Plan patternEnergyPlan;
     private int historySize;
+    private int maxChildren;
     
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, EPOSAgent.FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize){
+    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren){
         this.expSeqNum = expSeqNum;
         this.experimentID = "Experiment "+expSeqNum+"/";
         this.priority = priority;
@@ -83,6 +85,7 @@ public class EPOSExperiment extends SimulatedExperiment{
         this.fitnessFunction = fitnessFunction;
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
+        this.maxChildren = maxChildren;
         
         File dir = new File(plansLocation+"/"+planConfigurations);  
         this.agentMeterIDs = dir.listFiles(new FileFilter() {  
@@ -91,6 +94,9 @@ public class EPOSExperiment extends SimulatedExperiment{
                 return pathname.isDirectory();  
             }
         });
+        if(agentMeterIDs == null) {
+            System.out.println("ERROR: directory " + dir.getPath() + " is empty");
+        }
         
         this.N = agentMeterIDs.length;
         this.patternEnergyPlan = loadPatternPlan(plansLocation+"/"+TISFile);
@@ -114,9 +120,11 @@ public class EPOSExperiment extends SimulatedExperiment{
                 if (peerIndex == 0) {
                    newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
                 }
-                newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), 4)); //v[(int)(Math.random()*v.length)]
+                newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), maxChildren));
                 newPeer.addPeerlet(new TreeProvider());
-                newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                //newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                
+                newPeer.addPeerlet(new EPOSAgentNew(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
 
                 return newPeer;
             }
@@ -125,15 +133,16 @@ public class EPOSExperiment extends SimulatedExperiment{
         startPeers(0,N);
     }
     
-    public final ArithmeticListState loadPatternPlan(String TISLocation){
-        ArithmeticListState patternEnergyPlan=new ArithmeticListState(new ArrayList());
+    public final Plan loadPatternPlan(String TISLocation){
+        Plan patternEnergyPlan = new GlobalPlan();
         File file = new File(TISLocation);
         try {
-            Scanner sc = new Scanner(file);
-            while (sc.hasNextDouble()) {
-                patternEnergyPlan.addArithmeticState(new ArithmeticState(sc.nextDouble()));
+            Scanner scanner = new Scanner(file);
+            scanner.useLocale(Locale.US);
+            while (scanner.hasNextDouble()) {
+                patternEnergyPlan.addArithmeticState(new ArithmeticState(scanner.nextDouble()));
             }
-            sc.close();
+            scanner.close();
         } 
         catch (FileNotFoundException | NoSuchElementException e){
             e.printStackTrace();

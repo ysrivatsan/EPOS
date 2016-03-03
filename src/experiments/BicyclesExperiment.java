@@ -17,7 +17,7 @@
  */
 package experiments;
 
-import agents.EPOSAgent;
+import agents.fitnessFunction.MinDeviationFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -26,11 +26,11 @@ import org.joda.time.DateTime;
 /**
  * @author Peter
  */
-public class TestEPOS1 extends ExperimentLauncher {
+public class BicyclesExperiment extends ExperimentLauncher {
     // EPOS Agent
 
     public static void main(String[] args) {
-        ExperimentLauncher launcher = new TestEPOS1();
+        ExperimentLauncher launcher = new BicyclesExperiment();
         launcher.treeInstances = 1;
         launcher.runDuration = 25;
         launcher.run();
@@ -40,9 +40,9 @@ public class TestEPOS1 extends ExperimentLauncher {
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment("01",
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                "input-data/test", "4.5", "pattern.txt",
+                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                EPOSAgent.FitnessFunction.MINIMIZING_DEVIATIONS, DateTime.parse("0001-01-01"), 5);
+                new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 2);
         return experiment;
     }
 }

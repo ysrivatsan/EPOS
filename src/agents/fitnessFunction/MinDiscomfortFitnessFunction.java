@@ -17,7 +17,7 @@
  */
 package agents.fitnessFunction;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 import agents.HistoricPlans;
 import agents.energyPlan.Plan;
 import java.util.List;
@@ -34,7 +34,7 @@ public class MinDiscomfortFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minDiscomfort = Double.MAX_VALUE;
         Plan selected = null;
         

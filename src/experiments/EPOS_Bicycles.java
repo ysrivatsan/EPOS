@@ -5,14 +5,16 @@
 package experiments;
 
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
+import agents.energyPlan.Plan;
+import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.MatchEstimate2FitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
-import static experiments.EPOS_PNW.loadTIS;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -49,9 +51,9 @@ public class EPOS_Bicycles extends SimulatedExperiment{
     private final static int[] v=new int[]{4};
     // EPOS Agent
     private static int treeInstances=1;
-    private static String plansLocation="input-data";
+    private static String plansLocation="input-data/bicycle";
     private static String planConfigurations="user_plans_unique_8to10_force_trips";
-    private static String TISLocation="input-data/incentive.txt";
+    private static String TISLocation=plansLocation + "/cost.txt";
     static File dir = new File(plansLocation+"/"+planConfigurations);  
     private static String treeStamp="2BR"; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
     private static File[] agentMeterIDs = dir.listFiles(new FileFilter() {  
@@ -61,10 +63,10 @@ public class EPOS_Bicycles extends SimulatedExperiment{
     });
     private static DateTime aggregationPhase=DateTime.parse("0001-01-01");
     private static String plansFormat=".plans";
-    private static EPOSAgent.FitnessFunction fitnessFunction=EPOSAgent.FitnessFunction.MATCHING_UPPER_BOUND_2;
+    private static FitnessFunction fitnessFunction=new MatchEstimate2FitnessFunction();
     private static int planSize=98;
     private static DateTime historicAggregationPhase=DateTime.parse("0001-01-01");
-    private static ArithmeticListState patternEnergyPlan;
+    private static Plan patternEnergyPlan;
     private static int historySize=5;
     
     public static void main(String[] args) {
@@ -86,9 +88,9 @@ public class EPOS_Bicycles extends SimulatedExperiment{
                     if (peerIndex == 0) {
                        newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
                     }
-                    newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 3));
+                    newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 2));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                    newPeer.addPeerlet(new EPOSAgentNew(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
                     return newPeer;
                 }
             };
@@ -97,15 +99,14 @@ public class EPOS_Bicycles extends SimulatedExperiment{
             //run the simulation
             test.runSimulation(Time.inSeconds(runDuration));
         }
-        
     }
     
-    public final static ArithmeticListState loadTIS(String TISLocation){
-        ArithmeticListState patternEnergyPlan=new ArithmeticListState(new ArrayList());
+    public final static Plan loadTIS(String TISLocation){
+        Plan patternEnergyPlan= new Plan();
         File file = new File(TISLocation);
         try {
             Scanner sc = new Scanner(file);
-            while (sc.hasNextLine()) {
+            while (sc.hasNextDouble()) {
                 patternEnergyPlan.addArithmeticState(new ArithmeticState(sc.nextDouble()));
             }
             sc.close();

@@ -17,7 +17,7 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 
 /**
  *
@@ -25,8 +25,13 @@ import agents.EPOSAgent;
  */
 public class AggregatePlan extends Plan {
     
-    public AggregatePlan(EPOSAgent agent) {
+    public AggregatePlan() {}
+    
+    public AggregatePlan(EPOSAgentNew agent) {
         super(Plan.Type.AGGREGATE_PLAN, agent);
     }
     
+    public AggregatePlan(EPOSAgentNew agent, String planStr) {
+        super(Plan.Type.AGGREGATE_PLAN, agent, planStr);
+    }
 }

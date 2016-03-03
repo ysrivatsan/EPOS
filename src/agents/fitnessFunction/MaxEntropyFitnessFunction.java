@@ -17,11 +17,10 @@
  */
 package agents.fitnessFunction;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 import agents.HistoricPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
-import dsutil.generic.state.ArithmeticListState;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public class MaxEntropyFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double maxEntropy = Double.MIN_VALUE;
         Plan selected = null;
 

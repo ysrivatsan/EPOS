@@ -17,9 +17,10 @@
  */
 package experiments;
 
-import agents.EPOSAgent;
-import agents.EPOSAgent.EnergyPlanInformation;
-import agents.EPOSAgent.EnergyPlanType;
+import agents.EPOSAgentNew;
+import agents.energyPlan.GlobalPlan;
+import agents.energyPlan.Plan;
+import agents.energyPlan.PossiblePlan;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import java.io.BufferedWriter;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.Set;
-import org.joda.time.DateTime;
 import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementLog;
 import protopeer.measurement.MeasurementLoggerListener;
@@ -111,31 +111,31 @@ public class EPOSEvaluator {
         if(plans.size()>0){
             Iterator it=plans.iterator();
             while(it.hasNext()){
-                ArithmeticListState plan=(ArithmeticListState)it.next();
-                if((EnergyPlanType)plan.getProperty(EPOSAgent.EnergyPlanInformation.TYPE)==EnergyPlanType.GLOBAL_PLAN){
+                Plan plan=(Plan) it.next();
+                if(plan instanceof GlobalPlan) {
                     for(ArithmeticState hourValue:plan.getArithmeticStates()){
                         hourValues=hourValues+this.roundDecimals(hourValue.getValue(),2)+",";
                     }
-                    coordinationPhase=((DateTime)plan.getProperty(EPOSAgent.EnergyPlanInformation.COORDINATION_PHASE)).toString("yyyy-MM-dd");
+                    coordinationPhase= plan.getCoordinationPhase().toString("yyyy-MM-dd");
                 }
-                if((EnergyPlanType)plan.getProperty(EPOSAgent.EnergyPlanInformation.TYPE)==EnergyPlanType.POSSIBLE_PLAN){
-                    String planConfigurations=(String)plan.getProperty(EnergyPlanInformation.CONFIGURATION);
+                if(plan instanceof PossiblePlan) {
+                    String planConfigurations=plan.getConfiguration();
                     File outputDirectory=new File("output-data"+"/"+planConfigurations);
                     if(!outputDirectory.exists()){
                         outputDirectory.mkdir();
                     }
-                    String agentMeterID=(String)plan.getProperty(EPOSAgent.EnergyPlanInformation.AGENT_METER_ID);
+                    String agentMeterID=plan.getAgentMeterID();
                     File agentMeterIDDirectory=new File("output-data"+"/"+planConfigurations+"/"+agentMeterID);
                     if(!agentMeterIDDirectory.exists()){
                         agentMeterIDDirectory.mkdir();
                     }
                     try{
-                        String coordinationPhaseNameFile=((DateTime)plan.getProperty(EPOSAgent.EnergyPlanInformation.COORDINATION_PHASE)).toString("yyyy-MM-dd");
+                        String coordinationPhaseNameFile=plan.getCoordinationPhase().toString("yyyy-MM-dd");
                         File selectedPlan=new File("output-data"+"/"+planConfigurations+"/"+agentMeterID+"/"+coordinationPhaseNameFile+".plans");
                         selectedPlan.createNewFile();
                         BufferedWriter output = new BufferedWriter(new FileWriter(selectedPlan));
                         int planSize=plan.getNumberOfStates();
-                        String selectedPlanLine=((Double)plan.getProperty(EnergyPlanInformation.DISCOMFORT)).doubleValue()+":";
+                        String selectedPlanLine=plan.getDiscomfort()+":";
                         for(int i=0;i<planSize;i++){
                             selectedPlanLine=selectedPlanLine+roundDecimals(plan.getArithmeticState(i).getValue(),2);
                             if(i!=planSize-1){
@@ -155,10 +155,10 @@ public class EPOSEvaluator {
 //            coordinationPhase="bootstrapping";
 //            hourValues="bootstrapping";
 //        }        
-        double planSize=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.PLAN_SIZE).getSum(),2);
-        double robustness=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.ROBUSTNESS).getSum(),2);
-        double discomfort=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.DISCOMFORT).getSum(),2);
-        double selectedPlan=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.SELECTED_PLAN_VALUE).getSum(),2);
+        double planSize=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.PLAN_SIZE).getSum(),2);
+        double robustness=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.ROBUSTNESS).getSum(),2);
+        double discomfort=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.DISCOMFORT).getSum(),2);
+        double selectedPlan=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.SELECTED_PLAN_VALUE).getSum(),2);
         System.out.println(
                 epochNum+coma+
                 coordinationPhase+coma+

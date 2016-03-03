@@ -18,16 +18,17 @@
 package experiments;
 
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
+import agents.energyPlan.Plan;
+import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.MaxEntropyFitnessFunction;
 import dsutil.generic.RankPriority;
-import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
 import org.joda.time.DateTime;
 import protopeer.Experiment;
 import protopeer.Peer;
@@ -69,10 +70,10 @@ public class TestEPOS extends SimulatedExperiment{
     });
     private static DateTime aggregationPhase=DateTime.parse("2010-01-09");
     private static String plansFormat=".plans";
-    private static EPOSAgent.FitnessFunction fitnessFunction=EPOSAgent.FitnessFunction.MAXIMIZING_ENTROPY;
+    private static FitnessFunction fitnessFunction= new MaxEntropyFitnessFunction();
     private static int planSize=24;
     private static DateTime historicAggregationPhase=DateTime.parse("2010-01-09");
-    private static ArithmeticListState patternEnergyPlan;
+    private static Plan patternEnergyPlan;
     private static int historySize=5;
     
     public static void main(String[] args) {
@@ -95,7 +96,7 @@ public class TestEPOS extends SimulatedExperiment{
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), v[(int)(Math.random()*v.length)]));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, 24, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                    newPeer.addPeerlet(new EPOSAgentNew(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, 24, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
 
                     return newPeer;
                 }
@@ -108,8 +109,8 @@ public class TestEPOS extends SimulatedExperiment{
         
     }
     
-    public final static ArithmeticListState getPatternPlan(int planSize){
-        ArithmeticListState patternEnergyPlan=new ArithmeticListState(new ArrayList());
+    public final static Plan getPatternPlan(int planSize){
+        Plan patternEnergyPlan= new Plan();
         for(int i=0;i<planSize;i++){
             if(i>=2 && i<=9){
                 patternEnergyPlan.addArithmeticState(new ArithmeticState(0.8));

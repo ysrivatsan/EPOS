@@ -17,7 +17,7 @@
  */
 package messages;
 
-import dsutil.generic.state.ArithmeticListState;
+import agents.energyPlan.Plan;
 import protopeer.network.Message;
 
 /**
@@ -25,5 +25,5 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class EPOSResponse extends Message{
-    public ArithmeticListState selectedPlan;
+    public Plan selectedPlan;
 }

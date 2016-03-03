@@ -17,16 +17,22 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
 
 /**
  *
  * @author Peter
  */
 public class GlobalPlan extends Plan {
-    
-    public GlobalPlan(EPOSAgent agent) {
+
+    public GlobalPlan() {
+    }
+
+    public GlobalPlan(EPOSAgentNew agent) {
         super(Plan.Type.GLOBAL_PLAN, agent);
     }
-    
+
+    public GlobalPlan(EPOSAgentNew agent, String planStr) {
+        super(Plan.Type.GLOBAL_PLAN, agent, planStr);
+    }
 }

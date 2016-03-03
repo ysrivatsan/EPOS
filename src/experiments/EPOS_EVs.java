@@ -5,14 +5,16 @@
 package experiments;
 
 
-import agents.EPOSAgent;
+import agents.EPOSAgentNew;
+import agents.energyPlan.Plan;
+import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.MinProductSumFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
-import static experiments.EPOS_PNW.loadTIS;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -61,10 +63,10 @@ public class EPOS_EVs extends SimulatedExperiment{
     });
     private static DateTime aggregationPhase=DateTime.parse("2015-01-01");
     private static String plansFormat=".plans";
-    private static EPOSAgent.FitnessFunction fitnessFunction=EPOSAgent.FitnessFunction.MINIMIZING_PRODUCT_SUM;
+    private static FitnessFunction fitnessFunction=new MinProductSumFitnessFunction();
     private static int planSize=1440;
     private static DateTime historicAggregationPhase=DateTime.parse("2015-01-01");
-    private static ArithmeticListState patternEnergyPlan;
+    private static Plan patternEnergyPlan;
     private static int historySize=5;
     
     public static void main(String[] args) {
@@ -88,7 +90,7 @@ public class EPOS_EVs extends SimulatedExperiment{
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 3));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                    newPeer.addPeerlet(new EPOSAgentNew(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
                     return newPeer;
                 }
             };
@@ -100,8 +102,8 @@ public class EPOS_EVs extends SimulatedExperiment{
         
     }
     
-    public final static ArithmeticListState loadTIS(String TISLocation){
-        ArithmeticListState patternEnergyPlan=new ArithmeticListState(new ArrayList());
+    public final static Plan loadTIS(String TISLocation){
+        Plan patternEnergyPlan= new Plan();
         File file = new File(TISLocation);
         try {
             Scanner sc = new Scanner(file);

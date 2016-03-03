@@ -4,11 +4,6 @@
  */
 package experiments;
 
-import agents.EPOSAgent;
-import dsutil.generic.RankPriority;
-import dsutil.protopeer.services.topology.trees.DescriptorType;
-import dsutil.protopeer.services.topology.trees.TreeType;
-import org.joda.time.DateTime;
 import protopeer.util.quantities.Time;
 
 /**

@@ -17,7 +17,7 @@
  */
 package messages;
 
-import dsutil.generic.state.ArithmeticListState;
+import agents.energyPlan.Plan;
 import org.joda.time.DateTime;
 import protopeer.network.Message;
 
@@ -27,5 +27,5 @@ import protopeer.network.Message;
  */
 public class EPOSBroadcast extends Message{
     public DateTime coordinationPhase;
-    public ArithmeticListState globalPlan;
+    public Plan globalPlan;
 }

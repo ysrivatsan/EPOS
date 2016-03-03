@@ -17,6 +17,7 @@
  */
 package messages;
 
+import agents.energyPlan.Plan;
 import dsutil.generic.state.ArithmeticListState;
 import java.util.List;
 import protopeer.Finger;
@@ -28,7 +29,7 @@ import protopeer.network.Message;
  */
 public class EPOSRequest extends Message{
     public Finger child;
-    public List<ArithmeticListState> possiblePlans;
-    public ArithmeticListState aggregatePlan;
-    public ArithmeticListState aggregateHistoryPlan;
+    public List<Plan> possiblePlans;
+    public Plan aggregatePlan;
+    public Plan aggregateHistoryPlan;
 }
