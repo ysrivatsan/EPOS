@@ -17,7 +17,7 @@
  */
 package agents.fitnessFunction;
 
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import agents.energyPlan.Plan;
 import agents.HistoricPlans;
 import java.util.List;
@@ -30,5 +30,5 @@ public interface FitnessFunction {
 
     public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic);
 
-    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic);
+    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic);
 }

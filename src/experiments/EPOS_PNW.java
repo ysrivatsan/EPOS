@@ -5,7 +5,7 @@
 package experiments;
 
 
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import agents.energyPlan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.MinProductSumFitnessFunction;
@@ -90,7 +90,7 @@ public class EPOS_PNW extends SimulatedExperiment{
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 4)); //v[(int)(Math.random()*v.length)]
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgentNew(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
                     return newPeer;
                 }
             };

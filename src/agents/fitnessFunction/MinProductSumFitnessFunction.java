@@ -18,7 +18,7 @@
 package agents.fitnessFunction;
 
 import agents.energyPlan.AggregatePlan;
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import agents.energyPlan.Plan;
 import agents.energyPlan.GlobalPlan;
 import agents.HistoricPlans;
@@ -36,7 +36,7 @@ public class MinProductSumFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minProductSum = Double.MAX_VALUE;
         Plan selected = null;
 

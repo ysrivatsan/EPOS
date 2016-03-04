@@ -17,7 +17,7 @@
  */
 package agents.fitnessFunction;
 
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import agents.HistoricPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
@@ -36,7 +36,7 @@ public class MaxCorrelationFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgentNew agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double maxCorrelationCoefficient = -1.0;
         Plan selected = null;
 

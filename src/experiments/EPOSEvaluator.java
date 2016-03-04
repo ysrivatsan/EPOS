@@ -17,7 +17,7 @@
  */
 package experiments;
 
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import agents.energyPlan.GlobalPlan;
 import agents.energyPlan.Plan;
 import agents.energyPlan.PossiblePlan;
@@ -155,10 +155,10 @@ public class EPOSEvaluator {
 //            coordinationPhase="bootstrapping";
 //            hourValues="bootstrapping";
 //        }        
-        double planSize=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.PLAN_SIZE).getSum(),2);
-        double robustness=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.ROBUSTNESS).getSum(),2);
-        double discomfort=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.DISCOMFORT).getSum(),2);
-        double selectedPlan=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgentNew.Measurements.SELECTED_PLAN_VALUE).getSum(),2);
+        double planSize=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.PLAN_SIZE).getSum(),2);
+        double robustness=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.ROBUSTNESS).getSum(),2);
+        double discomfort=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.DISCOMFORT).getSum(),2);
+        double selectedPlan=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSAgent.Measurements.SELECTED_PLAN_VALUE).getSum(),2);
         System.out.println(
                 epochNum+coma+
                 coordinationPhase+coma+

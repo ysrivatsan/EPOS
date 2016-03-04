@@ -17,7 +17,7 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgentNew;
+import agents.EPOSAgent;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import java.util.ArrayList;
@@ -49,13 +49,13 @@ public class Plan extends ArithmeticListState {
         super(new ArrayList<>());
     }
 
-    public Plan(Plan.Type type, EPOSAgentNew agent) {
+    public Plan(Plan.Type type, EPOSAgent agent) {
         super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this);
     }
     
-    public Plan(Plan.Type type, EPOSAgentNew agent, String planStr) {
+    public Plan(Plan.Type type, EPOSAgent agent, String planStr) {
         super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this, planStr);

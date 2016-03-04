@@ -58,7 +58,7 @@ import protopeer.util.quantities.Time;
  *
  * @author Evangelos
  */
-public class EPOSAgentNew extends BasePeerlet implements TreeApplicationInterface {
+public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
 
     private String experimentID;
     private String plansLocation;
@@ -115,7 +115,7 @@ public class EPOSAgentNew extends BasePeerlet implements TreeApplicationInterfac
     private TreeMap<DateTime, Map<HistoricEnergyPlans, Plan>> historicEnergyPlans;
     private Map<Finger, EPOSRequest> messageBuffer;
 
-    public EPOSAgentNew(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime aggregationPhase, DateTime historicAggregationPhase, Plan patternEnergyPlan, int historySize) {
+    public EPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime aggregationPhase, DateTime historicAggregationPhase, Plan patternEnergyPlan, int historySize) {
         this.experimentID = experimentID;
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
@@ -265,8 +265,10 @@ public class EPOSAgentNew extends BasePeerlet implements TreeApplicationInterfac
         request.child = getPeer().getFinger();
         request.possiblePlans = this.possiblePlans;
         request.aggregatePlan = this.aggregatePlan;
-        if (this.historicEnergyPlans.size() != 0) {
-            Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
+        Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
+        if(historicPlans != null) {
+        //if (this.historicEnergyPlans.size() != 0) {
+        //    Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
             request.aggregateHistoryPlan = historicPlans.get(HistoricEnergyPlans.AGGREGATE_PLAN);
         } else {
             request.aggregateHistoryPlan = null;
