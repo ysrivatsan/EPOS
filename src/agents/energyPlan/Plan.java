@@ -243,6 +243,12 @@ public class Plan extends ArithmeticListState {
         double rootMeanSquaredError = Math.sqrt(meanSquaredError);
         return rootMeanSquaredError;
     }
+    
+    public void set(Plan other) {
+        for (int i = 0; i < this.getNumberOfStates(); i++) {
+            this.setArithmeticState(i, other.getArithmeticState(i).getValue());
+        }
+    }
 
     public void add(Plan other) {
         for (int i = 0; i < this.getNumberOfStates(); i++) {

@@ -18,6 +18,8 @@
 package experiments;
 
 import agents.fitnessFunction.MinDeviationFitnessFunction;
+import agents.fitnessFunction.RandomFitnessFunction;
+import agents.fitnessFunction.WeightedRandomFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -42,7 +44,7 @@ public class BicyclesExperiment2 extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycleStations", "station_plans_kmeans_8to10", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3);
+                new WeightedRandomFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3);
         return experiment;
     }
 }

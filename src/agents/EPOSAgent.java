@@ -65,21 +65,18 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
     private String planConfigurations;
     private String treeStamp;
     private String agentMeterID;
-    private DateTime aggregationPhase;
-    private List<DateTime> coordinationPhases;
-    private int coordinationPhaseIndex;
-    private String plansFormat;
-    private DateTime historicAggregationPhase;
-    private MeasurementFileDumper measurementDumper;
 
-    public static enum Measurements {
-        COORDINATION_PHASE,
-        PLAN_SIZE,
-        SELECTED_PLAN_VALUE,
-        DISCOMFORT,
-        ROBUSTNESS,
-        GLOBAL_PLAN
-    }
+    private int planSize;
+
+    private double robustness;
+
+    private DateTime currentPhase;
+    private DateTime previousPhase;
+    private List<DateTime> phases;
+    private int phaseIndex;
+
+    private String plansFormat;
+    private MeasurementFileDumper measurementDumper;
 
     public static enum TopologicalState {
         ROOT,
@@ -88,52 +85,48 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
         DISCONNECTED
     }
 
-    public static enum HistoricEnergyPlans {
-        SELECTED_PLAN,
-        AGGREGATE_PLAN,
-        GLOBAL_PLAN
-    }
-    private double robustness;
-    private int energyPlanSize;
     private int historySize;
+    private TreeMap<DateTime, HistoricPlans> history;
+
     private FingerDescriptor myAgentDescriptor;
     private Finger parent = null;
     private List<Finger> children = new ArrayList<Finger>();
     private TopologicalState topologicalState;
+    private Map<Finger, EPOSRequest> messageBuffer;
+
     private FitnessFunction fitnessFunction;
-    private Plan patternEnergyPlan;
-    private List<Plan> possiblePlans;
-    private Plan selectedPlan;
-    private Plan aggregatePlan;
     private Plan globalPlan;
+    private Plan patternPlan;
+    private Plan aggregatePlan;
+    private Plan selectedPlan;
+    private List<Plan> possiblePlans;
     private Plan historicSelectedPlan;
     private Plan historicAggregatePlan;
     private Plan historicGlobalPlan;
     private List<Plan> combinationalPlans;
+
     private Map<Plan, Map<Finger, Plan>> combinationalPlansMap;
     private Plan selectedCombinationalPlan;
-    private TreeMap<DateTime, Map<HistoricEnergyPlans, Plan>> historicEnergyPlans;
-    private Map<Finger, EPOSRequest> messageBuffer;
 
-    public EPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime aggregationPhase, DateTime historicAggregationPhase, Plan patternEnergyPlan, int historySize) {
+    public EPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan patternPlan, int historySize) {
         this.experimentID = experimentID;
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
         this.treeStamp = treeStamp;
         this.agentMeterID = agentMeterID;
-        this.aggregationPhase = aggregationPhase;
+        this.currentPhase = initialPhase;
         this.plansFormat = plansFormat;
         this.fitnessFunction = fitnessFunction;
-        this.energyPlanSize = planSize;
-        this.historicAggregationPhase = historicAggregationPhase;
-        this.patternEnergyPlan = patternEnergyPlan;
+        this.planSize = planSize;
+        this.previousPhase = previousPhase;
+        this.patternPlan = patternPlan;
         this.historySize = historySize;
-        this.coordinationPhases = new ArrayList<>();
-        this.coordinationPhaseIndex = 0;
+        this.phases = new ArrayList<>();
+        this.phaseIndex = 0;
         this.possiblePlans = new ArrayList<>();
         this.combinationalPlans = new ArrayList<>();
         this.combinationalPlansMap = new HashMap<>();
-        this.historicEnergyPlans = new TreeMap<>();
+        this.history = new TreeMap<>();
         this.messageBuffer = new HashMap<>();
         this.topologicalState = TopologicalState.DISCONNECTED;
     }
@@ -193,7 +186,7 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
         loadAgentTimer.addTimerListener(new TimerListener() {
             public void timerExpired(Timer timer) {
 //                System.out.println(coordinationPhaseIndex);
-                if (coordinationPhaseIndex < coordinationPhases.size()) {
+                if (phaseIndex < phases.size()) {
                     clearCoordinationPhase();
                     if (topologicalState == TopologicalState.LEAF) {
                         plan();
@@ -207,14 +200,14 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
     }
 
     private void clearCoordinationPhase() {
-        if (this.historicEnergyPlans.size() > this.historySize) {
-            this.historicEnergyPlans.remove(this.historicEnergyPlans.firstKey());
+        if (this.history.size() > this.historySize) {
+            this.history.remove(this.history.firstKey());
         }
-        aggregationPhase = coordinationPhases.get(coordinationPhaseIndex);
-        if (coordinationPhaseIndex != 0) {
-            historicAggregationPhase = coordinationPhases.get(coordinationPhaseIndex - 1);
+        currentPhase = phases.get(phaseIndex);
+        if (phaseIndex > 0) {
+            previousPhase = phases.get(phaseIndex - 1);
         }
-        coordinationPhaseIndex++;
+        phaseIndex++;
         this.robustness = 0.0;
         this.possiblePlans.clear();
         this.selectedPlan = new PossiblePlan(this);
@@ -241,13 +234,13 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
         });
         for (int i = 0; i < dates.length; i++) {
             StringTokenizer dateTokenizer = new StringTokenizer(dates[i].getName(), ".");
-            this.coordinationPhases.add(DateTime.parse(dateTokenizer.nextToken()));
+            this.phases.add(DateTime.parse(dateTokenizer.nextToken()));
         }
     }
 
     public void plan() {
         try {
-            File file = new File(this.plansLocation + "/" + this.planConfigurations + "/" + this.agentMeterID + "/" + this.aggregationPhase.toString("yyyy-MM-dd") + this.plansFormat);
+            File file = new File(this.plansLocation + "/" + this.planConfigurations + "/" + this.agentMeterID + "/" + this.currentPhase.toString("yyyy-MM-dd") + this.plansFormat);
             Scanner scanner = new Scanner(file);
             scanner.useLocale(Locale.US);
             while (scanner.hasNextLine()) {
@@ -265,11 +258,11 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
         request.child = getPeer().getFinger();
         request.possiblePlans = this.possiblePlans;
         request.aggregatePlan = this.aggregatePlan;
-        Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
-        if(historicPlans != null) {
-        //if (this.historicEnergyPlans.size() != 0) {
-        //    Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
-            request.aggregateHistoryPlan = historicPlans.get(HistoricEnergyPlans.AGGREGATE_PLAN);
+        HistoricPlans historicPlans = history.get(previousPhase);
+        if (historicPlans != null) {
+            //if (this.historicEnergyPlans.size() != 0) {
+            //    Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
+            request.aggregateHistoryPlan = historicPlans.aggregatedPlan;
         } else {
             request.aggregateHistoryPlan = null;
         }
@@ -312,24 +305,21 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
     }
 
     public void select() {
-        HistoricPlans historic = null;
-        if (this.coordinationPhaseIndex > 1) {
-            historic = new HistoricPlans(
-                    this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.GLOBAL_PLAN),
-                    this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.AGGREGATE_PLAN),
-                    this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.SELECTED_PLAN));
+        HistoricPlans historicPlans = null;
+        if (this.phaseIndex > 1) {
+            historicPlans = this.history.get(this.previousPhase);
         }
-        this.selectedCombinationalPlan = fitnessFunction.select(this, aggregatePlan, combinationalPlans, patternEnergyPlan, historic);
+        this.selectedCombinationalPlan = fitnessFunction.select(this, aggregatePlan, combinationalPlans, patternPlan, historicPlans);
     }
 
     public void update() {
         this.aggregatePlan.add(this.selectedCombinationalPlan);
-        this.historicAggregatePlan.add(aggregatePlan);
+        this.historicAggregatePlan.set(aggregatePlan);
     }
 
     public void informChildren() {
         for (Finger child : children) {
-            Plan selectedPlan = this.combinationalPlansMap.get(this.selectedCombinationalPlan).get(child);
+            Plan selectedPlan = this.combinationalPlansMap.get(selectedCombinationalPlan).get(child);
             EPOSResponse response = new EPOSResponse();
             response.selectedPlan = selectedPlan;
             getPeer().sendMessage(child.getNetworkAddress(), response);
@@ -358,32 +348,23 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
                 this.informChildren();
                 this.plan();
                 if (this.topologicalState == TopologicalState.ROOT) {
-                    HistoricPlans historic = null;
-                    if (this.coordinationPhaseIndex > 1) {
-                        historic = new HistoricPlans(
-                                this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.GLOBAL_PLAN),
-                                this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.AGGREGATE_PLAN),
-                                this.historicEnergyPlans.get(this.historicAggregationPhase).get(HistoricEnergyPlans.SELECTED_PLAN));
+                    HistoricPlans historicPlans = null;
+                    if (this.phaseIndex > 1) {
+                        historicPlans = history.get(this.previousPhase);
                     }
-                    Plan rootSelectedPlanMinDis = fitnessFunction.select(this, aggregatePlan, possiblePlans, globalPlan, historic);
-                    this.selectedPlan.add(rootSelectedPlanMinDis);
-                    this.selectedPlan.setDiscomfort(rootSelectedPlanMinDis.getDiscomfort());
-                    this.historicSelectedPlan.add(rootSelectedPlanMinDis);
+                    Plan selectedPlan = fitnessFunction.select(this, aggregatePlan, possiblePlans, globalPlan, historicPlans);
+                    this.selectedPlan.set(selectedPlan);
+                    this.selectedPlan.setDiscomfort(selectedPlan.getDiscomfort());
 
                     this.aggregatePlan.add(selectedPlan);
                     this.globalPlan.add(aggregatePlan);
-                    this.historicAggregatePlan.add(aggregatePlan);
-                    this.historicGlobalPlan.add(globalPlan);
-                    HashMap<HistoricEnergyPlans, Plan> historicPlans = new HashMap<HistoricEnergyPlans, Plan>();
-                    historicPlans.put(HistoricEnergyPlans.GLOBAL_PLAN, historicGlobalPlan);
-                    historicPlans.put(HistoricEnergyPlans.AGGREGATE_PLAN, historicAggregatePlan);
-                    historicPlans.put(HistoricEnergyPlans.SELECTED_PLAN, historicSelectedPlan);
-                    this.historicEnergyPlans.put(this.aggregationPhase, historicPlans);
 
-                    historic = new HistoricPlans(historicGlobalPlan, historicAggregatePlan, historicSelectedPlan);
-                    this.robustness = fitnessFunction.getRobustness(globalPlan, patternEnergyPlan, historic);
+                    historicPlans = new HistoricPlans(globalPlan, aggregatePlan, selectedPlan);
+                    this.history.put(this.currentPhase, historicPlans);
 
-                    System.out.print(globalPlan.getNumberOfStates() + "," + aggregationPhase.toString("yyyy-MM-dd") + ",");
+                    this.robustness = fitnessFunction.getRobustness(globalPlan, patternPlan, historicPlans);
+
+                    System.out.print(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + ",");
                     for (ArithmeticState value : globalPlan.getArithmeticStates()) {
                         System.out.print(value.getValue() + ",");
                     }
@@ -397,22 +378,19 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
         }
         if (message instanceof EPOSResponse) {
             EPOSResponse response = (EPOSResponse) message;
-            this.selectedPlan.add(response.selectedPlan);
+            this.selectedPlan.set(response.selectedPlan);
             this.selectedPlan.setDiscomfort(response.selectedPlan.getDiscomfort());
-            this.historicSelectedPlan.add(selectedPlan);
+            this.historicSelectedPlan.set(selectedPlan);
         }
         if (message instanceof EPOSBroadcast) {
             EPOSBroadcast broadcast = (EPOSBroadcast) message;
-            this.globalPlan.add(broadcast.globalPlan);
-            this.historicGlobalPlan.add(globalPlan);
-            HashMap<HistoricEnergyPlans, Plan> historicPlans = new HashMap<>();
-            historicPlans.put(HistoricEnergyPlans.GLOBAL_PLAN, historicGlobalPlan);
-            historicPlans.put(HistoricEnergyPlans.AGGREGATE_PLAN, historicAggregatePlan);
-            historicPlans.put(HistoricEnergyPlans.SELECTED_PLAN, historicSelectedPlan);
-            this.historicEnergyPlans.put(this.aggregationPhase, historicPlans);
+            this.globalPlan.set(broadcast.globalPlan);
+            this.historicGlobalPlan.set(globalPlan);
 
-            HistoricPlans historic = new HistoricPlans(historicGlobalPlan, historicAggregatePlan, historicSelectedPlan);
-            this.robustness = fitnessFunction.getRobustness(globalPlan, patternEnergyPlan, historic);
+            HistoricPlans historicPlans = new HistoricPlans(globalPlan, historicAggregatePlan, historicSelectedPlan);
+            this.history.put(this.currentPhase, historicPlans);
+
+            this.robustness = fitnessFunction.getRobustness(globalPlan, patternPlan, historicPlans);
 
             if (this.topologicalState == TopologicalState.LEAF) {
 //                this.plan();
@@ -481,11 +459,11 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
                 if (epochNumber == 2) {
                     if (topologicalState == TopologicalState.ROOT) {
                         log.log(epochNumber, globalPlan, 1.0);
-                        log.log(epochNumber, Measurements.PLAN_SIZE, energyPlanSize);
-                        log.log(epochNumber, Measurements.ROBUSTNESS, robustness);
+                        log.log(epochNumber, EPOSMeasures.PLAN_SIZE, planSize);
+                        log.log(epochNumber, EPOSMeasures.ROBUSTNESS, robustness);
                     }
                     log.log(epochNumber, selectedPlan, 1.0);
-                    log.log(epochNumber, Measurements.DISCOMFORT, selectedPlan.getDiscomfort());
+                    log.log(epochNumber, EPOSMeasures.DISCOMFORT, selectedPlan.getDiscomfort());
 //                    log.log(epochNumber, Measurements.SELECTED_PLAN_VALUE, selectedPlan.getArithmeticState(0).getValue());
                     writeGraphData(epochNumber);
                 }
@@ -528,17 +506,17 @@ public class EPOSAgent extends BasePeerlet implements TreeApplicationInterface {
     }
 
     public void initPlan(Plan plan) {
-        for (int i = 0; i < energyPlanSize; i++) {
+        for (int i = 0; i < planSize; i++) {
             plan.addArithmeticState(new ArithmeticState(0.0));
         }
-        plan.setCoordinationPhase(aggregationPhase);
+        plan.setCoordinationPhase(currentPhase);
         plan.setDiscomfort(0.0);
         plan.setAgentMeterID(agentMeterID);
         plan.setConfiguration(planConfigurations + "-" + treeStamp);
     }
 
     public void initPlan(Plan plan, String planStr) {
-        plan.setCoordinationPhase(aggregationPhase);
+        plan.setCoordinationPhase(currentPhase);
 
         Scanner scanner = new Scanner(planStr);
         scanner.useLocale(Locale.US);
