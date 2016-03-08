@@ -17,7 +17,7 @@
  */
 package agents.fitnessFunction;
 
-import agents.EPOSAgent;
+import agents.Agent;
 import agents.HistoricPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.GlobalPlan;
@@ -36,7 +36,7 @@ public class MatchEstimate2FitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minRootMeanSquaredError = Double.MAX_VALUE;
         Plan selected = null;
 

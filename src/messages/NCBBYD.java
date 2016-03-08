@@ -15,27 +15,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction;
+package messages;
 
-import agents.Agent;
-import agents.energyPlan.Plan;
-import agents.HistoricPlans;
-import java.util.List;
+import protopeer.network.Message;
+import protopeer.network.NetworkAddress;
 
 /**
  *
  * @author Peter
  */
-public class RandomFitnessFunction implements FitnessFunction {
-
-    @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
-        return globalPlan.stdDeviation();
-    }
-
-    @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        return combinationalPlans.get((int)(Math.random()*combinationalPlans.size()));
-    }
-    
+public class NCBBYD extends Message {
+    public NetworkAddress y; //child
+    public double d;
 }

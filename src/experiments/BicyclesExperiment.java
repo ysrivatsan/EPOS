@@ -40,7 +40,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment("01",
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                "input-data/bicycle", "user_plans_unique_8to10_force_trips_small", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 2);
         return experiment;

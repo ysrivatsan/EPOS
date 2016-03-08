@@ -36,6 +36,7 @@ import protopeer.Peer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import protopeer.measurement.MeasurementLoggerListener;
+import protopeer.network.Message;
 import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
@@ -131,6 +132,9 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     }
     
     abstract void runPhase();
+    
+    @Override
+    public abstract void handleIncomingMessage(Message message);
     
     void readPlans() {
         possiblePlans.clear();

@@ -15,37 +15,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction;
+package messages;
 
-import agents.Agent;
-import agents.HistoricPlans;
 import agents.energyPlan.Plan;
-import java.util.List;
+import java.util.Map;
+import protopeer.network.Message;
+import protopeer.network.NetworkAddress;
 
 /**
  *
  * @author Peter
  */
-public class MinDemandFitnessFunction implements FitnessFunction {
-
-    @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
-        return globalPlan.avg();
-    }
-
-    @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        double minDemand=Double.MAX_VALUE;
-        Plan selected = null;
-        
-        for(Plan combinationalPlan:combinationalPlans){
-            double demand=combinationalPlan.avg();
-            if(demand<minDemand){
-                minDemand=demand;
-                selected=combinationalPlan;
-            }
-        }
-        return selected;
-    }
-    
+public class OPTOptimal extends Message {
+    public Plan globalPlan;
+    public Map<NetworkAddress,Integer> selection;
 }
