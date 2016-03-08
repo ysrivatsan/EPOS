@@ -28,7 +28,7 @@ import java.util.List;
  */
 public interface FitnessFunction {
 
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic);
+    public double getRobustness(Plan globalPlan, Plan costSignal, HistoricPlans historic);
 
-    public Plan select(EPOSAgent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic);
+    public Plan select(EPOSAgent agent, Plan aggregate, List<Plan> plans, Plan costSignal, HistoricPlans historic);
 }

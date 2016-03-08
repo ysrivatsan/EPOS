@@ -17,6 +17,7 @@
  */
 package agents.energyPlan;
 
+import agents.Agent;
 import agents.EPOSAgent;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
@@ -49,13 +50,13 @@ public class Plan extends ArithmeticListState {
         super(new ArrayList<>());
     }
 
-    public Plan(Plan.Type type, EPOSAgent agent) {
+    public Plan(Plan.Type type, Agent agent) {
         super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this);
     }
     
-    public Plan(Plan.Type type, EPOSAgent agent, String planStr) {
+    public Plan(Plan.Type type, Agent agent, String planStr) {
         super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this, planStr);
@@ -299,5 +300,40 @@ public class Plan extends ArithmeticListState {
             value = 2*average - value;
             this.setArithmeticState(i, value);
         }
+    }
+    
+    
+    private boolean isEqual(ArithmeticListState planA, ArithmeticListState planB) {
+        for (int i = 0; i < planA.getArithmeticStates().size(); i++) {
+            if (planA.getArithmeticState(i).getValue() != planB.getArithmeticState(i).getValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return getArithmeticStates().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Plan)) {
+            return false;
+        }
+        final Plan other = (Plan) obj;
+        for (int i = 0; i < this.getArithmeticStates().size(); i++) {
+            if (this.getArithmeticState(i).getValue() != other.getArithmeticState(i).getValue()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

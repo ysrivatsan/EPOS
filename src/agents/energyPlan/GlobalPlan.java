@@ -17,7 +17,7 @@
  */
 package agents.energyPlan;
 
-import agents.EPOSAgent;
+import agents.Agent;
 
 /**
  *
@@ -28,11 +28,11 @@ public class GlobalPlan extends Plan {
     public GlobalPlan() {
     }
 
-    public GlobalPlan(EPOSAgent agent) {
+    public GlobalPlan(Agent agent) {
         super(Plan.Type.GLOBAL_PLAN, agent);
     }
 
-    public GlobalPlan(EPOSAgent agent, String planStr) {
+    public GlobalPlan(Agent agent, String planStr) {
         super(Plan.Type.GLOBAL_PLAN, agent, planStr);
     }
 }
