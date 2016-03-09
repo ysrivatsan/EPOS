@@ -113,7 +113,7 @@ public class EPOSAgent extends Agent {
             //    Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
             request.aggregateHistoryPlan = historicPlans.aggregatedPlan;
         } else {
-            request.aggregateHistoryPlan = null;
+            request.aggregateHistoryPlan = null; 
         }
         this.getPeer().sendMessage(this.parent.getNetworkAddress(), request);
     }

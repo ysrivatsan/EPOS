@@ -17,6 +17,7 @@
  */
 package experiments;
 
+import agents.EPOSAgent;
 import agents.fitnessFunction.MinDeviationFitnessFunction;
 import agents.fitnessFunction.RandomFitnessFunction;
 import agents.fitnessFunction.WeightedRandomFitnessFunction;
@@ -44,7 +45,8 @@ public class BicyclesExperiment2 extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycleStations", "station_plans_kmeans_8to10", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new WeightedRandomFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3);
+                new WeightedRandomFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3,
+                new EPOSAgent.Factory());
         return experiment;
     }
 }
