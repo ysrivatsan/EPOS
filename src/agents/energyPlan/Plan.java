@@ -22,6 +22,7 @@ import agents.EPOSAgent;
 import dsutil.generic.state.ArithmeticListState;
 import dsutil.generic.state.ArithmeticState;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.joda.time.DateTime;
 
@@ -335,5 +336,21 @@ public class Plan extends ArithmeticListState {
             }
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        out.append('[');
+        Iterator<ArithmeticState> iter = getArithmeticStates().iterator();
+        if(iter.hasNext()) {
+            out.append(iter.next().getValue());
+        }
+        while(iter.hasNext()) {
+            out.append(',');
+            out.append(iter.next().getValue());
+        }
+        out.append(']');
+        return out.toString();
     }
 }

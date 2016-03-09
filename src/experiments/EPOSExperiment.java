@@ -18,6 +18,7 @@
 package experiments;
 
 
+import agents.AgentFactory;
 import agents.EPOSAgent;
 import agents.OptimalAgent;
 import agents.energyPlan.GlobalPlan;
@@ -73,7 +74,9 @@ public class EPOSExperiment extends SimulatedExperiment{
     private int historySize;
     private int maxChildren;
     
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren){
+    private AgentFactory factory;
+    
+    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, AgentFactory factory){
         this.expSeqNum = expSeqNum;
         this.experimentID = "Experiment "+expSeqNum+"/";
         this.priority = priority;
@@ -87,6 +90,7 @@ public class EPOSExperiment extends SimulatedExperiment{
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
         this.maxChildren = maxChildren;
+        this.factory = factory;
         
         File dir = new File(plansLocation+"/"+planConfigurations);  
         this.agentMeterIDs = dir.listFiles(new FileFilter() {  
@@ -125,8 +129,8 @@ public class EPOSExperiment extends SimulatedExperiment{
                 newPeer.addPeerlet(new TreeProvider());
                 //newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
                 
-                //newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
-                newPeer.addPeerlet(new OptimalAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), aggregationPhase, plansFormat, planSize, patternEnergyPlan, fitnessFunction)); 
+                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                //newPeer.addPeerlet(new OptimalAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), aggregationPhase, plansFormat, planSize, patternEnergyPlan, fitnessFunction)); 
 
                 return newPeer;
             }

@@ -60,6 +60,13 @@ public class EPOSAgent extends Agent {
 
     private final Map<Plan, Map<Finger, Plan>> combinationalPlansMap = new HashMap<>();
     private Plan selectedCombinationalPlan;
+    
+    public static class Factory implements AgentFactory {
+        @Override
+        public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
+        }
+    }
 
     public EPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
@@ -206,12 +213,7 @@ public class EPOSAgent extends Agent {
 
                     this.robustness = fitnessFunction.getRobustness(globalPlan, costSignal, historicPlans);
 
-                    System.out.print(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + ",");
-                    for (ArithmeticState value : globalPlan.getArithmeticStates()) {
-                        System.out.print(value.getValue() + ",");
-                    }
-                    System.out.print(this.robustness);
-                    System.out.println();
+                    System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +"," +robustness + ": " + globalPlan);
                     this.broadcast();
                 } else {
                     this.informParent();

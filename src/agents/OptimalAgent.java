@@ -20,6 +20,7 @@ package agents;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import agents.fitnessFunction.FitnessFunction;
+import dsutil.generic.state.ArithmeticState;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,13 @@ public class OptimalAgent extends Agent {
     private FitnessFunction fitnessFunction;
 
     private int activeChild = -1;
+    
+    public static class Factory implements AgentFactory {
+        @Override
+        public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new OptimalAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal, fitnessFunction);
+        }
+    }
 
     public OptimalAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
@@ -50,6 +58,8 @@ public class OptimalAgent extends Agent {
     @Override
     void runPhase() {
         if (isRoot()) {
+            readPlans();
+
             OPTAggregate msg = new OPTAggregate();
             for (int i = 0; i < possiblePlans.size(); i++) {
                 Map<NetworkAddress, Integer> selection = new HashMap<>();
@@ -57,7 +67,7 @@ public class OptimalAgent extends Agent {
                 msg.aggregatedPossiblePlans.put(possiblePlans.get(i), selection);
             }
             activeChild++;
-            if(activeChild < children.size()) {
+            if (activeChild < children.size()) {
                 getPeer().sendMessage(children.get(activeChild).getNetworkAddress(), msg);
             }
         }
@@ -67,8 +77,10 @@ public class OptimalAgent extends Agent {
     public void handleIncomingMessage(Message message) {
         if (message instanceof OPTAggregate) {
             OPTAggregate msg = (OPTAggregate) message;
-            
-            if(activeChild == -1) {  
+
+            if (activeChild == -1) {
+                readPlans();
+
                 Map<Plan, Map<NetworkAddress, Integer>> aggregatedPossiblePlans = new HashMap<>();
                 for (Map.Entry<Plan, Map<NetworkAddress, Integer>> entry : msg.aggregatedPossiblePlans.entrySet()) {
                     Plan aggregatedPlan = entry.getKey();
@@ -76,7 +88,7 @@ public class OptimalAgent extends Agent {
 
                     for (int i = 0; i < possiblePlans.size(); i++) {
                         Plan localPlan = possiblePlans.get(i);
-                        Plan newAggregatedPlan = new AggregatePlan();
+                        Plan newAggregatedPlan = new AggregatePlan(this);
                         newAggregatedPlan.set(aggregatedPlan);
                         newAggregatedPlan.add(localPlan);
 
@@ -86,43 +98,48 @@ public class OptimalAgent extends Agent {
                         aggregatedPossiblePlans.put(newAggregatedPlan, newSelection);
                     }
                 }
-                
+
                 msg = new OPTAggregate();
                 msg.aggregatedPossiblePlans = aggregatedPossiblePlans;
             }
-                
-            if(activeChild+1 < children.size()) {
+
+            if (activeChild + 1 < children.size()) {
                 activeChild++;
                 getPeer().sendMessage(children.get(activeChild).getNetworkAddress(), msg);
-            } else if(!isRoot()) {
+            } else if (!isRoot()) {
                 getPeer().sendMessage(parent.getNetworkAddress(), msg);
             } else {
                 this.globalPlan = fitnessFunction.select(this, new AggregatePlan(this), new ArrayList<>(msg.aggregatedPossiblePlans.keySet()), costSignal, null);
-                Map<NetworkAddress,Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
+                Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
                 int selectedPlanIdx = selection.get(getPeer().getNetworkAddress());
                 this.selectedPlan = possiblePlans.get(selectedPlanIdx);
-                
+
+                System.out.println("OPT found");
                 OPTOptimal m = new OPTOptimal();
                 m.globalPlan = globalPlan;
                 m.selection = selection;
-                for(Finger c : children) {
+                for (Finger c : children) {
                     getPeer().sendMessage(c.getNetworkAddress(), m);
                 }
+
+                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + ": " + globalPlan);
             }
         } else if (message instanceof OPTOptimal) {
             OPTOptimal msg = (OPTOptimal) message;
-            
             globalPlan = msg.globalPlan;
             selectedPlan = possiblePlans.get(msg.selection.get(getPeer().getNetworkAddress()));
-            for(Finger c : children) {
+            for (Finger c : children) {
                 getPeer().sendMessage(c.getNetworkAddress(), msg);
             }
         }
     }
 
+    private boolean measured = false;
+
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        if (epochNumber == 2) {
+        if (selectedPlan != null && !measured) {
+            measured = true;
             if (this.isRoot()) {
                 log.log(epochNumber, globalPlan, 1.0);
                 log.log(epochNumber, EPOSMeasures.PLAN_SIZE, globalPlan.getNumberOfStates());
@@ -133,17 +150,16 @@ public class OptimalAgent extends Agent {
             writeGraphData(epochNumber);
         }
     }
-    
+
     private void writeGraphData(int epochNumber) {
         System.out.println(getPeer().getNetworkAddress().toString() + ","
                 + ((parent != null) ? parent.getNetworkAddress().toString() : "-") + ","
                 + findSelectedPlan());
     }
 
-
     private int findSelectedPlan() {
         for (int i = 0; i < possiblePlans.size(); i++) {
-            if (possiblePlans.get(i).equals(selectedPlan)){
+            if (possiblePlans.get(i).equals(selectedPlan)) {
                 return i;
             }
         }
