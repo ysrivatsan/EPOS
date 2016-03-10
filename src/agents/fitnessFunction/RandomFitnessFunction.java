@@ -34,8 +34,8 @@ public class RandomFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        return combinationalPlans.get((int)(Math.random()*combinationalPlans.size()));
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+        return (int)(Math.random()*combinationalPlans.size());
     }
     
 }

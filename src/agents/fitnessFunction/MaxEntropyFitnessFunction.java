@@ -35,18 +35,19 @@ public class MaxEntropyFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double maxEntropy = Double.MIN_VALUE;
-        Plan selected = null;
+        int selected = -1;
 
-        for (Plan combinationalPlan : combinationalPlans) {
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
             double entropy = testAggregatePlan.entropy();
             if (entropy > maxEntropy) {
                 maxEntropy = entropy;
-                selected = combinationalPlan;
+                selected = i;
             }
         }
 

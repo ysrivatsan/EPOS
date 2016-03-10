@@ -35,19 +35,20 @@ public class MinRelativeDeviationFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minRelativeStandardDeviation = Double.MAX_VALUE;
-        Plan selected = null;
+        int selected = -1;
 
-        for (Plan combinationalPlan : combinationalPlans) {
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
-            
+
             double relativeStandardDeviation = testAggregatePlan.relativeStdDeviation();
             if (relativeStandardDeviation < minRelativeStandardDeviation) {
                 minRelativeStandardDeviation = relativeStandardDeviation;
-                selected = combinationalPlan;
+                selected = i;
             }
         }
 

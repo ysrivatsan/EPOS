@@ -34,7 +34,7 @@ public class WeightedRandomFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double totalDiscomfort = 0;
         for(Plan plan : combinationalPlans) {
             totalDiscomfort += plan.getDiscomfort();
@@ -42,14 +42,15 @@ public class WeightedRandomFitnessFunction implements FitnessFunction {
         
         double rand = Math.random();
         double cumulated = 0;
-        for(Plan plan : combinationalPlans) {
+        for(int i=0; i<combinationalPlans.size(); i++) {
+            Plan plan = combinationalPlans.get(i);
             cumulated += plan.getDiscomfort()/totalDiscomfort;
             if (cumulated >= rand) {
-                return plan;
+                return i;
             }
         }
         
-        return combinationalPlans.get(combinationalPlans.size()-1);
+        return combinationalPlans.size()-1;
     }
     
 }

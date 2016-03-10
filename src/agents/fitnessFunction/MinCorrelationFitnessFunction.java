@@ -39,14 +39,15 @@ public class MinCorrelationFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        Plan selected = null;
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+        int selected = -1;
 
         if (historic == null) {
-            selected = combinationalPlans.get((int) (Math.random() * combinationalPlans.size()));
+            selected = (int) (Math.random() * combinationalPlans.size());
         } else {
             double minCorrelation = 1.0;
-            for (Plan combinationalPlan : combinationalPlans) {
+            for (int i = 0; i < combinationalPlans.size(); i++) {
+                Plan combinationalPlan = combinationalPlans.get(i);
                 Plan testAggregatePlan = new AggregatePlan(agent);
                 testAggregatePlan.add(aggregatePlan);
                 testAggregatePlan.add(combinationalPlan);
@@ -54,7 +55,7 @@ public class MinCorrelationFitnessFunction implements FitnessFunction {
                 double correlation = testAggregatePlan.correlationCoefficient(historic.aggregatedPlan);
                 if (correlation < minCorrelation) {
                     minCorrelation = correlation;
-                    selected = combinationalPlan;
+                    selected = i;
                 }
             }
         }

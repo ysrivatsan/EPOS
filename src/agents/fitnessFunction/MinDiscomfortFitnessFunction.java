@@ -34,15 +34,16 @@ public class MinDiscomfortFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double minDiscomfort = Double.MAX_VALUE;
-        Plan selected = null;
+        int selected = -1;
         
-        for (Plan combinationalPlan : combinationalPlans) {
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
             double discomfort = combinationalPlan.getDiscomfort();
             if (discomfort < minDiscomfort) {
                 minDiscomfort = discomfort;
-                selected = combinationalPlan;
+                selected = i;
             }
         }
         

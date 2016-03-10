@@ -34,15 +34,16 @@ public class MaxDemandFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
-        double maxDemand=Double.MIN_VALUE;
-        Plan selected = null;
-        
-        for(Plan combinationalPlan:combinationalPlans){
-            double demand=combinationalPlan.avg();
-            if(demand>maxDemand){
-                maxDemand=demand;
-                selected=combinationalPlan;
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+        double maxDemand = Double.MIN_VALUE;
+        int selected = -1;
+
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
+            double demand = combinationalPlan.avg();
+            if (demand > maxDemand) {
+                maxDemand = demand;
+                selected = i;
             }
         }
         return selected;

@@ -23,7 +23,6 @@ import agents.energyPlan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.energyPlan.Plan;
 import agents.energyPlan.PossiblePlan;
-import dsutil.generic.state.ArithmeticState;
 import dsutil.generic.state.State;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,13 +54,13 @@ public class EPOSAgent extends Agent {
     private Plan historicSelectedPlan;
     private Plan historicAggregatePlan;
     private Plan historicGlobalPlan;
-    private final List<Plan> combinationalPlans = new ArrayList<>();
     private double robustness;
 
-    private final Map<Plan, Map<Finger, Plan>> combinationalPlansMap = new HashMap<>();
     private Plan selectedCombinationalPlan;
-    
+    private List<Integer> selectedCombination;
+
     public static class Factory implements AgentFactory {
+
         @Override
         public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
             return new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
@@ -96,8 +95,6 @@ public class EPOSAgent extends Agent {
         this.historicSelectedPlan = new PossiblePlan(this);
         this.historicAggregatePlan = new AggregatePlan(this);
         this.historicGlobalPlan = new GlobalPlan(this);
-        this.combinationalPlans.clear();
-        this.combinationalPlansMap.clear();
         this.selectedCombinationalPlan = new CombinationalPlan(this);
         this.messageBuffer.clear();
     }
@@ -113,52 +110,58 @@ public class EPOSAgent extends Agent {
             //    Map<HistoricEnergyPlans, Plan> historicPlans = this.historicEnergyPlans.get(this.historicAggregationPhase);
             request.aggregateHistoryPlan = historicPlans.aggregatedPlan;
         } else {
-            request.aggregateHistoryPlan = null; 
+            request.aggregateHistoryPlan = null;
         }
         this.getPeer().sendMessage(this.parent.getNetworkAddress(), request);
     }
 
-    public void preProcessing() {
-        int complexity = 1;
-        ArrayList<Integer> currentChildPlanIndices = new ArrayList<>();
-        ArrayList<Integer> numberOfInputPossiblePlans = new ArrayList<>();
+    private void preProcessing() {
         for (Finger child : children) {
-            this.aggregatePlan.add(this.messageBuffer.get(child).aggregatePlan);
-            currentChildPlanIndices.add(0);
-            numberOfInputPossiblePlans.add(this.messageBuffer.get(child).possiblePlans.size());
-            complexity *= this.messageBuffer.get(child).possiblePlans.size();
-        }
-        for (int i = 0; i < complexity; i++) {
-            Plan combinationalPlan = new CombinationalPlan(this);
-            HashMap<Finger, Plan> combinationalPlanChildSelections = new HashMap<>();
-            for (int c = 0; c < this.children.size(); c++) {
-                Finger child = this.children.get(c);
-                List<Plan> childPlans = this.messageBuffer.get(child).possiblePlans;
-                Plan currentChildPlan = childPlans.get(currentChildPlanIndices.get(c));
-                combinationalPlan.add(currentChildPlan);
-                double discomfort = combinationalPlan.getDiscomfort() + currentChildPlan.getDiscomfort();
-                combinationalPlan.setDiscomfort(discomfort);
-                combinationalPlanChildSelections.put(child, currentChildPlan);
-            }
-            this.combinationalPlans.add(combinationalPlan);
-            this.combinationalPlansMap.put(combinationalPlan, combinationalPlanChildSelections);
-            int lastInputPossiblePlanIndex = currentChildPlanIndices.size() - 1;
-            currentChildPlanIndices.set(lastInputPossiblePlanIndex, currentChildPlanIndices.get(lastInputPossiblePlanIndex) + 1);
-            for (int j = lastInputPossiblePlanIndex; j > 0; j--) {
-                if (currentChildPlanIndices.get(j) >= numberOfInputPossiblePlans.get(j)) {
-                    currentChildPlanIndices.set(j, 0);
-                    currentChildPlanIndices.set(j - 1, currentChildPlanIndices.get(j - 1) + 1);
-                }
-            }
+            EPOSRequest msg = messageBuffer.get(child);
+            aggregatePlan.add(msg.aggregatePlan);
         }
     }
 
     public void select() {
+        List<Plan> combinationalPlans = new ArrayList<>();
+        List<List<Integer>> combinationalSelections = new ArrayList<>();
+
+        // init combinations
+        int numCombinations = 1;
+        for (Finger child : children) {
+            EPOSRequest msg = messageBuffer.get(child);
+            numCombinations *= msg.possiblePlans.size();
+        }
+        for (int i = 0; i < numCombinations; i++) {
+            combinationalPlans.add(new CombinationalPlan(this));
+            combinationalSelections.add(new ArrayList<>());
+        }
+
+        // calc all possible combinations
+        int factor = 1;
+        for (Finger child : children) {
+            List<Plan> childPlans = messageBuffer.get(child).possiblePlans;
+            int numPlans = childPlans.size();
+            for (int i = 0; i < numCombinations; i++) {
+                int planIdx = (i / factor) % numPlans;
+                Plan combinationalPlan = combinationalPlans.get(i);
+                combinationalPlan.add(childPlans.get(planIdx));
+                combinationalPlan.setDiscomfort(combinationalPlan.getDiscomfort() + childPlans.get(planIdx).getDiscomfort());
+                combinationalSelections.get(i).add(planIdx);
+            }
+            factor *= numPlans;
+        }
+
         HistoricPlans historicPlans = null;
         if (previousPhase != null) {
             historicPlans = history.get(previousPhase);
         }
-        this.selectedCombinationalPlan = fitnessFunction.select(this, aggregatePlan, combinationalPlans, costSignal, historicPlans);
+
+        // select best combination
+        int selectedCombination = fitnessFunction.select(this, aggregatePlan, combinationalPlans, costSignal, historicPlans);
+        this.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
+        this.selectedCombination = combinationalSelections.get(selectedCombination);
+        //this.selectedCombination = combinationalPlansMap.get(selectedCombinationalPlan);
     }
 
     public void update() {
@@ -167,10 +170,12 @@ public class EPOSAgent extends Agent {
     }
 
     public void informChildren() {
-        for (Finger child : children) {
-            Plan selectedChildPlan = this.combinationalPlansMap.get(selectedCombinationalPlan).get(child);
+        for (int c = 0; c < children.size(); c++) {
+            Finger child = children.get(c);
+            int selected = selectedCombination.get(c);
+
             EPOSResponse response = new EPOSResponse();
-            response.selectedPlan = selectedChildPlan;
+            response.selectedPlan = messageBuffer.get(child).possiblePlans.get(selected);
             getPeer().sendMessage(child.getNetworkAddress(), response);
         }
     }
@@ -201,7 +206,8 @@ public class EPOSAgent extends Agent {
                     if (previousPhase != null) {
                         historicPlans = history.get(previousPhase);
                     }
-                    Plan selectedPlan = fitnessFunction.select(this, aggregatePlan, possiblePlans, globalPlan, historicPlans);
+                    int selected = fitnessFunction.select(this, aggregatePlan, possiblePlans, globalPlan, historicPlans);
+                    Plan selectedPlan = possiblePlans.get(selected);
                     this.selectedPlan.set(selectedPlan);
                     this.selectedPlan.setDiscomfort(selectedPlan.getDiscomfort());
 
@@ -213,7 +219,7 @@ public class EPOSAgent extends Agent {
 
                     this.robustness = fitnessFunction.getRobustness(globalPlan, costSignal, historicPlans);
 
-                    System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +"," +robustness + ": " + globalPlan);
+                    System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + globalPlan);
                     this.broadcast();
                 } else {
                     this.informParent();
@@ -278,7 +284,7 @@ public class EPOSAgent extends Agent {
 
     private int findSelectedPlan() {
         for (int i = 0; i < possiblePlans.size(); i++) {
-            if (possiblePlans.get(i).equals(selectedPlan)){
+            if (possiblePlans.get(i).equals(selectedPlan)) {
                 return i;
             }
         }

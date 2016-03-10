@@ -37,20 +37,21 @@ import protopeer.network.NetworkAddress;
  *
  * @author Peter
  */
-public class OptimalAgent extends Agent {
+public class OPTAgent extends Agent {
 
     private FitnessFunction fitnessFunction;
 
     private int activeChild = -1;
-    
+
     public static class Factory implements AgentFactory {
+
         @Override
         public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OptimalAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal, fitnessFunction);
+            return new OPTAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal, fitnessFunction);
         }
     }
 
-    public OptimalAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
+    public OPTAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
         this.fitnessFunction = fitnessFunction;
     }
@@ -109,12 +110,12 @@ public class OptimalAgent extends Agent {
             } else if (!isRoot()) {
                 getPeer().sendMessage(parent.getNetworkAddress(), msg);
             } else {
-                this.globalPlan = fitnessFunction.select(this, new AggregatePlan(this), new ArrayList<>(msg.aggregatedPossiblePlans.keySet()), costSignal, null);
+                List<Plan> combinationalPlans = new ArrayList<>(msg.aggregatedPossiblePlans.keySet());
+                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, costSignal, null));
                 Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
                 int selectedPlanIdx = selection.get(getPeer().getNetworkAddress());
                 this.selectedPlan = possiblePlans.get(selectedPlanIdx);
 
-                System.out.println("OPT found");
                 OPTOptimal m = new OPTOptimal();
                 m.globalPlan = globalPlan;
                 m.selection = selection;
@@ -148,6 +149,7 @@ public class OptimalAgent extends Agent {
             log.log(epochNumber, EPOSMeasures.DISCOMFORT, selectedPlan.getDiscomfort());
             //log.log(epochNumber, Measurements.SELECTED_PLAN_VALUE, selectedPlan.getArithmeticState(0).getValue());
             writeGraphData(epochNumber);
+            //writeStuff();
         }
     }
 
@@ -155,6 +157,15 @@ public class OptimalAgent extends Agent {
         System.out.println(getPeer().getNetworkAddress().toString() + ","
                 + ((parent != null) ? parent.getNetworkAddress().toString() : "-") + ","
                 + findSelectedPlan());
+    }
+
+    private void writeStuff() {
+        int selected = findSelectedPlan();
+        for (int i = 0; i < possiblePlans.size(); i++) {
+            Plan p = possiblePlans.get(i);
+            p.addArithmeticState(new ArithmeticState(i == selected ? -1 : 0));
+            System.out.println(p+";");
+        }
     }
 
     private int findSelectedPlan() {

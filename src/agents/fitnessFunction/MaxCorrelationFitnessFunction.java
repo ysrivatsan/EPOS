@@ -36,11 +36,12 @@ public class MaxCorrelationFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public Plan select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
         double maxCorrelationCoefficient = -1.0;
-        Plan selected = null;
+        int selected = -1;
 
-        for (Plan combinationalPlan : combinationalPlans) {
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
@@ -53,7 +54,7 @@ public class MaxCorrelationFitnessFunction implements FitnessFunction {
             double correlationCoefficient = normalizedPatternPlan.correlationCoefficient(testAggregatePlan);
             if (correlationCoefficient > maxCorrelationCoefficient) {
                 maxCorrelationCoefficient = correlationCoefficient;
-                selected = combinationalPlan;
+                selected = i;
             }
         }
 

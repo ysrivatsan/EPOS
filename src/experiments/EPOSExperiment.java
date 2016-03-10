@@ -20,7 +20,7 @@ package experiments;
 
 import agents.AgentFactory;
 import agents.EPOSAgent;
-import agents.OptimalAgent;
+import agents.OPTAgent;
 import agents.energyPlan.GlobalPlan;
 import agents.energyPlan.Plan;
 import agents.fitnessFunction.FitnessFunction;
