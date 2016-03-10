@@ -44,7 +44,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3,
-                new EPOSAgent.Factory());
+                new IEPOSAgent.Factory());
         return experiment;
     }
 }

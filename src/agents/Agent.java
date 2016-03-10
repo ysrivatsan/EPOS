@@ -258,4 +258,10 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
             plan.addArithmeticState(new ArithmeticState(scanner.nextDouble()));
         }
     }
+    
+    public void broadcast(Message msg) {
+        for(Finger c : children) {
+            getPeer().sendMessage(c.getNetworkAddress(), msg);
+        }
+    }
 }

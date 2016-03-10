@@ -42,7 +42,9 @@ import protopeer.network.Message;
  *
  * @author Evangelos
  */
-public class EPOSAgent extends Agent {
+public class IEPOSAgent extends Agent {
+    private final int MAX_ITERATIONS = 10;
+    private int iteration;
 
     private final int planSize;
     private final int historySize;
@@ -60,16 +62,21 @@ public class EPOSAgent extends Agent {
 
     private Plan selectedCombinationalPlan;
     private List<Integer> selectedCombination;
+    
+    private Plan prevSelectedPlan;
+    private Plan prevChildAggregatedPlan;
+    private Plan prevSelectedCombinationalPlan;
+    private Plan prevGlobalPlan;
 
     public static class Factory implements AgentFactory {
 
         @Override
         public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
+            return new IEPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
         }
     }
 
-    public EPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+    public IEPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
         this.fitnessFunction = fitnessFunction;
         this.planSize = planSize;
@@ -79,6 +86,7 @@ public class EPOSAgent extends Agent {
     @Override
     void runPhase() {
         initPhase();
+        initIteration();
         if (this.isLeaf()) {
             readPlans();
             informParent();
@@ -89,7 +97,16 @@ public class EPOSAgent extends Agent {
         if (this.history.size() > this.historySize) {
             this.history.remove(this.history.firstKey());
         }
+        this.iteration = 0;
+        this.prevSelectedPlan = null;
+        this.prevChildAggregatedPlan = null;
+        this.prevSelectedCombinationalPlan = null;
+        this.prevGlobalPlan = null;
+    }
+    
+    private void initIteration() {
         this.robustness = 0.0;
+        this.selectedCombinationalPlan = new CombinationalPlan(this);
         this.possiblePlans.clear();
         this.selectedPlan = new PossiblePlan(this);
         this.aggregatePlan = new AggregatePlan(this);
@@ -98,7 +115,6 @@ public class EPOSAgent extends Agent {
         this.historicSelectedPlan = new PossiblePlan(this);
         this.historicAggregatePlan = new AggregatePlan(this);
         this.historicGlobalPlan = new GlobalPlan(this);
-        this.selectedCombinationalPlan = new CombinationalPlan(this);
         this.messageBuffer.clear();
     }
 
@@ -159,7 +175,14 @@ public class EPOSAgent extends Agent {
         }
 
         // select best combination
-        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historicPlans);
+        Plan modifiedChildAggregatePlan = new AggregatePlan(this);
+        modifiedChildAggregatePlan.set(childAggregatePlan);
+        if(iteration > 0) {
+            modifiedChildAggregatePlan.add(prevGlobalPlan);
+            modifiedChildAggregatePlan.subtract(prevChildAggregatedPlan);
+            modifiedChildAggregatePlan.subtract(prevSelectedCombinationalPlan);
+        }
+        int selectedCombination = fitnessFunction.select(this, modifiedChildAggregatePlan, combinationalPlans, costSignal, historicPlans);
         this.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
         this.selectedCombination = combinationalSelections.get(selectedCombination);
     }
@@ -180,14 +203,13 @@ public class EPOSAgent extends Agent {
             getPeer().sendMessage(child.getNetworkAddress(), response);
         }
     }
-
-    private void broadcast() {
-        EPOSBroadcast broadcast = new EPOSBroadcast();
-        broadcast.coordinationPhase = this.globalPlan.getCoordinationPhase();
-        broadcast.globalPlan = this.globalPlan;
-        for (Finger child : children) {
-            getPeer().sendMessage(child.getNetworkAddress(), broadcast);
-        }
+    
+    private void betweenIterations() {
+        iteration++;
+        prevSelectedPlan = selectedPlan;
+        prevChildAggregatedPlan = childAggregatePlan;
+        prevSelectedCombinationalPlan = selectedCombinationalPlan;
+        prevGlobalPlan = globalPlan;
     }
 
     @Override
@@ -206,14 +228,22 @@ public class EPOSAgent extends Agent {
                     if (previousPhase != null) {
                         historicPlans = history.get(previousPhase);
                     }
-                    int selected = fitnessFunction.select(this, childAggregatePlan, possiblePlans, globalPlan, historicPlans);
+                    
+                    Plan modifiedAggregatePlan = new AggregatePlan(this);
+                    modifiedAggregatePlan.set(aggregatePlan);
+                    if(prevSelectedPlan != null) {
+                        modifiedAggregatePlan.add(prevGlobalPlan);
+                        modifiedAggregatePlan.subtract(prevChildAggregatedPlan);
+                        modifiedAggregatePlan.subtract(prevSelectedCombinationalPlan);
+                        modifiedAggregatePlan.subtract(prevSelectedPlan);
+                    }
+                    int selected = fitnessFunction.select(this, modifiedAggregatePlan, possiblePlans, globalPlan, historicPlans);
                     Plan selectedPlan = possiblePlans.get(selected);
                     this.selectedPlan.set(selectedPlan);
                     this.selectedPlan.setDiscomfort(selectedPlan.getDiscomfort());
 
-                    this.aggregatePlan.set(childAggregatePlan);
-                    this.aggregatePlan.add(selectedPlan);
                     this.globalPlan.set(aggregatePlan);
+                    this.globalPlan.add(selectedPlan);
 
                     historicPlans = new HistoricPlans(globalPlan, aggregatePlan, selectedPlan);
                     this.history.put(this.currentPhase, historicPlans);
@@ -221,7 +251,13 @@ public class EPOSAgent extends Agent {
                     this.robustness = fitnessFunction.getRobustness(globalPlan, costSignal, historicPlans);
 
                     System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + globalPlan);
-                    this.broadcast();
+                    if(iteration+1 < MAX_ITERATIONS) {
+                        betweenIterations();
+                        broadcast(new IEPOSIteration(globalPlan));
+                        initIteration();
+                    } else {
+                        broadcast(new EPOSBroadcast(globalPlan));
+                    }
                 } else {
                     this.informParent();
                 }
@@ -242,9 +278,18 @@ public class EPOSAgent extends Agent {
             this.robustness = fitnessFunction.getRobustness(globalPlan, costSignal, historicPlans);
 
             if (!this.isLeaf()) {
-                for (Finger child : children) {
-                    getPeer().sendMessage(child.getNetworkAddress(), broadcast);
-                }
+                broadcast(broadcast);
+            }
+        } else if (message instanceof IEPOSIteration) {
+            IEPOSIteration iter = (IEPOSIteration) message;
+            this.globalPlan.set(iter.globalPlan);
+            betweenIterations();
+            initIteration();
+            if(this.isLeaf()) {
+                readPlans();
+                informParent();
+            } else {
+                broadcast(message);
             }
         }
     }
@@ -259,7 +304,7 @@ public class EPOSAgent extends Agent {
             }
             log.log(epochNumber, selectedPlan, 1.0);
             log.log(epochNumber, EPOSMeasures.DISCOMFORT, selectedPlan.getDiscomfort());
-            writeGraphData(epochNumber);
+            //writeGraphData(epochNumber);
         }
     }
 

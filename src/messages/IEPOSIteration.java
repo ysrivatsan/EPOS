@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Evangelos Pournaras
+ * Copyright (C) 2016 Evangelos Pournaras
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,22 +18,16 @@
 package messages;
 
 import agents.energyPlan.Plan;
-import org.joda.time.DateTime;
 import protopeer.network.Message;
 
 /**
  *
- * @author Evangelos
+ * @author Peter
  */
-public class EPOSBroadcast extends Message{
-    public DateTime coordinationPhase;
+public class IEPOSIteration extends Message {
     public Plan globalPlan;
-    
-    public EPOSBroadcast() {
-    }
-    
-    public EPOSBroadcast(Plan globalPlan) {
-        this.coordinationPhase = globalPlan.getCoordinationPhase();
+
+    public IEPOSIteration(Plan globalPlan) {
         this.globalPlan = globalPlan;
     }
 }
