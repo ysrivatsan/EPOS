@@ -176,11 +176,14 @@ public class IEPOSAgent extends Agent {
 
         // select best combination
         Plan modifiedChildAggregatePlan = new AggregatePlan(this);
-        modifiedChildAggregatePlan.set(childAggregatePlan);
         if(iteration > 0) {
-            modifiedChildAggregatePlan.add(prevGlobalPlan);
+            modifiedChildAggregatePlan.set(prevGlobalPlan);
             modifiedChildAggregatePlan.subtract(prevChildAggregatedPlan);
             modifiedChildAggregatePlan.subtract(prevSelectedCombinationalPlan);
+            modifiedChildAggregatePlan.multiply(0.001);
+            modifiedChildAggregatePlan.add(childAggregatePlan);
+        } else {
+            modifiedChildAggregatePlan.set(childAggregatePlan);
         }
         int selectedCombination = fitnessFunction.select(this, modifiedChildAggregatePlan, combinationalPlans, costSignal, historicPlans);
         this.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
