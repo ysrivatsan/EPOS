@@ -206,14 +206,13 @@ public class EPOSAgent extends Agent {
                     if (previousPhase != null) {
                         historicPlans = history.get(previousPhase);
                     }
-                    int selected = fitnessFunction.select(this, childAggregatePlan, possiblePlans, globalPlan, historicPlans);
+                    int selected = fitnessFunction.select(this, aggregatePlan, possiblePlans, globalPlan, historicPlans);
                     Plan selectedPlan = possiblePlans.get(selected);
                     this.selectedPlan.set(selectedPlan);
                     this.selectedPlan.setDiscomfort(selectedPlan.getDiscomfort());
 
-                    this.aggregatePlan.set(childAggregatePlan);
-                    this.aggregatePlan.add(selectedPlan);
                     this.globalPlan.set(aggregatePlan);
+                    this.globalPlan.add(selectedPlan);
 
                     historicPlans = new HistoricPlans(globalPlan, aggregatePlan, selectedPlan);
                     this.history.put(this.currentPhase, historicPlans);

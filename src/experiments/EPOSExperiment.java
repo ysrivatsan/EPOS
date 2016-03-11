@@ -73,10 +73,11 @@ public class EPOSExperiment extends SimulatedExperiment{
     private Plan patternEnergyPlan;
     private int historySize;
     private int maxChildren;
+    private int maxAgents;
     
     private AgentFactory factory;
     
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, AgentFactory factory){
+    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory){
         this.expSeqNum = expSeqNum;
         this.experimentID = "Experiment "+expSeqNum+"/";
         this.priority = priority;
@@ -90,6 +91,7 @@ public class EPOSExperiment extends SimulatedExperiment{
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
         this.maxChildren = maxChildren;
+        this.maxAgents = maxAgents;
         this.factory = factory;
         
         File dir = new File(plansLocation+"/"+planConfigurations);  
@@ -103,7 +105,7 @@ public class EPOSExperiment extends SimulatedExperiment{
             System.out.println("ERROR: directory " + dir.getPath() + " is empty");
         }
         
-        this.N = agentMeterIDs.length;
+        this.N = Math.min(maxAgents,agentMeterIDs.length);
         this.patternEnergyPlan = loadPatternPlan(plansLocation+"/"+TISFile);
         this.planSize = patternEnergyPlan.getNumberOfStates();
     }

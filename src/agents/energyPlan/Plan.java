@@ -116,6 +116,14 @@ public class Plan extends ArithmeticListState {
     public double avg() {
         return sum() / getArithmeticStates().size();
     }
+    
+    public double dot(Plan other) {
+        double dot = 0;
+        for(int i=0; i<getNumberOfStates(); i++) {
+            dot += getArithmeticState(i).getValue() * other.getArithmeticState(i).getValue();
+        }
+        return dot;
+    }
 
     public double entropy() {
         double sum = sum();

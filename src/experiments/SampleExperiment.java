@@ -17,10 +17,9 @@
  */
 package experiments;
 
-import agents.EPOSAgent;
+import agents.*;
 import agents.fitnessFunction.MinDeviationFitnessFunction;
-import agents.fitnessFunction.RandomFitnessFunction;
-import agents.fitnessFunction.WeightedRandomFitnessFunction;
+import agents.fitnessFunction.SampleFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -29,11 +28,11 @@ import org.joda.time.DateTime;
 /**
  * @author Peter
  */
-public class BicyclesExperiment2 extends ExperimentLauncher {
+public class SampleExperiment extends ExperimentLauncher {
     // EPOS Agent
 
     public static void main(String[] args) {
-        ExperimentLauncher launcher = new BicyclesExperiment2();
+        ExperimentLauncher launcher = new SampleExperiment();
         launcher.treeInstances = 1;
         launcher.runDuration = 25;
         launcher.run();
@@ -43,10 +42,13 @@ public class BicyclesExperiment2 extends ExperimentLauncher {
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment("01",
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                "input-data/bicycleStations", "station_plans_kmeans_8to10", "cost.txt",
+                "input-data/samples", "equalAgents", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new WeightedRandomFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3, Integer.MAX_VALUE,
-                new EPOSAgent.Factory());
+                // with factor 0, results are the same (excl. root), compared to factor 80
+                new SampleFitnessFunction(80), DateTime.parse("0001-01-01"), 5, 3, 15, new EPOSAgent.Factory());
+                //new SampleFitnessFunction(80), DateTime.parse("0001-01-01"), 5, 3, 14, new OPTAgent.Factory());
+                //new SampleFitnessFunction(0), DateTime.parse("0001-01-01"), 5, 3, 15, new EPOSAgent.Factory());
+                //new SampleFitnessFunction(0), DateTime.parse("0001-01-01"), 5, 3, 14, new OPTAgent.Factory());
         return experiment;
     }
 }

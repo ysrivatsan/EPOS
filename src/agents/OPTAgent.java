@@ -123,7 +123,7 @@ public class OPTAgent extends Agent {
                     getPeer().sendMessage(c.getNetworkAddress(), m);
                 }
 
-                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + ": " + globalPlan);
+                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ fitnessFunction.getRobustness(globalPlan, costSignal, null) + ": " + globalPlan);
             }
         } else if (message instanceof OPTOptimal) {
             OPTOptimal msg = (OPTOptimal) message;

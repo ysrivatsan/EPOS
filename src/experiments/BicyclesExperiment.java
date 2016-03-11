@@ -43,7 +43,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3,
+                new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3, Integer.MAX_VALUE,
                 new IEPOSAgent.Factory());
         return experiment;
     }
