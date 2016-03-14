@@ -56,24 +56,17 @@ public class IterativeMinVariance1 extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous) {
-        double minVariance = Double.MAX_VALUE;
-        int selected = -1;
-
-        for (int i = 0; i < combinationalPlans.size(); i++) {
-            Plan combinationalPlan = combinationalPlans.get(i);
-            Plan testAggregatePlan = new AggregatePlan(agent);
-            testAggregatePlan.add(aggregatePlan);
-            testAggregatePlan.add(combinationalPlan);
-
-            double variance = testAggregatePlan.variance();
-            if (variance < minVariance) {
-                minVariance = variance;
-                selected = i;
-            }
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous) {
+        Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
+        if(previous != null) {
+            modifiedChildAggregatePlan.set(previous.globalPlan);
+            modifiedChildAggregatePlan.subtract(previous.aggregatePlan);
+            modifiedChildAggregatePlan.multiply(0.001);
+            modifiedChildAggregatePlan.add(childAggregatePlan);
+        } else {
+            modifiedChildAggregatePlan.set(childAggregatePlan);
         }
-
-        return selected;
+        return select(agent, modifiedChildAggregatePlan, combinationalPlans, pattern);
     }
 
 }

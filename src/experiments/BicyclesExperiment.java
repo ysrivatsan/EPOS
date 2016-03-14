@@ -18,7 +18,7 @@
 package experiments;
 
 import agents.*;
-import agents.fitnessFunction.MinDeviationFitnessFunction;
+import agents.fitnessFunction.IterativeMinVariance1;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -43,7 +43,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new MinDeviationFitnessFunction(), DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
+                new IterativeMinVariance1(), DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
                 new IEPOSAgent.Factory());
         return experiment;
     }

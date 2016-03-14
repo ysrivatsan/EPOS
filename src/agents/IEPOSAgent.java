@@ -165,16 +165,7 @@ public class IEPOSAgent extends Agent {
         }
 
         // select best combination
-        Plan modifiedChildAggregatePlan = new AggregatePlan(this);
-        if(iteration > 0) {
-            modifiedChildAggregatePlan.set(previous.globalPlan);
-            modifiedChildAggregatePlan.subtract(previous.aggregatePlan);
-            modifiedChildAggregatePlan.multiply(0.001);
-            modifiedChildAggregatePlan.add(childAggregatePlan);
-        } else {
-            modifiedChildAggregatePlan.set(childAggregatePlan);
-        }
-        int selectedCombination = fitnessFunction.select(this, modifiedChildAggregatePlan, combinationalPlans, costSignal, historic, previous);
+        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, previous);
         current.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
         this.selectedCombination = combinationalSelections.get(selectedCombination);
     }
@@ -212,14 +203,7 @@ public class IEPOSAgent extends Agent {
                 this.informChildren();
                 this.readPlans();
                 if (this.isRoot()) {
-                    Plan modifiedAggregatePlan = new AggregatePlan(this);
-                    modifiedAggregatePlan.set(current.aggregatePlan);
-                    if(previous != null) {
-                        modifiedAggregatePlan.add(previous.globalPlan);
-                        modifiedAggregatePlan.subtract(previous.aggregatePlan);
-                        modifiedAggregatePlan.subtract(previous.selectedPlan);
-                    }
-                    int selected = fitnessFunction.select(this, modifiedAggregatePlan, possiblePlans, costSignal, historic);
+                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous);
                     Plan selectedPlan = possiblePlans.get(selected);
                     current.selectedPlan.set(selectedPlan);
                     current.globalPlan.set(current.aggregatePlan);
