@@ -42,6 +42,9 @@ public class OPTAgent extends Agent {
     private FitnessFunction fitnessFunction;
 
     private int activeChild = -1;
+    
+    private Plan globalPlan;
+    private Plan selectedPlan;
 
     public static class Factory implements AgentFactory {
 
@@ -52,7 +55,7 @@ public class OPTAgent extends Agent {
     }
 
     public OPTAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
-        super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
+        super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
         this.fitnessFunction = fitnessFunction;
     }
 
@@ -111,7 +114,7 @@ public class OPTAgent extends Agent {
                 getPeer().sendMessage(parent.getNetworkAddress(), msg);
             } else {
                 List<Plan> combinationalPlans = new ArrayList<>(msg.aggregatedPossiblePlans.keySet());
-                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, costSignal, null));
+                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, null, null));
                 Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
                 int selectedPlanIdx = selection.get(getPeer().getNetworkAddress());
                 this.selectedPlan = possiblePlans.get(selectedPlanIdx);
@@ -123,7 +126,7 @@ public class OPTAgent extends Agent {
                     getPeer().sendMessage(c.getNetworkAddress(), m);
                 }
 
-                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ fitnessFunction.getRobustness(globalPlan, costSignal, null) + ": " + globalPlan);
+                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ fitnessFunction.getRobustness(globalPlan, null, null) + ": " + globalPlan);
             }
         } else if (message instanceof OPTOptimal) {
             OPTOptimal msg = (OPTOptimal) message;

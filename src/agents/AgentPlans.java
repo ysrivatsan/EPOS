@@ -23,14 +23,26 @@ import agents.energyPlan.Plan;
  *
  * @author Peter
  */
-public class HistoricPlans {
-    public final Plan globalPlan;
-    public final Plan aggregatedPlan;
-    public final Plan selectedPlan;
+public class AgentPlans {
+    public Plan globalPlan;
+    public Plan aggregatePlan;
+    public Plan selectedPlan;
+    public Plan selectedCombinationalPlan;
+    
+    public AgentPlans() {
+    }
+    
+    public AgentPlans(AgentPlans other) {
+        this.globalPlan = other.globalPlan;
+        this.aggregatePlan = other.aggregatePlan;
+        this.selectedPlan = other.selectedPlan;
+        this.selectedCombinationalPlan = other.selectedCombinationalPlan;
+    }
 
-    public HistoricPlans(Plan globalPlan, Plan aggregatedPlan, Plan selectedPlan) {
+    public void set(Plan globalPlan, Plan aggregatedPlan, Plan selectedPlan, Plan selectedCombinationalPlan) {
         this.globalPlan = globalPlan;
-        this.aggregatedPlan = aggregatedPlan;
+        this.aggregatePlan = aggregatedPlan;
         this.selectedPlan = selectedPlan;
+        this.selectedCombinationalPlan = selectedCombinationalPlan;
     }
 }

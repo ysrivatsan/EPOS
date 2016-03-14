@@ -19,22 +19,22 @@ package agents.fitnessFunction;
 
 import agents.Agent;
 import agents.energyPlan.Plan;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class RandomFitnessFunction implements FitnessFunction {
+public class RandomFitnessFunction extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         return globalPlan.stdDeviation();
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         return (int)(Math.random()*combinationalPlans.size());
     }
     

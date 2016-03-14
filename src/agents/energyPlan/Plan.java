@@ -150,6 +150,15 @@ public class Plan extends ArithmeticListState {
         return stdDev;
     }
 
+    public double variance() {
+        double average = avg();
+        double sumSquare = 0.0;
+        for (ArithmeticState state : getArithmeticStates()) {
+            sumSquare += Math.pow((state.getValue() - average), 2.0);
+        }
+        return sumSquare / getArithmeticStates().size();
+    }
+
     public double relativeStdDeviation() {
         double average = avg();
         double sumSquare = 0.0;
@@ -258,6 +267,7 @@ public class Plan extends ArithmeticListState {
         for (int i = 0; i < this.getNumberOfStates(); i++) {
             this.setArithmeticState(i, other.getArithmeticState(i).getValue());
         }
+        this.setDiscomfort(other.getDiscomfort());
     }
 
     public void add(Plan other) {

@@ -48,7 +48,7 @@ import protopeer.util.quantities.Time;
 public abstract class Agent extends BasePeerlet implements TreeApplicationInterface {
     Finger parent = null;
     final List<Finger> children = new ArrayList<>();
-    private TopologicalState topologicalState = TopologicalState.DISCONNECTED;;
+    private TopologicalState topologicalState = TopologicalState.DISCONNECTED;
     
     private final String experimentID;
     private final String plansLocation;
@@ -64,16 +64,13 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final String plansFormat;
     private final int planSize;
     
-    Plan globalPlan;
-    Plan selectedPlan;
-    Plan costSignal;
     final List<Plan> possiblePlans = new ArrayList<>();
     
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal) {
+    public Agent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize) {
         this.experimentID = experimentID;
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
@@ -82,7 +79,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.currentPhase = initialPhase;
         this.plansFormat = plansFormat;
         this.planSize = planSize;
-        this.costSignal = costSignal;
     }
     
     @Override

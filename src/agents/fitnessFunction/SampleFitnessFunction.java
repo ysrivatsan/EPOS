@@ -18,7 +18,7 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Peter
  */
-public class SampleFitnessFunction implements FitnessFunction {
+public class SampleFitnessFunction extends FitnessFunction {
     private int f;
     
     public SampleFitnessFunction(int f) {
@@ -35,12 +35,12 @@ public class SampleFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         return globalPlan.dot(globalPlan) + f*globalPlan.sum() + 1;
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 

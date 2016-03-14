@@ -44,7 +44,7 @@ import protopeer.network.NetworkAddress;
 public class NCBBAgent extends Agent {
 
     public NCBBAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal) {
-        super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal);
+        super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
     }
 
     @Override

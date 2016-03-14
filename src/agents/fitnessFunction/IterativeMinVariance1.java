@@ -18,25 +18,25 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.AgentPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
+import agents.AgentPlans;
 import java.util.List;
 
 /**
- *
+ * minimize variance (submodular/convex compared to std deviation)
  * @author Peter
  */
-public class MaxLoadFactorFitnessFunction extends FitnessFunction {
+public class IterativeMinVariance1 extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
-        return globalPlan.avg() / globalPlan.max();
+    public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
+        return plan.variance();
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
-        double maxLoadFactor = Double.MIN_VALUE;
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
+        double minVariance = Double.MAX_VALUE;
         int selected = -1;
 
         for (int i = 0; i < combinationalPlans.size(); i++) {
@@ -44,13 +44,35 @@ public class MaxLoadFactorFitnessFunction extends FitnessFunction {
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
-            double loadFactor = testAggregatePlan.avg() / testAggregatePlan.max();
-            if (loadFactor > maxLoadFactor) {
-                maxLoadFactor = loadFactor;
+
+            double variance = testAggregatePlan.variance();
+            if (variance < minVariance) {
+                minVariance = variance;
                 selected = i;
             }
         }
-        
+
+        return selected;
+    }
+
+    @Override
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous) {
+        double minVariance = Double.MAX_VALUE;
+        int selected = -1;
+
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            Plan combinationalPlan = combinationalPlans.get(i);
+            Plan testAggregatePlan = new AggregatePlan(agent);
+            testAggregatePlan.add(aggregatePlan);
+            testAggregatePlan.add(combinationalPlan);
+
+            double variance = testAggregatePlan.variance();
+            if (variance < minVariance) {
+                minVariance = variance;
+                selected = i;
+            }
+        }
+
         return selected;
     }
 

@@ -21,22 +21,22 @@ import agents.Agent;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import agents.energyPlan.GlobalPlan;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class MinErrorFitnessFunction implements FitnessFunction {
+public class MinErrorFitnessFunction extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         return globalPlan.rootMeanSquareError(pattern);
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minRootMeanSquaredError = Double.MAX_VALUE;
         int selected = -1;
 

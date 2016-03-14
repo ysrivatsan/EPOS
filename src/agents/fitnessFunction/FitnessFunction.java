@@ -19,16 +19,30 @@ package agents.fitnessFunction;
 
 import agents.Agent;
 import agents.energyPlan.Plan;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public interface FitnessFunction {
+public abstract class FitnessFunction {
 
-    public double getRobustness(Plan globalPlan, Plan costSignal, HistoricPlans historic);
+    public abstract double getRobustness(Plan plan, Plan costSignal, AgentPlans historic);
 
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, HistoricPlans historic);
+    public int select(Agent agent, List<Plan> plans, Plan costSignal) {
+        return 0;
+    }
+
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal) {
+        return select(agent, plans, costSignal);
+    }
+
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic) {
+        return select(agent, aggregate, plans, costSignal);
+    }
+
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
+        return select(agent, aggregate, plans, costSignal, historic);
+    }
 }

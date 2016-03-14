@@ -20,17 +20,17 @@ package agents.fitnessFunction;
 import agents.Agent;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class ReversingDeviationFitnessFunction implements FitnessFunction {
+public class ReversingDeviationFitnessFunction extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         if (historic == null) {
             return 0.0;
         } else {
@@ -40,7 +40,7 @@ public class ReversingDeviationFitnessFunction implements FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         int selected = -1;
 
         if (historic == null) {
@@ -52,7 +52,7 @@ public class ReversingDeviationFitnessFunction implements FitnessFunction {
                 Plan combinationalPlan = combinationalPlans.get(i);
                 Plan testAggregatePlan = new AggregatePlan(agent);
                 testAggregatePlan.add(historic.globalPlan);
-                testAggregatePlan.subtract(historic.aggregatedPlan);
+                testAggregatePlan.subtract(historic.aggregatePlan);
                 testAggregatePlan.subtract(historic.selectedPlan);
                 testAggregatePlan.add(aggregatePlan);
                 testAggregatePlan.add(combinationalPlan);

@@ -18,7 +18,7 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import agents.energyPlan.GlobalPlan;
@@ -28,15 +28,15 @@ import java.util.List;
  *
  * @author Peter
  */
-public class MaxCorrelationFitnessFunction implements FitnessFunction {
+public class MaxCorrelationFitnessFunction extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         return globalPlan.correlationCoefficient(pattern);
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double maxCorrelationCoefficient = -1.0;
         int selected = -1;
 

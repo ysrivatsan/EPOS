@@ -18,7 +18,7 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.HistoricPlans;
+import agents.AgentPlans;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.GlobalPlan;
 import agents.energyPlan.Plan;
@@ -28,15 +28,15 @@ import java.util.List;
  *
  * @author Peter
  */
-public class MatchEstimate2FitnessFunction implements FitnessFunction {
+public class MatchEstimate2FitnessFunction extends FitnessFunction {
 
     @Override
-    public double getRobustness(Plan globalPlan, Plan pattern, HistoricPlans historic) {
+    public double getRobustness(Plan globalPlan, Plan pattern, AgentPlans historic) {
         return globalPlan.rootMeanSquareError(pattern);
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, HistoricPlans historic) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minRootMeanSquaredError = Double.MAX_VALUE;
         int selected = -1;
 
