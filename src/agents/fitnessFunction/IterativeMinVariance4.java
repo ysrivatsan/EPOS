@@ -25,10 +25,10 @@ import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B uniformly with 1/n
+ * weight B according to estimated optimum with aggregates and adaptive
  * @author Peter
  */
-public class IterativeMinVariance1 extends FitnessFunction {
+public class IterativeMinVariance4 extends FitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
@@ -60,14 +60,26 @@ public class IterativeMinVariance1 extends FitnessFunction {
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree) {
         Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            double factor = 1.0/(numNodes-numNodesSubtree);
-            if(!Double.isFinite(factor)) {
-                factor = 1;
-            }
+            double ep1 = Math.log1p(numNodes)/Math.log(2);
+            double ep1mi = Math.log1p(numNodesSubtree)/Math.log(2);
+            double i = ep1 - ep1mi;
+            double factor = ep1mi/ep1/Math.pow(2,i);
+            
             for(AgentPlans p : previous) {
                 modifiedChildAggregatePlan.add(p.globalPlan);
                 modifiedChildAggregatePlan.subtract(p.aggregatePlan);
             }
+            
+            double variance = 0;
+            for(Plan p : combinationalPlans) {
+                variance += p.variance();
+            }
+            variance = variance/combinationalPlans.size();
+            factor = factor * variance/modifiedChildAggregatePlan.variance();
+            if(!Double.isFinite(factor)) {
+                factor = 1;
+            }
+            
             modifiedChildAggregatePlan.multiply(factor);
             modifiedChildAggregatePlan.add(childAggregatePlan);
         } else {

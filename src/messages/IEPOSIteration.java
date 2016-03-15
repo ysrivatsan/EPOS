@@ -26,8 +26,10 @@ import protopeer.network.Message;
  */
 public class IEPOSIteration extends Message {
     public Plan globalPlan;
+    public int numNodes;
 
-    public IEPOSIteration(Plan globalPlan) {
+    public IEPOSIteration(Plan globalPlan, int numNodes) {
         this.globalPlan = globalPlan;
+        this.numNodes = numNodes;
     }
 }

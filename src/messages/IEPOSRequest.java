@@ -21,6 +21,6 @@ package messages;
  *
  * @author Peter
  */
-public class IEPOSRequest {
+public class IEPOSRequest extends EPOSRequest {
     public int numNodes;
 }

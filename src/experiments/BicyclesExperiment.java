@@ -18,7 +18,7 @@
 package experiments;
 
 import agents.*;
-import agents.fitnessFunction.IterativeMinVariance1;
+import agents.fitnessFunction.*;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -31,10 +31,14 @@ public class BicyclesExperiment extends ExperimentLauncher {
     // EPOS Agent
 
     public static void main(String[] args) {
-        ExperimentLauncher launcher = new BicyclesExperiment();
-        launcher.treeInstances = 1;
-        launcher.runDuration = 25;
-        launcher.run();
+        //while(true) {
+            ExperimentLauncher launcher = new BicyclesExperiment();
+            launcher.treeInstances = 1;
+            launcher.runDuration = 25;
+            launcher.run();
+            launcher = null;
+            System.gc();
+        //}
     }
 
     @Override
@@ -43,7 +47,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new IterativeMinVariance1(), DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
+                new IterativeMinVariance2(), DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
                 new IEPOSAgent.Factory());
         return experiment;
     }

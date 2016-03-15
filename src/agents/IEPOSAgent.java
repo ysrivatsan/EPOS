@@ -25,6 +25,7 @@ import agents.energyPlan.Plan;
 import agents.energyPlan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,6 +33,7 @@ import messages.EPOSBroadcast;
 import messages.EPOSRequest;
 import messages.EPOSResponse;
 import messages.IEPOSIteration;
+import messages.IEPOSRequest;
 import org.joda.time.DateTime;
 import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
@@ -49,6 +51,8 @@ public class IEPOSAgent extends Agent {
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
 
+    private int numNodes;
+    private int numNodesSubtree;
     private final Map<Finger, EPOSRequest> messageBuffer = new HashMap<>();
 
     private final FitnessFunction fitnessFunction;
@@ -56,7 +60,7 @@ public class IEPOSAgent extends Agent {
     
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
-    private AgentPlans previous;
+    private LinkedList<AgentPlans> previous = new LinkedList<>();
     private AgentPlans historic;
     
     private Plan childAggregatePlan;
@@ -93,13 +97,14 @@ public class IEPOSAgent extends Agent {
             this.history.remove(this.history.firstKey());
         }
         this.iteration = 0;
-        this.previous = null;
+        this.previous.clear();
         
         if(previousPhase != null) {
             this.historic = history.get(previousPhase);
         } else {
             this.historic = null;
         }
+        numNodes = -1;
     }
     
     private void initIteration() {
@@ -112,10 +117,11 @@ public class IEPOSAgent extends Agent {
         current.selectedPlan = new PossiblePlan(this);
         current.selectedCombinationalPlan = new CombinationalPlan(this);
         this.messageBuffer.clear();
+        this.numNodesSubtree = 1;
     }
 
     public void informParent() {
-        EPOSRequest request = new EPOSRequest();
+        IEPOSRequest request = new IEPOSRequest();
         request.child = getPeer().getFinger();
         request.possiblePlans = possiblePlans;
         request.aggregatePlan = current.aggregatePlan;
@@ -124,6 +130,7 @@ public class IEPOSAgent extends Agent {
         } else {
             request.aggregateHistoryPlan = null;
         }
+        request.numNodes = numNodesSubtree;
         getPeer().sendMessage(parent.getNetworkAddress(), request);
     }
 
@@ -165,7 +172,7 @@ public class IEPOSAgent extends Agent {
         }
 
         // select best combination
-        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, previous);
+        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, previous, numNodes, numNodesSubtree);
         current.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
         this.selectedCombination = combinationalSelections.get(selectedCombination);
     }
@@ -188,14 +195,15 @@ public class IEPOSAgent extends Agent {
     
     private void betweenIterations() {
         iteration++;
-        previous = current;
+        previous.addFirst(current);
     }
 
     @Override
     public void handleIncomingMessage(Message message) {
-        if (message instanceof EPOSRequest) {
-            EPOSRequest request = (EPOSRequest) message;
+        if (message instanceof IEPOSRequest) {
+            IEPOSRequest request = (IEPOSRequest) message;
             this.messageBuffer.put(request.child, request);
+            this.numNodesSubtree += request.numNodes;
             if (this.children.size() == this.messageBuffer.size()) {
                 this.preProcessing();
                 this.select();
@@ -203,7 +211,7 @@ public class IEPOSAgent extends Agent {
                 this.informChildren();
                 this.readPlans();
                 if (this.isRoot()) {
-                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous);
+                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree);
                     Plan selectedPlan = possiblePlans.get(selected);
                     current.selectedPlan.set(selectedPlan);
                     current.globalPlan.set(current.aggregatePlan);
@@ -215,8 +223,9 @@ public class IEPOSAgent extends Agent {
 
                     System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
                     if(iteration+1 < MAX_ITERATIONS) {
+                        numNodes = numNodesSubtree;
                         betweenIterations();
-                        broadcast(new IEPOSIteration(current.globalPlan));
+                        broadcast(new IEPOSIteration(current.globalPlan, numNodes));
                         initIteration();
                     } else {
                         broadcast(new EPOSBroadcast(current.globalPlan));
@@ -241,6 +250,7 @@ public class IEPOSAgent extends Agent {
             }
         } else if (message instanceof IEPOSIteration) {
             IEPOSIteration iter = (IEPOSIteration) message;
+            numNodes = iter.numNodes;
             current.globalPlan.set(iter.globalPlan);
             betweenIterations();
             initIteration();
