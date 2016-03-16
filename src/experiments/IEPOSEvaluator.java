@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import protopeer.measurement.Aggregate;
 import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementLog;
 import protopeer.measurement.MeasurementLoggerListener;
@@ -70,20 +72,28 @@ public class IEPOSEvaluator {
             }
         }
 
-        System.out.println("X = [");
-        for(MeasurementLog log : logs) {
-            System.out.print(log.getAggregate(0).getAverage());
-            for (int i = 1; i <= maxIteration; i++) {
-                System.out.print(", " + log.getAggregate(i).getAverage());
-            }
-            System.out.println(";");
-        }
-        System.out.println("]");
-        System.out.println("plot(X');");
+        printMatrix("XAvg", logs, maxIteration, a -> a.getAverage());
+        printMatrix("XMax", logs, maxIteration, a -> a.getMax());
+        printMatrix("XMin", logs, maxIteration, a -> a.getMin());
+        printMatrix("XStd", logs, maxIteration, a -> a.getStdDev());
+        
+        System.out.println("plot(XAvg');");
         System.out.print("legend('" + names.get(0) + "'");
         for(int i=1; i<names.size(); i++) {
             System.out.print(",'" + names.get(i) + "'");
         }
         System.out.println(");");
+    }
+    
+    private static void printMatrix(String name, List<MeasurementLog> logs, int maxIteration, Function<Aggregate, Double> function) {
+        System.out.println(name + " = [");
+        for(MeasurementLog log : logs) {
+            System.out.print(function.apply(log.getAggregate(0)));
+            for (int i = 1; i <= maxIteration; i++) {
+                System.out.print(", " + function.apply(log.getAggregate(i)));
+            }
+            System.out.println(";");
+        }
+        System.out.println("]");
     }
 }

@@ -32,8 +32,13 @@ import protopeer.measurement.MeasurementLog;
  * @author Peter
  */
 public class BicyclesExperiment extends ExperimentLauncher {
-    private final static int numExperiments = 10;
+    private final static int numExperiments = 20;
     private FitnessFunction fitnessFunction;
+    private int numUser;
+    
+    public BicyclesExperiment(int numUser) {
+        this.numUser = numUser;
+    }
     
     private static MeasurementLog log = null;
 
@@ -44,19 +49,27 @@ public class BicyclesExperiment extends ExperimentLauncher {
         comparedFunctions.add(new IterativeMinVariance3());
         comparedFunctions.add(new IterativeMinVariance4());
         
+        List<Integer> comparedNumUser = new ArrayList<>();
+        //comparedNumUser.add(10000); // max user
+        //comparedNumUser.add(1000);
+        comparedNumUser.add(100);
+        //comparedNumUser.add(10);
+        
         List<String> names = new ArrayList<>();
         List<MeasurementLog> logs = new ArrayList<>();
         
-        for(FitnessFunction fitnessFunction : comparedFunctions) {
-            BicyclesExperiment launcher = new BicyclesExperiment();
-            launcher.fitnessFunction = fitnessFunction;
-            launcher.treeInstances = numExperiments;
-            launcher.runDuration = 4;
-            launcher.run();
-            
-            names.add(launcher.getName());
-            logs.add(log);
-            log = null;
+        for(int numUser : comparedNumUser) {
+            for(FitnessFunction fitnessFunction : comparedFunctions) {
+                BicyclesExperiment launcher = new BicyclesExperiment(numUser);
+                launcher.fitnessFunction = fitnessFunction;
+                launcher.treeInstances = numExperiments;
+                launcher.runDuration = 4;
+                launcher.run();
+
+                names.add(launcher.getName());
+                logs.add(log);
+                log = null;
+            }
         }
         
         IEPOSEvaluator.evaluateLogs(names, logs);
@@ -68,7 +81,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,//Integer.MAX_VALUE,
                 new IEPOSAgent.Factory());
         return experiment;
     }
@@ -83,7 +96,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
     }
     
     private String getName() {
-        return fitnessFunction.getClass().getSimpleName();
+        return fitnessFunction.getClass().getSimpleName() + " " + numUser + "U";
     }
     
     private String getName(int num) {
