@@ -22,33 +22,71 @@ import agents.fitnessFunction.*;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
+import java.util.ArrayList;
+import java.util.List;
 import org.joda.time.DateTime;
+import protopeer.Experiment;
+import protopeer.measurement.MeasurementLog;
 
 /**
  * @author Peter
  */
 public class BicyclesExperiment extends ExperimentLauncher {
-    // EPOS Agent
+    private final static int numExperiments = 10;
+    private FitnessFunction fitnessFunction;
+    
+    private static MeasurementLog log = null;
 
     public static void main(String[] args) {
-        //while(true) {
-            ExperimentLauncher launcher = new BicyclesExperiment();
-            launcher.treeInstances = 1;
-            launcher.runDuration = 25;
+        List<FitnessFunction> comparedFunctions = new ArrayList<>();
+        comparedFunctions.add(new IterativeMinVariance1());
+        comparedFunctions.add(new IterativeMinVariance2());
+        comparedFunctions.add(new IterativeMinVariance3());
+        comparedFunctions.add(new IterativeMinVariance4());
+        
+        List<String> names = new ArrayList<>();
+        List<MeasurementLog> logs = new ArrayList<>();
+        
+        for(FitnessFunction fitnessFunction : comparedFunctions) {
+            BicyclesExperiment launcher = new BicyclesExperiment();
+            launcher.fitnessFunction = fitnessFunction;
+            launcher.treeInstances = numExperiments;
+            launcher.runDuration = 4;
             launcher.run();
-            launcher = null;
-            System.gc();
-        //}
+            
+            names.add(launcher.getName());
+            logs.add(log);
+            log = null;
+        }
+        
+        IEPOSEvaluator.evaluateLogs(names, logs);
     }
 
     @Override
     public EPOSExperiment createExperiment(int num) {
-        EPOSExperiment experiment = new EPOSExperiment("01",
+        EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                new IterativeMinVariance2(), DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, 1000,//Integer.MAX_VALUE,
                 new IEPOSAgent.Factory());
         return experiment;
+    }
+    
+    @Override
+    public void evaluateRun() {
+        if(log == null) {
+            log = Experiment.getSingleton().getRootMeasurementLog();
+        } else {
+            log.mergeWith(Experiment.getSingleton().getRootMeasurementLog());
+        }
+    }
+    
+    private String getName() {
+        return fitnessFunction.getClass().getSimpleName();
+    }
+    
+    private String getName(int num) {
+        return getName() + " " + num;
     }
 }

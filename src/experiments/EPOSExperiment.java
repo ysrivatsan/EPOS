@@ -111,14 +111,14 @@ public class EPOSExperiment extends SimulatedExperiment{
     }
     
     public final void initEPOS(){
-        System.out.println("Experiment "+expSeqNum+"\n");
+        System.out.println("Experiment "+expSeqNum);
         
         Experiment.initEnvironment();
         init();
         
         final File folder = new File("peersLog/"+experimentID);
         clearExperimentFile(folder);
-        folder.mkdir();
+        folder.mkdirs();
         
         PeerFactory peerFactory=new PeerFactory() {
             @Override

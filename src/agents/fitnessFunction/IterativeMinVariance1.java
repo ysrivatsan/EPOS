@@ -32,7 +32,7 @@ public class IterativeMinVariance1 extends FitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
-        return plan.variance();
+        return Math.sqrt(plan.variance());
     }
 
     @Override

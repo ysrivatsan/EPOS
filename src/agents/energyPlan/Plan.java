@@ -156,7 +156,7 @@ public class Plan extends ArithmeticListState {
         for (ArithmeticState state : getArithmeticStates()) {
             sumSquare += Math.pow((state.getValue() - average), 2.0);
         }
-        return sumSquare / getArithmeticStates().size();
+        return sumSquare / (getArithmeticStates().size()-1);
     }
 
     public double relativeStdDeviation() {

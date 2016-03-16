@@ -35,6 +35,7 @@ import protopeer.Finger;
 import protopeer.Peer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
+import protopeer.measurement.MeasurementLogger;
 import protopeer.measurement.MeasurementLoggerListener;
 import protopeer.network.Message;
 import protopeer.time.Timer;
@@ -65,6 +66,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final int planSize;
     
     final List<Plan> possiblePlans = new ArrayList<>();
+    MeasurementLog log;
     
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
@@ -84,6 +86,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     @Override
     public void init(Peer peer) {
         super.init(peer);
+        this.log = new MeasurementLog();
         this.loadCoordinationPhases();
     }
 
@@ -199,12 +202,12 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     }
     
     private void scheduleMeasurements() {
-        MeasurementFileDumper measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
+        //MeasurementFileDumper measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
         getPeer().getMeasurementLogger().addMeasurementLoggerListener(new MeasurementLoggerListener() {
             @Override
             public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
                 measure(log, epochNumber);
-                measurementDumper.measurementEpochEnded(log, epochNumber);
+                //measurementDumper.measurementEpochEnded(log, epochNumber);
                 log.shrink(epochNumber, epochNumber + 1);
             }
         });

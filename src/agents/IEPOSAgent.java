@@ -35,6 +35,7 @@ import messages.EPOSResponse;
 import messages.IEPOSIteration;
 import messages.IEPOSRequest;
 import org.joda.time.DateTime;
+import protopeer.Experiment;
 import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
@@ -45,6 +46,7 @@ import protopeer.network.Message;
  */
 public class IEPOSAgent extends Agent {
     private final int MAX_ITERATIONS = 10;
+    private int measurementEpoch;
     private int iteration;
 
     private final int planSize;
@@ -221,7 +223,9 @@ public class IEPOSAgent extends Agent {
 
                     this.robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
 
-                    System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+                    Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
+                    //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
+                    //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
                     if(iteration+1 < MAX_ITERATIONS) {
                         numNodes = numNodesSubtree;
                         betweenIterations();
@@ -265,16 +269,7 @@ public class IEPOSAgent extends Agent {
 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        if (epochNumber == 2) {
-            if (this.isRoot()) {
-                log.log(epochNumber, current.globalPlan, 1.0);
-                log.log(epochNumber, EPOSMeasures.PLAN_SIZE, planSize);
-                log.log(epochNumber, EPOSMeasures.ROBUSTNESS, robustness);
-            }
-            log.log(epochNumber, current.selectedPlan, 1.0);
-            log.log(epochNumber, EPOSMeasures.DISCOMFORT, current.selectedPlan.getDiscomfort());
-            //writeGraphData(epochNumber);
-        }
+        this.measurementEpoch = epochNumber+1;
     }
 
     private void writeGraphData(int epochNumber) {
