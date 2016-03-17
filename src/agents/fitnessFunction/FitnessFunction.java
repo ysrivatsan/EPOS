@@ -46,7 +46,7 @@ public abstract class FitnessFunction {
         return select(agent, aggregate, plans, costSignal, historic);
     }
 
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         return select(agent, aggregate, plans, costSignal, historic, previous);
     }
 }

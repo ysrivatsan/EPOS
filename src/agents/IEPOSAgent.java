@@ -45,7 +45,7 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class IEPOSAgent extends Agent {
-    private final int MAX_ITERATIONS = 20;
+    private final int MAX_ITERATIONS = 10;
     private int measurementEpoch;
     private int iteration;
 
@@ -55,6 +55,8 @@ public class IEPOSAgent extends Agent {
 
     private int numNodes;
     private int numNodesSubtree;
+    private int layer;
+    private double avgNumChildren;
     private final Map<Finger, EPOSRequest> messageBuffer = new HashMap<>();
 
     private final FitnessFunction fitnessFunction;
@@ -120,6 +122,8 @@ public class IEPOSAgent extends Agent {
         current.selectedCombinationalPlan = new CombinationalPlan(this);
         this.messageBuffer.clear();
         this.numNodesSubtree = 1;
+        this.avgNumChildren = children.size();
+        this.layer = 0;
     }
 
     public void informParent() {
@@ -174,7 +178,7 @@ public class IEPOSAgent extends Agent {
         }
 
         // select best combination
-        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, previous, numNodes, numNodesSubtree);
+        int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
         current.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
         this.selectedCombination = combinationalSelections.get(selectedCombination);
     }
@@ -213,7 +217,7 @@ public class IEPOSAgent extends Agent {
                 this.informChildren();
                 this.readPlans();
                 if (this.isRoot()) {
-                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree);
+                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
                     Plan selectedPlan = possiblePlans.get(selected);
                     current.selectedPlan.set(selectedPlan);
                     current.globalPlan.set(current.aggregatePlan);
@@ -225,11 +229,11 @@ public class IEPOSAgent extends Agent {
 
                     Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
                     //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
-                    //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+                    System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
                     if(iteration+1 < MAX_ITERATIONS) {
                         numNodes = numNodesSubtree;
                         betweenIterations();
-                        broadcast(new IEPOSIteration(current.globalPlan, numNodes));
+                        broadcast(new IEPOSIteration(current.globalPlan, numNodes, 1, children.size()));
                         initIteration();
                     } else {
                         broadcast(new EPOSBroadcast(current.globalPlan));
@@ -256,13 +260,19 @@ public class IEPOSAgent extends Agent {
             IEPOSIteration iter = (IEPOSIteration) message;
             numNodes = iter.numNodes;
             current.globalPlan.set(iter.globalPlan);
+            
             betweenIterations();
             initIteration();
+            
+            layer = iter.hops;
+            avgNumChildren = iter.sumChildren / iter.hops;
+            
             if(this.isLeaf()) {
                 readPlans();
                 informParent();
             } else {
-                broadcast(message);
+                iter = new IEPOSIteration(iter.globalPlan, iter.numNodes, iter.hops+1, iter.sumChildren+children.size());
+                broadcast(iter);
             }
         }
     }

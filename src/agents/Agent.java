@@ -201,13 +201,18 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         }
     }
     
+        MeasurementFileDumper measurementDumper;
     private void scheduleMeasurements() {
-        //MeasurementFileDumper measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
+        if(isRoot()) {
+            //measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
+        }
         getPeer().getMeasurementLogger().addMeasurementLoggerListener(new MeasurementLoggerListener() {
             @Override
             public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
                 measure(log, epochNumber);
-                //measurementDumper.measurementEpochEnded(log, epochNumber);
+                if(isRoot()) {
+                   // measurementDumper.measurementEpochEnded(log, epochNumber);
+                }
                 log.shrink(epochNumber, epochNumber + 1);
             }
         });

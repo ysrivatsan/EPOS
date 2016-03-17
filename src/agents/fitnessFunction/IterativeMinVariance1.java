@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B uniformly with 1/n
+ * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
 public class IterativeMinVariance1 extends FitnessFunction {
@@ -57,10 +57,10 @@ public class IterativeMinVariance1 extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            double factor = 1.0/(numNodes-numNodesSubtree);
+            double factor = 1.0/numNodes;
             if(!Double.isFinite(factor)) {
                 factor = 1;
             }

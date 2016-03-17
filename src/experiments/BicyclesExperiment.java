@@ -32,7 +32,7 @@ import protopeer.measurement.MeasurementLog;
  * @author Peter
  */
 public class BicyclesExperiment extends ExperimentLauncher {
-    private final static int numExperiments = 20;
+    private final static int numExperiments = 3;
     private FitnessFunction fitnessFunction;
     private int numUser;
     
@@ -44,10 +44,11 @@ public class BicyclesExperiment extends ExperimentLauncher {
 
     public static void main(String[] args) {
         List<FitnessFunction> comparedFunctions = new ArrayList<>();
-        comparedFunctions.add(new IterativeMinVariance1());
-        comparedFunctions.add(new IterativeMinVariance2());
-        comparedFunctions.add(new IterativeMinVariance3());
+        //comparedFunctions.add(new IterativeMinVariance1());
+        //comparedFunctions.add(new IterativeMinVariance2());
+        //comparedFunctions.add(new IterativeMinVariance3());
         comparedFunctions.add(new IterativeMinVariance4());
+        //comparedFunctions.add(new IterativeMinVariance5());
         
         List<Integer> comparedNumUser = new ArrayList<>();
         //comparedNumUser.add(10000); // max user

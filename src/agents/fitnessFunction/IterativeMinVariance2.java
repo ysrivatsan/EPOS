@@ -21,11 +21,12 @@ import agents.Agent;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import agents.AgentPlans;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B according to estimated optimum with aggregates
+ * weight B according to estimated optimum without aggregates and per-level equality
  * @author Peter
  */
 public class IterativeMinVariance2 extends FitnessFunction {
@@ -57,14 +58,10 @@ public class IterativeMinVariance2 extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            double ep1 = Math.log1p(numNodes)/Math.log(2);
-            double ep1mi = Math.log1p(numNodesSubtree)/Math.log(2);
-            double i = ep1 - ep1mi;
-            double factor = ep1mi/ep1/Math.pow(2,i);
-            factor = factor * numNodes / (numNodes - (double)numNodesSubtree);
+            double factor =  1.0/Math.pow(avgChildren,layer);
             if(!Double.isFinite(factor)) {
                 factor = 1;
             }
