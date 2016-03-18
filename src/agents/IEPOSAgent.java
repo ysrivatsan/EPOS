@@ -45,7 +45,7 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class IEPOSAgent extends Agent {
-    private final int MAX_ITERATIONS = 10;
+    private final int MAX_ITERATIONS = 1000;
     private int measurementEpoch;
     private int iteration;
 
@@ -229,13 +229,18 @@ public class IEPOSAgent extends Agent {
 
                     Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
                     //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
-                    System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+                    //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
                     if(iteration+1 < MAX_ITERATIONS) {
                         numNodes = numNodesSubtree;
                         betweenIterations();
                         broadcast(new IEPOSIteration(current.globalPlan, numNodes, 1, children.size()));
                         initIteration();
+                        System.out.print(".");
+                        if(iteration%10 == 0) {
+                            System.out.print(" ");
+                        }
                     } else {
+                        System.out.println(".");
                         broadcast(new EPOSBroadcast(current.globalPlan));
                     }
                 } else {
