@@ -39,7 +39,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 10;
+    private final static int numExperiments = 20;
     private FitnessFunction fitnessFunction;
     private int numUser;
 
@@ -58,8 +58,8 @@ public class BicyclesExperiment extends ExperimentLauncher {
 
         List<Integer> comparedNumUser = new ArrayList<>();
         //comparedNumUser.add(2300); // max user
-        //comparedNumUser.add(1000);
-        comparedNumUser.add(100);
+        comparedNumUser.add(1000);
+        //comparedNumUser.add(100);
         //comparedNumUser.add(10);
 
         List<String> names = new ArrayList<>();

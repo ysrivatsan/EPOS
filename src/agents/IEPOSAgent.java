@@ -201,7 +201,15 @@ public class IEPOSAgent extends Agent {
     
     private void betweenIterations() {
         iteration++;
-        previous.addFirst(current);
+        if(previous.isEmpty()) {
+            previous.addFirst(current);
+        } else {
+            AgentPlans p = previous.getFirst();
+            p.aggregatePlan.add(current.aggregatePlan);
+            p.globalPlan.add(current.globalPlan);
+            p.selectedPlan.add(current.selectedPlan);
+            p.selectedCombinationalPlan.add(current.selectedCombinationalPlan);
+        }
     }
 
     @Override
@@ -235,8 +243,10 @@ public class IEPOSAgent extends Agent {
                         betweenIterations();
                         broadcast(new IEPOSIteration(current.globalPlan, numNodes, 1, children.size()));
                         initIteration();
-                        System.out.print(".");
                         if(iteration%10 == 0) {
+                            System.out.print(".");
+                        }
+                        if(iteration%100 == 0) {
                             System.out.print(" ");
                         }
                     } else {
