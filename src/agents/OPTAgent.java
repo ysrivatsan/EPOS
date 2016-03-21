@@ -152,7 +152,6 @@ public class OPTAgent extends Agent {
             log.log(epochNumber, EPOSMeasures.DISCOMFORT, selectedPlan.getDiscomfort());
             //log.log(epochNumber, Measurements.SELECTED_PLAN_VALUE, selectedPlan.getArithmeticState(0).getValue());
             writeGraphData(epochNumber);
-            //writeStuff();
         }
     }
 
@@ -160,15 +159,6 @@ public class OPTAgent extends Agent {
         System.out.println(getPeer().getNetworkAddress().toString() + ","
                 + ((parent != null) ? parent.getNetworkAddress().toString() : "-") + ","
                 + findSelectedPlan());
-    }
-
-    private void writeStuff() {
-        int selected = findSelectedPlan();
-        for (int i = 0; i < possiblePlans.size(); i++) {
-            Plan p = possiblePlans.get(i);
-            p.addArithmeticState(new ArithmeticState(i == selected ? -1 : 0));
-            System.out.println(p+";");
-        }
     }
 
     private int findSelectedPlan() {

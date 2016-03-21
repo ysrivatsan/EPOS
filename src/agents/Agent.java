@@ -21,10 +21,13 @@ import agents.energyPlan.Plan;
 import agents.energyPlan.PossiblePlan;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.TreeApplicationInterface;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -238,9 +241,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     }
 
     public void initPlan(Plan plan) {
-        for (int i = 0; i < planSize; i++) {
-            plan.addArithmeticState(new ArithmeticState(0.0));
-        }
+        plan.init(planSize);
         plan.setCoordinationPhase(currentPhase);
         plan.setDiscomfort(0.0);
         plan.setAgentMeterID(agentMeterID);
@@ -248,6 +249,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     }
 
     public void initPlan(Plan plan, String planStr) {
+        plan.init(planSize);
         plan.setCoordinationPhase(currentPhase);
 
         Scanner scanner = new Scanner(planStr);
@@ -255,11 +257,12 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         scanner.useDelimiter(":");
         double score = scanner.nextDouble();
         plan.setDiscomfort(1.0 - score);
-
+        
         scanner.useDelimiter(",");
         scanner.skip(":");
-        while (scanner.hasNextDouble()) {
-            plan.addArithmeticState(new ArithmeticState(scanner.nextDouble()));
+        
+        for (int i=0; scanner.hasNextDouble(); i++) {
+            plan.setValue(i, scanner.nextDouble());
         }
     }
     

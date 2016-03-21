@@ -32,6 +32,8 @@ import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -143,17 +145,21 @@ public class EPOSExperiment extends SimulatedExperiment{
     public final Plan loadPatternPlan(String TISLocation){
         Plan patternEnergyPlan = new GlobalPlan();
         File file = new File(TISLocation);
-        try {
-            Scanner scanner = new Scanner(file);
+        List<Double> vals = new ArrayList<>();
+        try (Scanner scanner = new Scanner(file)) {
             scanner.useLocale(Locale.US);
             while (scanner.hasNextDouble()) {
-                patternEnergyPlan.addArithmeticState(new ArithmeticState(scanner.nextDouble()));
+                vals.add(scanner.nextDouble());
             }
-            scanner.close();
-        } 
-        catch (FileNotFoundException | NoSuchElementException e){
+        
+            patternEnergyPlan.init(vals.size());
+            for(int i=0; i<vals.size(); i++) {
+                patternEnergyPlan.setValue(i,vals.get(i));
+            }
+        } catch (FileNotFoundException | NoSuchElementException e){
             e.printStackTrace();
         }
+        
         return patternEnergyPlan;
     }
         

@@ -91,7 +91,7 @@ public class IEPOSAgent extends Agent {
         initPhase();
         initIteration();
         if (this.isLeaf()) {
-            readPlans();
+            this.readPlans();
             informParent();
         }
     }
@@ -102,6 +102,7 @@ public class IEPOSAgent extends Agent {
         }
         this.iteration = 0;
         this.previous.clear();
+        this.possiblePlans.clear();
         
         if(previousPhase != null) {
             this.historic = history.get(previousPhase);
@@ -113,7 +114,6 @@ public class IEPOSAgent extends Agent {
     
     private void initIteration() {
         this.robustness = 0.0;
-        this.possiblePlans.clear();
         this.childAggregatePlan = new AggregatePlan(this);
         current = new AgentPlans();
         current.globalPlan = new GlobalPlan(this);
@@ -223,7 +223,9 @@ public class IEPOSAgent extends Agent {
                 this.select();
                 this.update();
                 this.informChildren();
-                this.readPlans();
+                if(possiblePlans.isEmpty()) {
+                    this.readPlans();
+                }
                 if (this.isRoot()) {
                     int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
                     Plan selectedPlan = possiblePlans.get(selected);
@@ -283,7 +285,7 @@ public class IEPOSAgent extends Agent {
             avgNumChildren = iter.sumChildren / iter.hops;
             
             if(this.isLeaf()) {
-                readPlans();
+                // plans are not read again (only in first iteration)
                 informParent();
             } else {
                 iter = new IEPOSIteration(iter.globalPlan, iter.numNodes, iter.hops+1, iter.sumChildren+children.size());

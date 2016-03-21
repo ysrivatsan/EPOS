@@ -39,7 +39,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 20;
+    private final static int numExperiments = 1;
     private FitnessFunction fitnessFunction;
     private int numUser;
 
@@ -50,16 +50,23 @@ public class BicyclesExperiment extends ExperimentLauncher {
     private static MeasurementLog log = null;
 
     public static void main(String[] args) {
+        long t0 = System.currentTimeMillis();
+        
         List<FitnessFunction> comparedFunctions = new ArrayList<>();
-        comparedFunctions.add(new IterativeMinVariance1());
-        comparedFunctions.add(new IterativeMinVariance2());
-        comparedFunctions.add(new IterativeMinVariance3());
-        comparedFunctions.add(new IterativeMinVariance4());
-
+        //comparedFunctions.add(new IterativeMinVariance1());
+        //comparedFunctions.add(new IterativeMinVariance2());
+        //comparedFunctions.add(new IterativeMinVariance3());
+        //comparedFunctions.add(new IterativeMinVariance4());
+        comparedFunctions.add(new IterativeMinVariance1sqrt());
+        //comparedFunctions.add(new IterativeMinVariance3sqrt());
+        //comparedFunctions.add(new IterMinVarG1());
+        //comparedFunctions.add(new IterMinVarG2());
+        //comparedFunctions.add(new IterMinVarG3());
+        
         List<Integer> comparedNumUser = new ArrayList<>();
         //comparedNumUser.add(2300); // max user
         comparedNumUser.add(1000);
-        //comparedNumUser.add(100);
+        //comparedNumUser.add(50);
         //comparedNumUser.add(10);
 
         List<String> names = new ArrayList<>();
@@ -87,13 +94,16 @@ public class BicyclesExperiment extends ExperimentLauncher {
         }
 
         IEPOSEvaluator.evaluateLogs(names, logs);
+        
+        long t1 = System.currentTimeMillis();
+        System.out.println((t1-t0)/1000);
     }
 
     @Override
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                "input-data/bicycle", "user_plans_hybrid5_8to10_force_trips", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,
                 new IEPOSAgent.Factory());

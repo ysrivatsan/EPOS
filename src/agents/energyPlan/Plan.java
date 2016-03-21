@@ -18,19 +18,22 @@
 package agents.energyPlan;
 
 import agents.Agent;
-import agents.EPOSAgent;
-import dsutil.generic.state.ArithmeticListState;
-import dsutil.generic.state.ArithmeticState;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.Serializable;
+import java.util.Arrays;
 import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class Plan extends ArithmeticListState {
+public class Plan implements Serializable {
+
+    private double[] values;
+    private Type type;
+    private DateTime coordinationPhase;
+    private double discomfort;
+    private String agentMeterID;
+    private String configuration;
 
     protected static enum Type {
         POSSIBLE_PLAN,
@@ -39,88 +42,94 @@ public class Plan extends ArithmeticListState {
         GLOBAL_PLAN
     }
 
-    private static enum Information {
-        TYPE,
-        COORDINATION_PHASE,
-        DISCOMFORT,
-        AGENT_METER_ID,
-        CONFIGURATION
-    }
-    
     public Plan() {
-        super(new ArrayList<>());
     }
 
     public Plan(Plan.Type type, Agent agent) {
-        super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this);
     }
-    
+
     public Plan(Plan.Type type, Agent agent, String planStr) {
-        super(new ArrayList<>());
         this.setType(type);
         agent.initPlan(this, planStr);
+    }
+    
+    public void init(int length) {
+        values = new double[length];
+    }
+    
+    public void setValue(int idx, double value) {
+        values[idx] = value;
+    }
+    
+    public void addValue(double value) {
+        values = Arrays.copyOf(values, values.length+1);
+        values[values.length-1] = value;
     }
 
     // property getter/setter
     public Type getType() {
-        return (Type) this.getProperty(Information.TYPE);
+        return type;
     }
 
     private void setType(Type type) {
-        this.addProperty(Information.TYPE, type);
+        this.type = type;
     }
 
     public DateTime getCoordinationPhase() {
-        return (DateTime) this.getProperty(Information.COORDINATION_PHASE);
+        return coordinationPhase;
     }
 
     public void setCoordinationPhase(DateTime coordinationPhase) {
-        this.addProperty(Information.COORDINATION_PHASE, coordinationPhase);
+        this.coordinationPhase = coordinationPhase;
     }
 
     public double getDiscomfort() {
-        return (Double) this.getProperty(Information.DISCOMFORT);
+        return discomfort;
     }
 
     public void setDiscomfort(double discomfort) {
-        this.addProperty(Information.DISCOMFORT, discomfort);
+        this.discomfort = discomfort;
     }
 
     public String getAgentMeterID() {
-        return (String) this.getProperty(Information.AGENT_METER_ID);
+        return agentMeterID;
     }
 
     public void setAgentMeterID(String agentMeterID) {
-        this.addProperty(Information.AGENT_METER_ID, agentMeterID);
+        this.agentMeterID = agentMeterID;
     }
 
     public String getConfiguration() {
-        return (String) this.getProperty(Information.CONFIGURATION);
+        return configuration;
     }
 
     public void setConfiguration(String config) {
-        this.addProperty(Information.CONFIGURATION, config);
+        this.configuration = config;
+    }
+    
+    public int getNumberOfStates() {
+        return values.length;
     }
 
     // Operations
     public double sum() {
         double sum = 0.0;
-        for (ArithmeticState state : getArithmeticStates()) {
-            sum += state.getValue();
+        for (double state : values) {
+            sum += state;
         }
         return sum;
     }
 
     public double avg() {
-        return sum() / getArithmeticStates().size();
+        return sum() / values.length;
     }
-    
+
     public double dot(Plan other) {
         double dot = 0;
-        for(int i=0; i<getNumberOfStates(); i++) {
-            dot += getArithmeticState(i).getValue() * other.getArithmeticState(i).getValue();
+        for (int i = 0; i < values.length; i++) {
+            dot += values[i] * other.values[i];
         }
         return dot;
     }
@@ -128,8 +137,8 @@ public class Plan extends ArithmeticListState {
     public double entropy() {
         double sum = sum();
         double entropy = 0.0;
-        for (ArithmeticState state : getArithmeticStates()) {
-            double p = state.getValue() / sum;
+        for (double state : values) {
+            double p = state / sum;
             if (p == 0.0) {
                 entropy += 0.0;
             } else {
@@ -142,10 +151,10 @@ public class Plan extends ArithmeticListState {
     public double stdDeviation() {
         double average = avg();
         double sumSquare = 0.0;
-        for (ArithmeticState state : getArithmeticStates()) {
-            sumSquare += Math.pow((state.getValue() - average), 2.0);
+        for (double state : values) {
+            sumSquare += Math.pow((state - average), 2.0);
         }
-        double variance = sumSquare / getArithmeticStates().size();
+        double variance = sumSquare / values.length;
         double stdDev = Math.sqrt(variance);
         return stdDev;
     }
@@ -153,28 +162,28 @@ public class Plan extends ArithmeticListState {
     public double variance() {
         double average = avg();
         double sumSquare = 0.0;
-        for (ArithmeticState state : getArithmeticStates()) {
-            sumSquare += Math.pow((state.getValue() - average), 2.0);
+        for (double state : values) {
+            sumSquare += Math.pow((state - average), 2.0);
         }
-        return sumSquare / (getArithmeticStates().size()-1);
+        return sumSquare / (values.length - 1);
     }
 
     public double relativeStdDeviation() {
         double average = avg();
         double sumSquare = 0.0;
-        for (ArithmeticState state : getArithmeticStates()) {
-            sumSquare += Math.pow((state.getValue() - average), 2.0);
+        for (double state : values) {
+            sumSquare += Math.pow((state - average), 2.0);
         }
-        double variance = sumSquare / getArithmeticStates().size();
+        double variance = sumSquare / values.length;
         double stDev = Math.sqrt(variance);
         return stDev / average;
     }
 
     public double max() {
         double maximum = Double.MIN_VALUE;
-        for (ArithmeticState state : getArithmeticStates()) {
-            if (state.getValue() > maximum) {
-                maximum = state.getValue();
+        for (double state : values) {
+            if (state > maximum) {
+                maximum = state;
             }
         }
         return maximum;
@@ -182,9 +191,9 @@ public class Plan extends ArithmeticListState {
 
     public double min() {
         double minimum = Double.MAX_VALUE;
-        for (ArithmeticState state : getArithmeticStates()) {
-            if (state.getValue() < minimum) {
-                minimum = state.getValue();
+        for (double state : values) {
+            if (state < minimum) {
+                minimum = state;
             }
         }
         return minimum;
@@ -198,8 +207,8 @@ public class Plan extends ArithmeticListState {
      * @return the correlation coefficient
      */
     public double correlationCoefficient(Plan other) {
-        List<ArithmeticState> energyPlanX = this.getArithmeticStates();
-        List<ArithmeticState> energyPlanY = other.getArithmeticStates();
+        double[] energyPlanX = values;
+        double[] energyPlanY = other.values;
 //        double corrCoeff=Double.NaN;
 //        int n=energyPlanX.size();
 //        double x=0.0;
@@ -232,108 +241,88 @@ public class Plan extends ArithmeticListState {
         double sum_sq_x = 0;
         double sum_sq_y = 0;
         double sum_coproduct = 0;
-        double mean_x = energyPlanX.get(0).getValue();
-        double mean_y = energyPlanY.get(0).getValue();
-        for (int i = 2; i < energyPlanX.size() + 1; i += 1) {
+        double mean_x = energyPlanX[0];
+        double mean_y = energyPlanY[0];
+        for (int i = 2; i < energyPlanX.length + 1; i += 1) {
             double sweep = Double.valueOf(i - 1) / i;
-            double delta_x = energyPlanX.get(i - 1).getValue() - mean_x;
-            double delta_y = energyPlanY.get(i - 1).getValue() - mean_y;
+            double delta_x = energyPlanX[i - 1] - mean_x;
+            double delta_y = energyPlanY[i - 1] - mean_y;
             sum_sq_x += delta_x * delta_x * sweep;
             sum_sq_y += delta_y * delta_y * sweep;
             sum_coproduct += delta_x * delta_y * sweep;
             mean_x += delta_x / i;
             mean_y += delta_y / i;
         }
-        double pop_sd_x = (double) Math.sqrt(sum_sq_x / energyPlanX.size());
-        double pop_sd_y = (double) Math.sqrt(sum_sq_y / energyPlanY.size());
-        double cov_x_y = sum_coproduct / energyPlanX.size();
+        double pop_sd_x = (double) Math.sqrt(sum_sq_x / energyPlanX.length);
+        double pop_sd_y = (double) Math.sqrt(sum_sq_y / energyPlanY.length);
+        double cov_x_y = sum_coproduct / energyPlanX.length;
         result = cov_x_y / (pop_sd_x * pop_sd_y);
         return result;
     }
 
     public double rootMeanSquareError(Plan other) {
-        List<ArithmeticState> energyPlanX = this.getArithmeticStates();
-        List<ArithmeticState> energyPlanY = other.getArithmeticStates();
+        double[] energyPlanX = values;
+        double[] energyPlanY = other.values;
         double squaredError = 0;
-        for (int i = 0; i < energyPlanX.size(); i++) {
-            squaredError += Math.pow(energyPlanX.get(i).getValue() - energyPlanY.get(i).getValue(), 2);
+        for (int i = 0; i < energyPlanX.length; i++) {
+            squaredError += Math.pow(energyPlanX[i] - energyPlanY[i], 2);
         }
-        double meanSquaredError = squaredError / energyPlanX.size();
+        double meanSquaredError = squaredError / energyPlanX.length;
         double rootMeanSquaredError = Math.sqrt(meanSquaredError);
         return rootMeanSquaredError;
     }
-    
+
     public void set(Plan other) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            this.setArithmeticState(i, other.getArithmeticState(i).getValue());
-        }
+        System.arraycopy(other.values, 0, values, 0, values.length);
         this.setDiscomfort(other.getDiscomfort());
     }
 
     public void add(Plan other) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() + other.getArithmeticState(i).getValue();
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] += other.values[i];
         }
     }
 
     public void add(double value) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() + value;
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] += value;
         }
     }
 
     public void subtract(Plan other) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() - other.getArithmeticState(i).getValue();
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] -= other.values[i];
         }
     }
 
     public void subtract(double value) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() - value;
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] -= value;
         }
     }
 
     public void multiply(Plan other) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() * other.getArithmeticState(i).getValue();
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] *= other.values[i];
         }
     }
 
     public void multiply(double factor) {
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double aggregateConsumption = this.getArithmeticState(i).getValue() * factor;
-            this.setArithmeticState(i, aggregateConsumption);
+        for (int i = 0; i < values.length; i++) {
+            values[i] *= factor;
         }
     }
 
     public void reverse() {
         double average = avg();
-        for (int i = 0; i < this.getNumberOfStates(); i++) {
-            double value = this.getArithmeticState(i).getValue();
-            value = 2*average - value;
-            this.setArithmeticState(i, value);
+        for (int i = 0; i < values.length; i++) {
+            values[i] = 2 * average - values[i];
         }
-    }
-    
-    
-    private boolean isEqual(ArithmeticListState planA, ArithmeticListState planB) {
-        for (int i = 0; i < planA.getArithmeticStates().size(); i++) {
-            if (planA.getArithmeticState(i).getValue() != planB.getArithmeticState(i).getValue()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
     public int hashCode() {
-        return getArithmeticStates().hashCode();
+        return values.hashCode();
     }
 
     @Override
@@ -348,8 +337,8 @@ public class Plan extends ArithmeticListState {
             return false;
         }
         final Plan other = (Plan) obj;
-        for (int i = 0; i < this.getArithmeticStates().size(); i++) {
-            if (this.getArithmeticState(i).getValue() != other.getArithmeticState(i).getValue()) {
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != other.values[i]) {
                 return false;
             }
         }
@@ -360,13 +349,12 @@ public class Plan extends ArithmeticListState {
     public String toString() {
         StringBuilder out = new StringBuilder();
         out.append('[');
-        Iterator<ArithmeticState> iter = getArithmeticStates().iterator();
-        if(iter.hasNext()) {
-            out.append(iter.next().getValue());
+        if (values.length > 0) {
+            out.append(values[0]);
         }
-        while(iter.hasNext()) {
+        for (int i = 1; i < values.length; i++) {
             out.append(',');
-            out.append(iter.next().getValue());
+            out.append(values[i]);
         }
         out.append(']');
         return out.toString();
