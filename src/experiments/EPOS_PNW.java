@@ -108,7 +108,7 @@ public class EPOS_PNW extends SimulatedExperiment{
         try {
             Scanner sc = new Scanner(file);
             while (sc.hasNextLine()) {
-                patternEnergyPlan.addArithmeticState(new ArithmeticState(sc.nextDouble()));
+                patternEnergyPlan.addValue(sc.nextDouble());
             }
             sc.close();
         } 

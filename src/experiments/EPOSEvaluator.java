@@ -17,13 +17,11 @@
  */
 package experiments;
 
-import agents.EPOSAgent;
 import agents.EPOSMeasures;
 import agents.energyPlan.GlobalPlan;
 import agents.energyPlan.Plan;
 import agents.energyPlan.PossiblePlan;
 import dsutil.generic.state.ArithmeticListState;
-import dsutil.generic.state.ArithmeticState;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -41,112 +39,110 @@ import protopeer.measurement.MeasurementLoggerListener;
  */
 public class EPOSEvaluator {
 
-    private final static String expSeqNum="0";
-    private final static String expID="Experiment "+expSeqNum+"/";
-    
-    private final static int minLoad=0;
-    private final static int maxLoad=1000;
+    private final static String expSeqNum = "0";
+    private final static String expID = "Experiment " + expSeqNum + "/";
+
+    private final static int minLoad = 0;
+    private final static int maxLoad = 1000;
 
     private LogReplayer replayer;
-    private final String coma=",";
+    private final String coma = ",";
 
-
-    public EPOSEvaluator(String logsDir, int minLoad, int maxLoad){
-        this.replayer=new LogReplayer();
+    public EPOSEvaluator(String logsDir, int minLoad, int maxLoad) {
+        this.replayer = new LogReplayer();
         this.loadLogs(logsDir, minLoad, maxLoad);
         this.replayResults();
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
 //        EPOSEvaluator replayer=new EPOSEvaluator("peersLog/"+expID, minLoad, maxLoad);
-        for(int i=0;i<1;i++){
-            EPOSEvaluator replayer=new EPOSEvaluator("peersLog/Experiment "+i+"/", minLoad, maxLoad);
+        for (int i = 0; i < 1; i++) {
+            EPOSEvaluator replayer = new EPOSEvaluator("peersLog/Experiment " + i + "/", minLoad, maxLoad);
         }
-        
+
     }
 
-    public void loadLogs(String directory, int minLoad, int maxLoad){
+    public void loadLogs(String directory, int minLoad, int maxLoad) {
         File folder = new File(directory);
-        if(!folder.isDirectory()) {
+        if (!folder.isDirectory()) {
             System.err.println("No dictionary " + folder.getPath());
             return;
         }
-        try{
+        try {
             File[] listOfFiles = folder.listFiles();
             for (int i = 0; i < listOfFiles.length; i++) {
-                if (listOfFiles[i].isFile()&&!listOfFiles[i].isHidden()) {
-                    MeasurementLog loadedLog=replayer.loadLogFromFile(directory+listOfFiles[i].getName());
-                    MeasurementLog replayedLog=this.getMemorySupportedLog(loadedLog, minLoad, maxLoad);
+                if (listOfFiles[i].isFile() && !listOfFiles[i].isHidden()) {
+                    MeasurementLog loadedLog = replayer.loadLogFromFile(directory + listOfFiles[i].getName());
+                    MeasurementLog replayedLog = this.getMemorySupportedLog(loadedLog, minLoad, maxLoad);
                     replayer.mergeLog(replayedLog);
-                }
-                else
+                } else {
                     if (listOfFiles[i].isDirectory()) {
                         //do sth else
                     }
+                }
             }
-        }
-        catch(IOException | ClassNotFoundException ex){
+        } catch (IOException | ClassNotFoundException ex) {
         }
     }
 
-    public void replayResults(){
+    public void replayResults() {
 //        this.printGlobalMetricsTags();
 //        this.calculatePeerResults(replayer.getCompleteLog());
         this.printLocalMetricsTags();
-        replayer.replayTo(new MeasurementLoggerListener(){
-            public void measurementEpochEnded(MeasurementLog log, int epochNumber){
+        replayer.replayTo(new MeasurementLoggerListener() {
+            public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
                 calculateEpochResults(log, epochNumber);
             }
         });
     }
 
-    private void calculatePeerResults(MeasurementLog globalLog){
-        
+    private void calculatePeerResults(MeasurementLog globalLog) {
+
     }
 
-    private void calculateEpochResults(MeasurementLog log, int epochNumber){
-        double epochNum=epochNumber;
-        Set plans=log.getTagsOfExactType(epochNumber, ArithmeticListState.class);
-        String hourValues="";
-        String coordinationPhase="";
-        if(plans.size()>0){
-            Iterator it=plans.iterator();
-            while(it.hasNext()){
-                Plan plan=(Plan) it.next();
-                if(plan instanceof GlobalPlan) {
-                    for(ArithmeticState hourValue:plan.getArithmeticStates()){
-                        hourValues=hourValues+this.roundDecimals(hourValue.getValue(),2)+",";
+    private void calculateEpochResults(MeasurementLog log, int epochNumber) {
+        double epochNum = epochNumber;
+        Set plans = log.getTagsOfExactType(epochNumber, ArithmeticListState.class);
+        String hourValues = "";
+        String coordinationPhase = "";
+        if (plans.size() > 0) {
+            Iterator it = plans.iterator();
+            while (it.hasNext()) {
+                Plan plan = (Plan) it.next();
+                if (plan instanceof GlobalPlan) {
+                    for (int i = 0; i < plan.getNumberOfStates(); i++) {
+                        double hourValue = plan.getValue(i);
+                        hourValues = hourValues + this.roundDecimals(hourValue, 2) + ",";
                     }
-                    coordinationPhase= plan.getCoordinationPhase().toString("yyyy-MM-dd");
+                    coordinationPhase = plan.getCoordinationPhase().toString("yyyy-MM-dd");
                 }
-                if(plan instanceof PossiblePlan) {
-                    String planConfigurations=plan.getConfiguration();
-                    File outputDirectory=new File("output-data"+"/"+planConfigurations);
-                    if(!outputDirectory.exists()){
+                if (plan instanceof PossiblePlan) {
+                    String planConfigurations = plan.getConfiguration();
+                    File outputDirectory = new File("output-data" + "/" + planConfigurations);
+                    if (!outputDirectory.exists()) {
                         outputDirectory.mkdir();
                     }
-                    String agentMeterID=plan.getAgentMeterID();
-                    File agentMeterIDDirectory=new File("output-data"+"/"+planConfigurations+"/"+agentMeterID);
-                    if(!agentMeterIDDirectory.exists()){
+                    String agentMeterID = plan.getAgentMeterID();
+                    File agentMeterIDDirectory = new File("output-data" + "/" + planConfigurations + "/" + agentMeterID);
+                    if (!agentMeterIDDirectory.exists()) {
                         agentMeterIDDirectory.mkdir();
                     }
-                    try{
-                        String coordinationPhaseNameFile=plan.getCoordinationPhase().toString("yyyy-MM-dd");
-                        File selectedPlan=new File("output-data"+"/"+planConfigurations+"/"+agentMeterID+"/"+coordinationPhaseNameFile+".plans");
+                    try {
+                        String coordinationPhaseNameFile = plan.getCoordinationPhase().toString("yyyy-MM-dd");
+                        File selectedPlan = new File("output-data" + "/" + planConfigurations + "/" + agentMeterID + "/" + coordinationPhaseNameFile + ".plans");
                         selectedPlan.createNewFile();
                         BufferedWriter output = new BufferedWriter(new FileWriter(selectedPlan));
-                        int planSize=plan.getNumberOfStates();
-                        String selectedPlanLine=plan.getDiscomfort()+":";
-                        for(int i=0;i<planSize;i++){
-                            selectedPlanLine=selectedPlanLine+roundDecimals(plan.getArithmeticState(i).getValue(),2);
-                            if(i!=planSize-1){
-                                selectedPlanLine=selectedPlanLine+",";
+                        int planSize = plan.getNumberOfStates();
+                        String selectedPlanLine = plan.getDiscomfort() + ":";
+                        for (int i = 0; i < planSize; i++) {
+                            selectedPlanLine = selectedPlanLine + roundDecimals(plan.getValue(i), 2);
+                            if (i != planSize - 1) {
+                                selectedPlanLine = selectedPlanLine + ",";
                             }
                         }
                         output.write(selectedPlanLine);
                         output.close();
-                    } 
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -156,42 +152,42 @@ public class EPOSEvaluator {
 //            coordinationPhase="bootstrapping";
 //            hourValues="bootstrapping";
 //        }        
-        double planSize=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.PLAN_SIZE).getSum(),2);
-        double robustness=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.ROBUSTNESS).getSum(),2);
-        double discomfort=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.DISCOMFORT).getSum(),2);
-        double selectedPlan=this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.SELECTED_PLAN_VALUE).getSum(),2);
+        double planSize = this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.PLAN_SIZE).getSum(), 2);
+        double robustness = this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.ROBUSTNESS).getSum(), 2);
+        double discomfort = this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.DISCOMFORT).getSum(), 2);
+        double selectedPlan = this.roundDecimals(log.getAggregateByEpochNumber(epochNumber, EPOSMeasures.SELECTED_PLAN_VALUE).getSum(), 2);
         System.out.println(
-                epochNum+coma+
-                coordinationPhase+coma+
-                planSize+coma+
-                hourValues//+
-//                robustness+coma+
-//                discomfort
-                );
+                epochNum + coma
+                + coordinationPhase + coma
+                + planSize + coma
+                + hourValues//+
+        //                robustness+coma+
+        //                discomfort
+        );
     }
-    
-    private MeasurementLog getMemorySupportedLog(MeasurementLog log, int minLoad, int maxLoad){
+
+    private MeasurementLog getMemorySupportedLog(MeasurementLog log, int minLoad, int maxLoad) {
         return log.getSubLog(minLoad, maxLoad);
     }
 
-    public void printGlobalMetricsTags(){
-       System.out.println("*** RESULTS PER PEER ***\n");
+    public void printGlobalMetricsTags() {
+        System.out.println("*** RESULTS PER PEER ***\n");
     }
 
-    public void printLocalMetricsTags(){
-        String hourValueTags="";
-        for(int i=1;i<=24;i++){
-            hourValueTags=hourValueTags+"Hour "+i+",";
+    public void printLocalMetricsTags() {
+        String hourValueTags = "";
+        for (int i = 1; i <= 24; i++) {
+            hourValueTags = hourValueTags + "Hour " + i + ",";
         }
         System.out.println("*** RESULTS PER EPOCH ***\n");
         System.out.println(
                 "Number of Epoch,"
-                +"Coordination Phase,"
-                +"planSize,"
-                +hourValueTags
-                +"Robustness,"
-                +"Discomfort"
-                );
+                + "Coordination Phase,"
+                + "planSize,"
+                + hourValueTags
+                + "Robustness,"
+                + "Discomfort"
+        );
     }
 
     public double roundDecimals(double decimal, int decimalPlace) {

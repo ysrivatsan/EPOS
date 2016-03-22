@@ -20,6 +20,7 @@ package agents.energyPlan;
 import agents.Agent;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Iterator;
 import org.joda.time.DateTime;
 
 /**
@@ -63,9 +64,17 @@ public class Plan implements Serializable {
         values[idx] = value;
     }
     
+    /**
+     * not recommended - generates new copy of the array
+     * @param value 
+     */
     public void addValue(double value) {
         values = Arrays.copyOf(values, values.length+1);
         values[values.length-1] = value;
+    }
+    
+    public double getValue(int idx) {
+        return values[idx];
     }
 
     // property getter/setter
@@ -310,6 +319,12 @@ public class Plan implements Serializable {
     public void multiply(double factor) {
         for (int i = 0; i < values.length; i++) {
             values[i] *= factor;
+        }
+    }
+    
+    public void pow(double x) {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = Math.pow(values[i], x);
         }
     }
 

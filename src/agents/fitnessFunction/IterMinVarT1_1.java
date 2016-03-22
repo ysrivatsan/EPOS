@@ -21,14 +21,15 @@ import agents.Agent;
 import agents.energyPlan.AggregatePlan;
 import agents.energyPlan.Plan;
 import agents.AgentPlans;
+import agents.energyPlan.CombinationalPlan;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B according to estimated optimum with aggregates and adaptive
  * @author Peter
  */
-public class IterativeMinVariance4v extends FitnessFunction {
+public class IterMinVarT1_1 extends FitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
@@ -59,33 +60,39 @@ public class IterativeMinVariance4v extends FitnessFunction {
     @Override
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
+        
+        List<Plan> modifiedCombinationalPlans = new ArrayList<>();
+        for(Plan p : combinationalPlans) {
+            Plan np = new CombinationalPlan(agent);
+            np.set(p);
+            np.multiply(Math.pow(avgChildren, 1));
+            modifiedCombinationalPlans.add(np);
+        }
         if(!previous.isEmpty()) {
-            double ep1 = Math.log1p(numNodes*(avgChildren-1))/Math.log(avgChildren);
-            double ep1mi = Math.log1p(numNodesSubtree*(avgChildren-1))/Math.log(avgChildren);
-            //double i = ep1 - ep1mi;
-            double factor = ep1mi/ep1/Math.pow(avgChildren,layer);
-            
-            for(AgentPlans p : previous) {
-                modifiedChildAggregatePlan.add(p.globalPlan);
-                modifiedChildAggregatePlan.subtract(p.aggregatePlan);
-            }
-            
-            double std = 0;
-            for(Plan p : combinationalPlans) {
-                std += p.stdDeviation();
-            }
-            std = std/combinationalPlans.size();
-            factor = factor * std/modifiedChildAggregatePlan.stdDeviation();
+            double factor = 1.0/numNodes;
             if(!Double.isFinite(factor)) {
                 factor = 1;
             }
             
+            for(AgentPlans p : previous) {
+                modifiedChildAggregatePlan.add(p.globalPlan);
+                Plan allAggregates = new AggregatePlan(agent);
+                allAggregates.set(p.aggregatePlan);
+                allAggregates.multiply(Math.pow(avgChildren, 1));
+                modifiedChildAggregatePlan.subtract(allAggregates);
+            }
             modifiedChildAggregatePlan.multiply(factor);
-            modifiedChildAggregatePlan.add(childAggregatePlan);
+            Plan a = new AggregatePlan(agent);
+            a.set(childAggregatePlan);
+            a.multiply(Math.pow(avgChildren, 1));
+            modifiedChildAggregatePlan.add(a);
         } else {
-            modifiedChildAggregatePlan.set(childAggregatePlan);
+            Plan a = new AggregatePlan(agent);
+            a.set(childAggregatePlan);
+            a.multiply(Math.pow(avgChildren, 1));
+            modifiedChildAggregatePlan.set(a);
         }
-        return select(agent, modifiedChildAggregatePlan, combinationalPlans, pattern);
+        return select(agent, modifiedChildAggregatePlan, modifiedCombinationalPlans, pattern);
     }
 
 }

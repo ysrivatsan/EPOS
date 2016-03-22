@@ -204,11 +204,16 @@ public class IEPOSAgent extends Agent {
         if(previous.isEmpty()) {
             previous.addFirst(current);
         } else {
+            double factor = 1;//((iteration-1.0)/iteration);
             AgentPlans p = previous.getFirst();
             p.aggregatePlan.add(current.aggregatePlan);
+            p.aggregatePlan.multiply(factor);
             p.globalPlan.add(current.globalPlan);
+            p.globalPlan.multiply(factor);
             p.selectedPlan.add(current.selectedPlan);
+            p.selectedPlan.multiply(factor);
             p.selectedCombinationalPlan.add(current.selectedCombinationalPlan);
+            p.selectedCombinationalPlan.multiply(factor);
         }
     }
 
