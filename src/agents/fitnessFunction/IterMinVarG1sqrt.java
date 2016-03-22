@@ -25,10 +25,9 @@ import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B according to estimated optimum with aggregates and equal Btilde
  * @author Peter
  */
-public class IterMinVarG2 extends FitnessFunction {
+public class IterMinVarG1sqrt extends FitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
@@ -57,17 +56,10 @@ public class IterMinVarG2 extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double children) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            double factor = 0;
-            double ep1 = Math.log1p(numNodes*(children-1))/Math.log(children);
-            double ep1mi = Math.log1p(numNodesSubtree*(children-1))/Math.log(children);
-            double i = ep1-ep1mi;
-            for(int j = 0; j < ep1mi; j++) {
-                factor += Math.pow(children, j)*(Math.pow(children, ep1-i-j)-1)/(children-1);
-            }
-            factor /= numNodes;
+            double factor = 1.0/Math.sqrt(numNodes);
             if(!Double.isFinite(factor)) {
                 factor = 1;
             }
