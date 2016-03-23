@@ -15,18 +15,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package messages;
+package agents.fitnessFunction.iterative;
 
+import agents.AgentPlans;
 import agents.plan.Plan;
-import java.util.Map;
-import protopeer.network.Message;
-import protopeer.network.NetworkAddress;
+import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class OPTOptimal extends Message {
-    public Plan globalPlan;
-    public Map<NetworkAddress,Integer> selection;
+public class FactorNormalizeStd implements Factor {
+
+    @Override
+    public double calcFactor(Plan factorTargetPlan, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+            double std = 0;
+            for(Plan p : combinationalPlans) {
+                std += p.stdDeviation();
+            }
+            std = std/combinationalPlans.size();
+            double factor = std/factorTargetPlan.stdDeviation();
+        if(!Double.isFinite(factor)) {
+            factor = 1;
+        }
+        return factor;
+    }
+    
+    @Override
+    public String toString() {
+        return "std(p)/std(...)";
+    }
 }

@@ -19,7 +19,7 @@ package agents.fitnessFunction;
 
 import agents.Agent;
 import agents.AgentPlans;
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import java.util.List;
 
 /**

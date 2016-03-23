@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Evangelos Pournaras
+ * Copyright (C) 2016 Evangelos Pournaras
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,21 +15,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package messages;
+package agents.plan;
 
-import agents.plan.Plan;
-import dsutil.generic.state.ArithmeticListState;
-import java.util.List;
-import protopeer.Finger;
-import protopeer.network.Message;
+import agents.Agent;
 
 /**
  *
- * @author Evangelos
+ * @author Peter
  */
-public class EPOSRequest extends Message{
-    public Finger child;
-    public List<Plan> possiblePlans;
-    public Plan aggregatePlan;
-    public Plan aggregateHistoryPlan;
+public class GlobalPlan extends Plan {
+
+    public GlobalPlan() {
+    }
+
+    public GlobalPlan(Agent agent) {
+        super(Plan.Type.GLOBAL_PLAN, agent);
+    }
+
+    public GlobalPlan(Agent agent, String planStr) {
+        super(Plan.Type.GLOBAL_PLAN, agent, planStr);
+    }
 }

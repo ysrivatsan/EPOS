@@ -17,8 +17,8 @@
  */
 package agents;
 
-import agents.energyPlan.Plan;
-import agents.energyPlan.PossiblePlan;
+import agents.plan.Plan;
+import agents.plan.PossiblePlan;
 import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.TreeApplicationInterface;
 import java.io.BufferedReader;

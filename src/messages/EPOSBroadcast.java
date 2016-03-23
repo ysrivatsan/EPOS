@@ -17,7 +17,7 @@
  */
 package messages;
 
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import org.joda.time.DateTime;
 import protopeer.network.Message;
 

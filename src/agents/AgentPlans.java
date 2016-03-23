@@ -17,7 +17,7 @@
  */
 package agents;
 
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 
 /**
  *
@@ -44,5 +44,16 @@ public class AgentPlans {
         this.aggregatePlan = aggregatedPlan;
         this.selectedPlan = selectedPlan;
         this.selectedCombinationalPlan = selectedCombinationalPlan;
+    }
+    
+    public void reset() {
+        globalPlan = null;
+        aggregatePlan = null;
+        selectedPlan = null;
+        selectedCombinationalPlan = null;
+    }
+    
+    public boolean isEmpty() {
+        return globalPlan == null;
     }
 }

@@ -5,7 +5,7 @@
 package experiments;
 
 import agents.EPOSAgent;
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.MatchEstimate2FitnessFunction;
 import dsutil.generic.RankPriority;

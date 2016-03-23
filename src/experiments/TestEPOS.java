@@ -18,7 +18,7 @@
 package experiments;
 
 import agents.EPOSAgent;
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.MaxEntropyFitnessFunction;
 import dsutil.generic.RankPriority;

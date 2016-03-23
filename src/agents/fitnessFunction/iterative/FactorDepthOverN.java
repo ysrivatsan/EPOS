@@ -15,18 +15,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package messages;
+package agents.fitnessFunction.iterative;
 
+import agents.AgentPlans;
 import agents.plan.Plan;
-import java.util.Map;
-import protopeer.network.Message;
-import protopeer.network.NetworkAddress;
+import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class OPTOptimal extends Message {
-    public Plan globalPlan;
-    public Map<NetworkAddress,Integer> selection;
+public class FactorDepthOverN implements Factor {
+
+    @Override
+    public double calcFactor(Plan factorTargetPlan, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        double ep1 = Math.log1p(numNodes*(avgChildren-1))/Math.log(avgChildren);
+        double ep1mi = Math.log1p(numNodesSubtree*(avgChildren-1))/Math.log(avgChildren);
+        //double i = ep1 - ep1mi;
+        double factor = ep1mi/ep1/Math.pow(avgChildren,layer);
+        if(!Double.isFinite(factor)) {
+            factor = 1;
+        }
+        return factor;
+    }
+    
+    @Override
+    public String toString() {
+        return "(1-i/d)/n";
+    }
 }

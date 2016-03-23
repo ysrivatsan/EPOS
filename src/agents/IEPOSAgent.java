@@ -17,17 +17,19 @@
  */
 package agents;
 
-import agents.energyPlan.AggregatePlan;
-import agents.energyPlan.CombinationalPlan;
-import agents.energyPlan.GlobalPlan;
+import agents.plan.AggregatePlan;
+import agents.plan.CombinationalPlan;
+import agents.plan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
-import agents.energyPlan.Plan;
-import agents.energyPlan.PossiblePlan;
+import agents.fitnessFunction.IterativeFitnessFunction;
+import agents.plan.Plan;
+import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TreeMap;
 import messages.EPOSBroadcast;
 import messages.EPOSRequest;
@@ -45,7 +47,7 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class IEPOSAgent extends Agent {
-    private final int MAX_ITERATIONS = 1000;
+    private final int MAX_ITERATIONS = 500;
     private int measurementEpoch;
     private int iteration;
 
@@ -59,12 +61,12 @@ public class IEPOSAgent extends Agent {
     private double avgNumChildren;
     private final Map<Finger, EPOSRequest> messageBuffer = new HashMap<>();
 
-    private final FitnessFunction fitnessFunction;
+    private final IterativeFitnessFunction fitnessFunction;
     private double robustness;
     
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
-    private LinkedList<AgentPlans> previous = new LinkedList<>();
+    private AgentPlans previous = new AgentPlans();
     private AgentPlans historic;
     
     private Plan childAggregatePlan;
@@ -74,11 +76,14 @@ public class IEPOSAgent extends Agent {
 
         @Override
         public Agent create(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
+            if(!(fitnessFunction instanceof IterativeFitnessFunction)) {
+                throw new IllegalArgumentException("Fitness function has to be iterative");
+            }
+            return new IEPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction)fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
         }
     }
 
-    public IEPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+    public IEPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
         this.fitnessFunction = fitnessFunction;
         this.planSize = planSize;
@@ -101,7 +106,7 @@ public class IEPOSAgent extends Agent {
             this.history.remove(this.history.firstKey());
         }
         this.iteration = 0;
-        this.previous.clear();
+        this.previous.reset();
         this.possiblePlans.clear();
         
         if(previousPhase != null) {
@@ -199,22 +204,34 @@ public class IEPOSAgent extends Agent {
         }
     }
     
+        
+    //private int windowSize = 10;
+    //private Queue<AgentPlans> window = new LinkedList<AgentPlans>();
     private void betweenIterations() {
         iteration++;
-        if(previous.isEmpty()) {
-            previous.addFirst(current);
+
+        /*
+        if(iteration == 1) {
+            window.clear();
+            window.offer(current);
+            previous = new AgentPlans(current);
         } else {
-            double factor = 1;//((iteration-1.0)/iteration);
-            AgentPlans p = previous.getFirst();
-            p.aggregatePlan.add(current.aggregatePlan);
-            p.aggregatePlan.multiply(factor);
-            p.globalPlan.add(current.globalPlan);
-            p.globalPlan.multiply(factor);
-            p.selectedPlan.add(current.selectedPlan);
-            p.selectedPlan.multiply(factor);
-            p.selectedCombinationalPlan.add(current.selectedCombinationalPlan);
-            p.selectedCombinationalPlan.multiply(factor);
+            window.offer(current);
+
+            if(window.size() > windowSize) {
+                AgentPlans rem = window.poll();
+                previous.globalPlan.subtract(rem.globalPlan);
+                previous.aggregatePlan.subtract(rem.aggregatePlan);
+                previous.selectedPlan.subtract(rem.selectedPlan);
+                previous.selectedCombinationalPlan.subtract(rem.selectedCombinationalPlan);
+            }
+            previous.globalPlan.add(current.globalPlan);
+            previous.aggregatePlan.add(current.aggregatePlan);
+            previous.selectedPlan.add(current.selectedPlan);
+            previous.selectedCombinationalPlan.add(current.selectedCombinationalPlan);
         }
+        */
+        fitnessFunction.updatePrevious(previous, current, iteration);
     }
 
     @Override

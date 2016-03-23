@@ -17,12 +17,12 @@
  */
 package agents;
 
-import agents.energyPlan.AggregatePlan;
-import agents.energyPlan.CombinationalPlan;
-import agents.energyPlan.GlobalPlan;
+import agents.plan.AggregatePlan;
+import agents.plan.CombinationalPlan;
+import agents.plan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
-import agents.energyPlan.Plan;
-import agents.energyPlan.PossiblePlan;
+import agents.plan.Plan;
+import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

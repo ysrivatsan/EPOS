@@ -17,8 +17,18 @@
  */
 package experiments;
 
+import agents.fitnessFunction.iterative.FactorDepthOverN;
+import agents.fitnessFunction.iterative.Factor1OverLayer;
+import agents.fitnessFunction.iterative.Factor1;
+import agents.fitnessFunction.iterative.FactorMOverN;
+import agents.fitnessFunction.iterative.Factor1OverN;
 import agents.*;
 import agents.fitnessFunction.*;
+import agents.fitnessFunction.iterative.AvgCombinator;
+import agents.fitnessFunction.iterative.Factor1OverSqrtN;
+import agents.fitnessFunction.iterative.FactorNormalizeStd;
+import agents.fitnessFunction.iterative.MostRecentCombinator;
+import agents.fitnessFunction.iterative.SumCombinator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -53,25 +63,18 @@ public class BicyclesExperiment extends ExperimentLauncher {
         long t0 = System.currentTimeMillis();
         
         List<FitnessFunction> comparedFunctions = new ArrayList<>();
-        //comparedFunctions.add(new IterativeMinVariance1());
-        //comparedFunctions.add(new IterativeMinVariance1v());
-        //comparedFunctions.add(new IterativeMinVariance4v());
-        //comparedFunctions.add(new IterativeMinVariance1sqrt());
-        //comparedFunctions.add(new IterativeMinVariance2());
-        /*comparedFunctions.add(new IterativeMinVariance3());
-        //comparedFunctions.add(new IterativeMinVariance3sqrt());
-        comparedFunctions.add(new IterativeMinVariance4());
-        comparedFunctions.add(new IterMinVarG1());
-        comparedFunctions.add(new IterMinVarG3());
-        */
-        /*comparedFunctions.add(new IterMinVarT1());
-        comparedFunctions.add(new IterMinVarT2());
-        comparedFunctions.add(new IterMinVarT3());
-        comparedFunctions.add(new IterMinVarT4());
-        */comparedFunctions.add(new IterMinVarT1_1());
-        comparedFunctions.add(new IterMinVarT2_1());
-        comparedFunctions.add(new IterMinVarT3_1());
-        comparedFunctions.add(new IterMinVarT4_1());
+        comparedFunctions.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
+        //comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
+        //comparedFunctions.add(new IterMinVarGmA(new FactorMOverN(), new SumCombinator()));
+        //comparedFunctions.add(new IterMinVarGmA(new FactorDepthOverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmA(new FactorNormalizeStd(), new SumCombinator()));
+        
+        comparedFunctions.add(new IterMinVarHGmA(new Factor1OverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        //omparedFunctions.add(new IterMinVarHGmA(new Factor1OverLayer(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        //comparedFunctions.add(new IterMinVarHGmA(new FactorMOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        //comparedFunctions.add(new IterMinVarHGmA(new FactorDepthOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        comparedFunctions.add(new IterMinVarHGmA(new FactorNormalizeStd(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        
         //comparedFunctions.add(new IterMinCost());
         
         List<Integer> comparedNumUser = new ArrayList<>();
@@ -131,7 +134,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
     }
 
     private String getName() {
-        return fitnessFunction.getClass().getSimpleName() + " " + numUser + "U";
+        return fitnessFunction.toString();
     }
 
     private String getName(int num) {

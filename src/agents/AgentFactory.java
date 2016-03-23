@@ -17,7 +17,7 @@
  */
 package agents;
 
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import org.joda.time.DateTime;
 

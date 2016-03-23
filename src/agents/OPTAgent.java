@@ -17,8 +17,8 @@
  */
 package agents;
 
-import agents.energyPlan.AggregatePlan;
-import agents.energyPlan.Plan;
+import agents.plan.AggregatePlan;
+import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import dsutil.generic.state.ArithmeticState;
 import java.util.ArrayList;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Evangelos Pournaras
+ * Copyright (C) 2016 Evangelos Pournaras
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,21 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package messages;
+package agents.fitnessFunction.iterative;
 
+import agents.AgentPlans;
 import agents.plan.Plan;
-import dsutil.generic.state.ArithmeticListState;
 import java.util.List;
-import protopeer.Finger;
-import protopeer.network.Message;
 
 /**
  *
- * @author Evangelos
+ * @author Peter
  */
-public class EPOSRequest extends Message{
-    public Finger child;
-    public List<Plan> possiblePlans;
-    public Plan aggregatePlan;
-    public Plan aggregateHistoryPlan;
+public class Factor1OverSqrtN implements Factor {
+
+    @Override
+    public double calcFactor(Plan factorTargetPlan, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        double factor = Math.sqrt(1.0/numNodes);
+        if(!Double.isFinite(factor)) {
+            factor = 1;
+        }
+        return factor;
+    }
+    
+    @Override
+    public String toString() {
+        return "1/sqrt(n)";
+    }
 }

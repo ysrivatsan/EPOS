@@ -17,7 +17,7 @@
  */
 package messages;
 
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import protopeer.network.Message;
 
 /**

@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.energyPlan;
+package agents.plan;
 
 import agents.Agent;
 
@@ -23,15 +23,15 @@ import agents.Agent;
  *
  * @author Peter
  */
-public class PossiblePlan extends Plan {
+public class CombinationalPlan extends Plan {
     
-    public PossiblePlan() {}
-
-    public PossiblePlan(Agent agent) {
-        super(Plan.Type.POSSIBLE_PLAN, agent);
+    public CombinationalPlan() {}
+    
+    public CombinationalPlan(Agent agent) {
+        super(Plan.Type.COMBINATIONAL_PLAN, agent);
     }
-
-    public PossiblePlan(Agent agent, String planStr) {
-        super(Plan.Type.POSSIBLE_PLAN, agent, planStr);
+    
+    public CombinationalPlan(Agent agent, String planStr) {
+        super(Plan.Type.COMBINATIONAL_PLAN, agent, planStr);
     }
 }

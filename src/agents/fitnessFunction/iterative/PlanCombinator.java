@@ -15,23 +15,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.energyPlan;
+package agents.fitnessFunction.iterative;
 
-import agents.Agent;
+import agents.plan.Plan;
 
 /**
  *
  * @author Peter
  */
-public class CombinationalPlan extends Plan {
-    
-    public CombinationalPlan() {}
-    
-    public CombinationalPlan(Agent agent) {
-        super(Plan.Type.COMBINATIONAL_PLAN, agent);
-    }
-    
-    public CombinationalPlan(Agent agent, String planStr) {
-        super(Plan.Type.COMBINATIONAL_PLAN, agent, planStr);
-    }
+public interface PlanCombinator {
+    public Plan combine(Plan target, Plan other, int iteration);
 }

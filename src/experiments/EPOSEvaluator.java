@@ -18,9 +18,9 @@
 package experiments;
 
 import agents.EPOSMeasures;
-import agents.energyPlan.GlobalPlan;
-import agents.energyPlan.Plan;
-import agents.energyPlan.PossiblePlan;
+import agents.plan.GlobalPlan;
+import agents.plan.Plan;
+import agents.plan.PossiblePlan;
 import dsutil.generic.state.ArithmeticListState;
 import java.io.BufferedWriter;
 import java.io.File;

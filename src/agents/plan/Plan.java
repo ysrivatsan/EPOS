@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.energyPlan;
+package agents.plan;
 
 import agents.Agent;
 import java.io.Serializable;
@@ -284,6 +284,10 @@ public class Plan implements Serializable {
     public void set(Plan other) {
         System.arraycopy(other.values, 0, values, 0, values.length);
         this.setDiscomfort(other.getDiscomfort());
+    }
+
+    public void set(double value) {
+        Arrays.fill(values, value);
     }
 
     public void add(Plan other) {

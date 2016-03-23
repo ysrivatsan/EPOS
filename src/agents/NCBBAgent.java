@@ -17,7 +17,7 @@
  */
 package agents;
 
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

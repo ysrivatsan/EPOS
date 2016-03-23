@@ -17,18 +17,23 @@
  */
 package agents.fitnessFunction;
 
+import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.Agent;
-import agents.energyPlan.AggregatePlan;
-import agents.energyPlan.Plan;
+import agents.plan.AggregatePlan;
+import agents.plan.Plan;
 import agents.AgentPlans;
 import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
- * weight B according to estimated optimum with aggregates and equal Btilde
+ * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
-public class IterativeMinVariance3 extends FitnessFunction {
+public abstract class IterativeMinVariance extends IterativeFitnessFunction {
+
+    public IterativeMinVariance(PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
+        super(combinatorG, combinatorA, combinatorS, combinatorSC);
+    }
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
@@ -57,24 +62,6 @@ public class IterativeMinVariance3 extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
-        Plan modifiedChildAggregatePlan = new AggregatePlan(agent);
-        if(!previous.isEmpty()) {
-            double factor = numNodesSubtree/(double)numNodes;
-            if(!Double.isFinite(factor)) {
-                factor = 1;
-            }
-            
-            for(AgentPlans p : previous) {
-                modifiedChildAggregatePlan.add(p.globalPlan);
-                modifiedChildAggregatePlan.subtract(p.aggregatePlan);
-            }
-            modifiedChildAggregatePlan.multiply(factor);
-            modifiedChildAggregatePlan.add(childAggregatePlan);
-        } else {
-            modifiedChildAggregatePlan.set(childAggregatePlan);
-        }
-        return select(agent, modifiedChildAggregatePlan, combinationalPlans, pattern);
-    }
+    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren);
 
 }

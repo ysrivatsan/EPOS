@@ -18,7 +18,7 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.energyPlan.Plan;
+import agents.plan.Plan;
 import agents.AgentPlans;
 import java.util.List;
 
@@ -40,13 +40,5 @@ public abstract class FitnessFunction {
 
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic) {
         return select(agent, aggregate, plans, costSignal);
-    }
-
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, List<AgentPlans> previous) {
-        return select(agent, aggregate, plans, costSignal, historic);
-    }
-
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, List<AgentPlans> previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
-        return select(agent, aggregate, plans, costSignal, historic, previous);
     }
 }
