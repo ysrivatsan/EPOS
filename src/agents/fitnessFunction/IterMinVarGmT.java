@@ -30,7 +30,7 @@ import java.util.List;
  * minimize variance (submodular/convex compared to std deviation)
  * @author Peter
  */
-public class IterMinVarGmT extends IterativeMinVariance {
+public class IterMinVarGmT extends IterMinVar {
     private final Factor factor;
     
     public IterMinVarGmT(Factor factor, PlanCombinator combinator) {

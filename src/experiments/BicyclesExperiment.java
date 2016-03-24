@@ -40,7 +40,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 1;
+    private final static int numExperiments = 5;
     private FitnessFunction fitnessFunction;
     private int numUser;
 
@@ -54,7 +54,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
         long t0 = System.currentTimeMillis();
         
         List<FitnessFunction> comparedFunctions = new ArrayList<>();
-        //comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
         /*
         comparedFunctions.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
         comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
@@ -80,14 +80,15 @@ public class BicyclesExperiment extends ExperimentLauncher {
         comparedFunctions.add(new IterMinVarHGmA(new FactorDepthOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
         comparedFunctions.add(new IterMinVarHGmA(new FactorNormalizeStd(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
         /**/
-        comparedFunctions.add(new IterMinCost2(new SumCombinator()));
+        comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+        comparedFunctions.add(new IterMaxMatchG(new Factor1OverN(), new SumCombinator()));
         /**/
         
         List<Integer> comparedNumUser = new ArrayList<>();
-        comparedNumUser.add(2300); // max user
+        //comparedNumUser.add(2300); // max user
         //comparedNumUser.add(1000);
         //comparedNumUser.add(50);
-        //comparedNumUser.add(12);
+        comparedNumUser.add(2300);
 
         List<String> names = new ArrayList<>();
         List<MeasurementLog> logs = new ArrayList<>();
@@ -123,13 +124,13 @@ public class BicyclesExperiment extends ExperimentLauncher {
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                //"input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
-                "input-data/bicycle", "user_plans_hybrid5_8to10_force_trips", "cost.txt",
+                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                //"input-data/bicycle", "user_plans_hybrid5_8to10_force_trips", "cost.txt",
                 //"input-data/Archive", "1.1", null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,
-                new IEPOSAgent.Factory());
-                //new IGreedyAgent.Factory());
+                //new IEPOSAgent.Factory());
+                new IGreedyAgent.Factory());
                 //new OPTAgent.Factory());
         return experiment;
     }

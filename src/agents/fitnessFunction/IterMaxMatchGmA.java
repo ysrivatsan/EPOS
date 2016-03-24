@@ -21,6 +21,7 @@ import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
+import agents.fitnessFunction.iterative.Factor;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.plan.GlobalPlan;
@@ -28,12 +29,15 @@ import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
+ *
  * @author Peter
  */
-public class IterMinCost extends IterativeFitnessFunction {
+public class IterMaxMatchGmA extends IterativeFitnessFunction {
+    private Factor factor;
 
-    public IterMinCost(PlanCombinator combinator) {
+    public IterMaxMatchGmA(Factor factor, PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+        this.factor = factor;
     }
 
     @Override
@@ -42,7 +46,7 @@ public class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
@@ -51,27 +55,45 @@ public class IterMinCost extends IterativeFitnessFunction {
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(childAggregatePlan);
             testAggregatePlan.add(combinationalPlan);
-            
-            Plan costPlan = previous.globalPlan;
-            if(costPlan == null) {
-                costPlan = new GlobalPlan(agent);
-            } else {
-                Plan x = new AggregatePlan(agent);
-                x.add(previous.aggregatePlan);
-                x.multiply(Math.pow(avgChildren, layer));
-                costPlan.add(x);
+
+            Plan target = new GlobalPlan(agent);
+            target.set(pattern);
+            double f1 = 1.0/target.norm();
+            if(!Double.isFinite(f1)) {
+                f1 = 1.0;
             }
-            //costPlan.pow(0.5);
+            target.multiply(f1);
             
-            testAggregatePlan.multiply(costPlan);
-            double cost = testAggregatePlan.sum();
+            double f2 = 1.0/testAggregatePlan.norm();
+            if(!Double.isFinite(f2)) {
+                f2 = 1.0;
+            }
+            testAggregatePlan.multiply(f2);
+            
+            double cost = -Math.abs(testAggregatePlan.dot(target));
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
             }
         }
-
+        
         return selected;
+    }
+
+    @Override
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        Plan costPlan = new GlobalPlan(agent);
+        costPlan.set(1);
+        
+        Plan x = new GlobalPlan(agent);
+        if(previous.globalPlan != null) {
+            x.set(previous.globalPlan);
+            x.subtract(previous.aggregatePlan);
+            x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+        }
+        x.add(childAggregatePlan);
+        
+        return select(agent, x, combinationalPlans, costPlan, historic);
     }
 
 }

@@ -21,6 +21,7 @@ import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
+import agents.fitnessFunction.iterative.Factor;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.plan.GlobalPlan;
@@ -31,10 +32,12 @@ import java.util.List;
  *
  * @author Peter
  */
-public class IterMinCost2 extends IterativeFitnessFunction {
+public class IterMaxMatchG extends IterativeFitnessFunction {
+    private Factor factor;
 
-    public IterMinCost2(PlanCombinator combinator) {
+    public IterMaxMatchG(Factor factor, PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+        this.factor = factor;
     }
 
     @Override
@@ -55,15 +58,19 @@ public class IterMinCost2 extends IterativeFitnessFunction {
 
             Plan target = new GlobalPlan(agent);
             target.set(pattern);
-            target.multiply(1.0/target.norm());
+            double f1 = 1.0/target.norm();
+            if(!Double.isFinite(f1)) {
+                f1 = 1.0;
+            }
+            target.multiply(f1);
             
-            testAggregatePlan.multiply(1.0/testAggregatePlan.norm());
+            double f2 = 1.0/testAggregatePlan.norm();
+            if(!Double.isFinite(f2)) {
+                f2 = 1.0;
+            }
+            testAggregatePlan.multiply(f2);
             
-            double aSqr = Math.abs(testAggregatePlan.dot(target));
-            aSqr = aSqr*aSqr;
-            double cSqr = testAggregatePlan.normSqr();
-            double cost = cSqr-aSqr;
-            //double cost = Math.acos(Math.sqrt(aSqr));
+            double cost = -Math.abs(testAggregatePlan.dot(target));
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
@@ -79,11 +86,11 @@ public class IterMinCost2 extends IterativeFitnessFunction {
         costPlan.set(1);
         
         Plan x = new GlobalPlan(agent);
-        x.set(childAggregatePlan);
         if(previous.globalPlan != null) {
-            x.add(previous.globalPlan);
+            x.set(previous.globalPlan);
+            x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
         }
-
+        
         return select(agent, x, combinationalPlans, costPlan, historic);
     }
 

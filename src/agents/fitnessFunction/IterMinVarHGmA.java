@@ -31,7 +31,7 @@ import java.util.List;
  * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
-public class IterMinVarHGmA extends IterativeMinVariance {
+public class IterMinVarHGmA extends IterMinVar {
     private final Factor factorG;
     private final Factor factorA;
     

@@ -29,9 +29,9 @@ import java.util.List;
  * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
-public abstract class IterativeMinVariance extends IterativeFitnessFunction {
+public abstract class IterMinVar extends IterativeFitnessFunction {
 
-    public IterativeMinVariance(PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
+    public IterMinVar(PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
         super(combinatorG, combinatorA, combinatorS, combinatorSC);
     }
 
