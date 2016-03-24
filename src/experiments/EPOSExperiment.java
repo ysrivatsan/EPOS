@@ -17,21 +17,18 @@
  */
 package experiments;
 
-
 import agents.AgentFactory;
-import agents.EPOSAgent;
-import agents.OPTAgent;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import dsutil.generic.RankPriority;
-import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -50,25 +47,26 @@ import tree.centralized.server.TreeServer;
  *
  * @author Evangelos
  */
-public class EPOSExperiment extends SimulatedExperiment{
+public class EPOSExperiment extends SimulatedExperiment {
+
     private final String expSeqNum;
     private String experimentID;
-    
+
     //Simulation Parameters
     private final int N;
-    
+
     // Tree building
     private final RankPriority priority;
     private final DescriptorType descriptor;
     private final TreeType type;
-    
+
     // EPOS Agent
     private String plansLocation;
     private String planConfigurations;
     private String treeStamp; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
     private File[] agentMeterIDs;
     private DateTime aggregationPhase;
-    private String plansFormat=".plans";
+    private String plansFormat = ".plans";
     private FitnessFunction fitnessFunction;
     private int planSize;
     private DateTime historicAggregationPhase;
@@ -76,12 +74,12 @@ public class EPOSExperiment extends SimulatedExperiment{
     private int historySize;
     private int maxChildren;
     private int maxAgents;
-    
+
     private AgentFactory factory;
-    
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory){
+
+    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory) {
         this.expSeqNum = expSeqNum;
-        this.experimentID = "Experiment "+expSeqNum+"/";
+        this.experimentID = "Experiment " + expSeqNum + "/";
         this.priority = priority;
         this.descriptor = descriptor;
         this.type = type;
@@ -95,79 +93,105 @@ public class EPOSExperiment extends SimulatedExperiment{
         this.maxChildren = maxChildren;
         this.maxAgents = maxAgents;
         this.factory = factory;
-        
-        File dir = new File(plansLocation+"/"+planConfigurations);  
-        this.agentMeterIDs = dir.listFiles(new FileFilter() {  
+
+        File dir = new File(plansLocation + "/" + planConfigurations);
+        this.agentMeterIDs = dir.listFiles(new FileFilter() {
             @Override
-            public boolean accept(File pathname) {  
-                return pathname.isDirectory();  
+            public boolean accept(File pathname) {
+                return pathname.isDirectory();
             }
         });
-        if(agentMeterIDs == null) {
+        if (agentMeterIDs == null) {
             System.out.println("ERROR: directory " + dir.getPath() + " is empty");
         }
-        
-        this.N = Math.min(maxAgents,agentMeterIDs.length);
-        this.patternEnergyPlan = loadPatternPlan(plansLocation+"/"+TISFile);
-        this.planSize = patternEnergyPlan.getNumberOfStates();
+
+        this.N = Math.min(maxAgents, agentMeterIDs.length);
+        this.planSize = getPlanSize();
+        this.patternEnergyPlan = loadPatternPlan(plansLocation + "/" + TISFile);
     }
-    
-    public final void initEPOS(){
-        System.out.println("Experiment "+expSeqNum);
-        
+
+    public final void initEPOS() {
+        System.out.println("Experiment " + expSeqNum + ", " + plansLocation + "/" + planConfigurations);
+
         Experiment.initEnvironment();
         init();
-        
-        final File folder = new File("peersLog/"+experimentID);
+
+        final File folder = new File("peersLog/" + experimentID);
         clearExperimentFile(folder);
         folder.mkdirs();
-        
-        PeerFactory peerFactory=new PeerFactory() {
+
+        PeerFactory peerFactory = new PeerFactory() {
             @Override
             public Peer createPeer(int peerIndex, Experiment experiment) {
                 Peer newPeer = new Peer(peerIndex);
                 if (peerIndex == 0) {
-                   newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
+                    newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
                 }
                 newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), maxChildren));
                 //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
                 newPeer.addPeerlet(new TreeProvider());
 
-                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize)); 
+                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize));
 
                 return newPeer;
             }
         };
-        initPeers(0,N,peerFactory);
-        startPeers(0,N);
+        initPeers(0, N, peerFactory);
+        startPeers(0, N);
     }
-    
-    public final Plan loadPatternPlan(String TISLocation){
+
+    public final Plan loadPatternPlan(String TISLocation) {
         Plan patternEnergyPlan = new GlobalPlan();
-        File file = new File(TISLocation);
         List<Double> vals = new ArrayList<>();
-        try (Scanner scanner = new Scanner(file)) {
-            scanner.useLocale(Locale.US);
-            while (scanner.hasNextDouble()) {
-                vals.add(scanner.nextDouble());
+
+        File file = new File(TISLocation);
+        if (file.exists()) {
+            try (Scanner scanner = new Scanner(file)) {
+                scanner.useLocale(Locale.US);
+                while (scanner.hasNextDouble()) {
+                    vals.add(scanner.nextDouble());
+                }
+            } catch (FileNotFoundException | NoSuchElementException e) {
+                e.printStackTrace();
             }
-        
-            patternEnergyPlan.init(vals.size());
-            for(int i=0; i<vals.size(); i++) {
-                patternEnergyPlan.setValue(i,vals.get(i));
+        } else {
+            for (int i = 0; i < planSize; i++) {
+                vals.add(0.0);
             }
-        } catch (FileNotFoundException | NoSuchElementException e){
-            e.printStackTrace();
         }
-        
+
+        patternEnergyPlan.init(vals.size());
+        for (int i = 0; i < vals.size(); i++) {
+            patternEnergyPlan.setValue(i, vals.get(i));
+        }
+
         return patternEnergyPlan;
     }
-        
-    public final void clearExperimentFile(File experiment){
+
+    private int getPlanSize() {
+        File file = agentMeterIDs[0];
+        File[] planFiles = file.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(plansFormat);
+            }
+        });
+        file = planFiles[0];
+        try (Scanner scanner = new Scanner(file)) {
+            scanner.useLocale(Locale.US);
+            String line = scanner.nextLine();
+            return line.split(",").length;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public final void clearExperimentFile(File experiment) {
         File[] files = experiment.listFiles();
-        if(files!=null) { //some JVMs return null for empty dirs
-            for(File f: files) {
-                if(f.isDirectory()) {
+        if (files != null) { //some JVMs return null for empty dirs
+            for (File f : files) {
+                if (f.isDirectory()) {
                     clearExperimentFile(f);
                 } else {
                     f.delete();

@@ -207,6 +207,18 @@ public class Plan implements Serializable {
         }
         return minimum;
     }
+    
+    public double norm() {
+        return Math.sqrt(normSqr());
+    }
+    
+    public double normSqr() {
+        double sum = 0.0;
+        for (double state : values) {
+            sum += state*state;
+        }
+        return sum;
+    }
 
     /**
      * Computes the correlation coefficient of two energy plans

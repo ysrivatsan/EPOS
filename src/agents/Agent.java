@@ -228,7 +228,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         File[] dates = agentDirectory.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                if (pathname.isHidden()) {
+                if (pathname.isHidden() || pathname.getName().charAt(0)=='.') {
                     return false;
                 }
                 return pathname.isFile();

@@ -62,6 +62,6 @@ public class IterMinVarHGmA extends IterativeMinVariance {
 
     @Override
     public String toString() {
-        return "IterMinVar "+combinatorG+"(g)*" + factorG + "-"+combinatorA+"(a)*"+factorA;
+        return "IterMinVar p+a+"+combinatorG+"(g)*" + factorG + "-"+combinatorA+"(a)*"+factorA;
     }
 }

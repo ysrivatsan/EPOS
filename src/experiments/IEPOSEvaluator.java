@@ -73,9 +73,9 @@ public class IEPOSEvaluator {
         }
 
         printMatrix("XAvg", logs, maxIteration, a -> a.getAverage());
-        printMatrix("XMax", logs, maxIteration, a -> a.getMax());
-        printMatrix("XMin", logs, maxIteration, a -> a.getMin());
-        printMatrix("XStd", logs, maxIteration, a -> a.getStdDev());
+        //printMatrix("XMax", logs, maxIteration, a -> a.getMax());
+        //printMatrix("XMin", logs, maxIteration, a -> a.getMin());
+        //printMatrix("XStd", logs, maxIteration, a -> a.getStdDev());
         
         System.out.println("plot(XAvg');");
         System.out.print("legend('" + names.get(0) + "'");
@@ -94,6 +94,6 @@ public class IEPOSEvaluator {
             }
             System.out.println(";");
         }
-        System.out.println("]");
+        System.out.println("];");
     }
 }

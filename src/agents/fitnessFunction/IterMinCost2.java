@@ -28,11 +28,12 @@ import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
+ *
  * @author Peter
  */
-public class IterMinCost extends IterativeFitnessFunction {
+public class IterMinCost2 extends IterativeFitnessFunction {
 
-    public IterMinCost(PlanCombinator combinator) {
+    public IterMinCost2(PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
     }
 
@@ -42,7 +43,7 @@ public class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
@@ -51,27 +52,39 @@ public class IterMinCost extends IterativeFitnessFunction {
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(childAggregatePlan);
             testAggregatePlan.add(combinationalPlan);
+
+            Plan target = new GlobalPlan(agent);
+            target.set(pattern);
+            target.multiply(1.0/target.norm());
             
-            Plan costPlan = previous.globalPlan;
-            if(costPlan == null) {
-                costPlan = new GlobalPlan(agent);
-            } else {
-                Plan x = new AggregatePlan(agent);
-                x.add(previous.aggregatePlan);
-                x.multiply(Math.pow(avgChildren, layer));
-                costPlan.add(x);
-            }
-            //costPlan.pow(0.5);
+            testAggregatePlan.multiply(1.0/testAggregatePlan.norm());
             
-            testAggregatePlan.multiply(costPlan);
-            double cost = testAggregatePlan.sum();
+            double aSqr = Math.abs(testAggregatePlan.dot(target));
+            aSqr = aSqr*aSqr;
+            double cSqr = testAggregatePlan.normSqr();
+            double cost = cSqr-aSqr;
+            //double cost = Math.acos(Math.sqrt(aSqr));
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
             }
         }
-
+        
         return selected;
+    }
+
+    @Override
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        Plan costPlan = new GlobalPlan(agent);
+        costPlan.set(1);
+        
+        Plan x = new GlobalPlan(agent);
+        x.set(childAggregatePlan);
+        if(previous.globalPlan != null) {
+            x.add(previous.globalPlan);
+        }
+
+        return select(agent, x, combinationalPlans, costPlan, historic);
     }
 
 }

@@ -44,15 +44,12 @@ public class IterMinVarG extends IterativeMinVariance {
         if(!previous.isEmpty()) {
             modifiedChildAggregatePlan.set(previous.globalPlan);
             modifiedChildAggregatePlan.multiply(factor.calcFactor(modifiedChildAggregatePlan, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
-            modifiedChildAggregatePlan.add(childAggregatePlan);
-        } else {
-            modifiedChildAggregatePlan.set(childAggregatePlan);
         }
         return select(agent, modifiedChildAggregatePlan, combinationalPlans, pattern);
     }
 
     @Override
     public String toString() {
-        return "IterMinVar "+combinatorG+"(g)*" + factor;
+        return "IterMinVar p+"+combinatorG+"(g)*" + factor;
     }
 }

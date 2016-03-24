@@ -17,18 +17,9 @@
  */
 package experiments;
 
-import agents.fitnessFunction.iterative.FactorDepthOverN;
-import agents.fitnessFunction.iterative.Factor1OverLayer;
-import agents.fitnessFunction.iterative.Factor1;
-import agents.fitnessFunction.iterative.FactorMOverN;
-import agents.fitnessFunction.iterative.Factor1OverN;
+import agents.fitnessFunction.iterative.*;
 import agents.*;
 import agents.fitnessFunction.*;
-import agents.fitnessFunction.iterative.AvgCombinator;
-import agents.fitnessFunction.iterative.Factor1OverSqrtN;
-import agents.fitnessFunction.iterative.FactorNormalizeStd;
-import agents.fitnessFunction.iterative.MostRecentCombinator;
-import agents.fitnessFunction.iterative.SumCombinator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -63,25 +54,40 @@ public class BicyclesExperiment extends ExperimentLauncher {
         long t0 = System.currentTimeMillis();
         
         List<FitnessFunction> comparedFunctions = new ArrayList<>();
-        comparedFunctions.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
         //comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
-        //comparedFunctions.add(new IterMinVarGmA(new FactorMOverN(), new SumCombinator()));
-        //comparedFunctions.add(new IterMinVarGmA(new FactorDepthOverN(), new SumCombinator()));
+        /*
+        comparedFunctions.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmA(new FactorMOverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmA(new FactorDepthOverN(), new SumCombinator()));
         comparedFunctions.add(new IterMinVarGmA(new FactorNormalizeStd(), new SumCombinator()));
-        
+        /*
+        comparedFunctions.add(new IterMinVarG(new Factor1OverN(), new WeightedSumCombinator()));
+        comparedFunctions.add(new IterMinVarG(new Factor1OverLayer(), new WeightedSumCombinator()));
+        comparedFunctions.add(new IterMinVarG(new FactorMOverN(), new WeightedSumCombinator()));
+        comparedFunctions.add(new IterMinVarG(new FactorDepthOverN(), new WeightedSumCombinator()));
+        comparedFunctions.add(new IterMinVarG(new FactorNormalizeStd(), new WeightedSumCombinator()));
+        /*
+        comparedFunctions.add(new IterMinVarGmT(new Factor1OverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmT(new Factor1OverLayer(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmT(new FactorMOverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmT(new FactorDepthOverN(), new SumCombinator()));
+        comparedFunctions.add(new IterMinVarGmT(new FactorNormalizeStd(), new SumCombinator()));
+        /*
         comparedFunctions.add(new IterMinVarHGmA(new Factor1OverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-        //omparedFunctions.add(new IterMinVarHGmA(new Factor1OverLayer(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-        //comparedFunctions.add(new IterMinVarHGmA(new FactorMOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-        //comparedFunctions.add(new IterMinVarHGmA(new FactorDepthOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        comparedFunctions.add(new IterMinVarHGmA(new Factor1OverLayer(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        comparedFunctions.add(new IterMinVarHGmA(new FactorMOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
+        comparedFunctions.add(new IterMinVarHGmA(new FactorDepthOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
         comparedFunctions.add(new IterMinVarHGmA(new FactorNormalizeStd(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-        
-        //comparedFunctions.add(new IterMinCost());
+        /**/
+        comparedFunctions.add(new IterMinCost2(new SumCombinator()));
+        /**/
         
         List<Integer> comparedNumUser = new ArrayList<>();
         comparedNumUser.add(2300); // max user
         //comparedNumUser.add(1000);
         //comparedNumUser.add(50);
-        //comparedNumUser.add(10);
+        //comparedNumUser.add(12);
 
         List<String> names = new ArrayList<>();
         List<MeasurementLog> logs = new ArrayList<>();
@@ -117,10 +123,14 @@ public class BicyclesExperiment extends ExperimentLauncher {
     public EPOSExperiment createExperiment(int num) {
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
-                "input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                //"input-data/bicycle", "user_plans_unique_8to10_force_trips", "cost.txt",
+                "input-data/bicycle", "user_plans_hybrid5_8to10_force_trips", "cost.txt",
+                //"input-data/Archive", "1.1", null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,
                 new IEPOSAgent.Factory());
+                //new IGreedyAgent.Factory());
+                //new OPTAgent.Factory());
         return experiment;
     }
 
