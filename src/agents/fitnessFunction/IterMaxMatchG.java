@@ -94,4 +94,8 @@ public class IterMaxMatchG extends IterativeFitnessFunction {
         return select(agent, x, combinationalPlans, costPlan, historic);
     }
 
+    @Override
+    public String toString() {
+        return "IterMaxMatch p+"+combinatorG+"(g)*"+factor;
+    }
 }

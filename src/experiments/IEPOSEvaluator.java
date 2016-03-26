@@ -20,6 +20,7 @@ package experiments;
 import agents.fitnessFunction.FitnessFunction;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -64,7 +65,7 @@ public class IEPOSEvaluator {
         });
     }
 
-    public static void evaluateLogs(List<String> names, List<MeasurementLog> logs) {
+    public static void evaluateLogs(int id, List<String> names, List<MeasurementLog> logs, PrintStream out) {
         int maxIteration = 0;
         for (MeasurementLog log : logs) {
             for (Object tag : log.getTagsOfExactType(Integer.class)) {
@@ -72,28 +73,29 @@ public class IEPOSEvaluator {
             }
         }
 
-        printMatrix("XAvg", logs, maxIteration, a -> a.getAverage());
-        //printMatrix("XMax", logs, maxIteration, a -> a.getMax());
-        //printMatrix("XMin", logs, maxIteration, a -> a.getMin());
-        //printMatrix("XStd", logs, maxIteration, a -> a.getStdDev());
+        printMatrix("XAvg"+id, logs, maxIteration, a -> a.getAverage(), out);
+        printMatrix("XMax"+id, logs, maxIteration, a -> a.getMax(), out);
+        printMatrix("XMin"+id, logs, maxIteration, a -> a.getMin(), out);
+        printMatrix("XStd"+id, logs, maxIteration, a -> a.getStdDev(), out);
         
-        System.out.println("plot(XAvg');");
-        System.out.print("legend('" + names.get(0) + "'");
+        out.println("figure("+id+");");
+        out.println("plot(XAvg"+id+"');");
+        out.print("legend('" + names.get(0) + "'");
         for(int i=1; i<names.size(); i++) {
-            System.out.print(",'" + names.get(i) + "'");
+            out.print(",'" + names.get(i) + "'");
         }
-        System.out.println(");");
+        out.println(");");
     }
     
-    private static void printMatrix(String name, List<MeasurementLog> logs, int maxIteration, Function<Aggregate, Double> function) {
-        System.out.println(name + " = [");
+    private static void printMatrix(String name, List<MeasurementLog> logs, int maxIteration, Function<Aggregate, Double> function, PrintStream out) {
+        out.println(name + " = [");
         for(MeasurementLog log : logs) {
-            System.out.print(function.apply(log.getAggregate(0)));
+            out.print(function.apply(log.getAggregate(0)));
             for (int i = 1; i <= maxIteration; i++) {
-                System.out.print(", " + function.apply(log.getAggregate(i)));
+                out.print(", " + function.apply(log.getAggregate(i)));
             }
-            System.out.println(";");
+            out.println(";");
         }
-        System.out.println("];");
+        out.println("];");
     }
 }

@@ -38,6 +38,6 @@ public class FactorMOverNmM implements Factor {
     
     @Override
     public String toString() {
-        return "m/n";
+        return "m/(n-m)";
     }
 }
