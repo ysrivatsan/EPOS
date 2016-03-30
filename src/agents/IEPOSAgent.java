@@ -47,7 +47,7 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class IEPOSAgent extends Agent {
-    private final int MAX_ITERATIONS = 1000;
+    private final int MAX_ITERATIONS = 500;
     private int measurementEpoch;
     private int iteration;
 

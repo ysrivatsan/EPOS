@@ -32,12 +32,14 @@ import java.util.List;
  *
  * @author Peter
  */
-public class IterMaxMatchGmA extends IterativeFitnessFunction {
-    private Factor factor;
-
-    public IterMaxMatchGmA(Factor factor, PlanCombinator combinator) {
-        super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
-        this.factor = factor;
+public class IterMaxMatchHGmA extends IterativeFitnessFunction {
+    private final Factor factorG;
+    private final Factor factorA;
+    
+    public IterMaxMatchHGmA(Factor factorG, Factor factorA, PlanCombinator combinatorG, PlanCombinator combinatorA) {
+        super(combinatorG, combinatorA, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+        this.factorG = factorG;
+        this.factorA = factorA;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
@@ -85,19 +87,23 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(1);
         
-        Plan x = new GlobalPlan(agent);
-        if(previous.globalPlan != null) {
-            x.set(previous.globalPlan);
-            x.subtract(previous.aggregatePlan);
-            x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+        Plan targetPlan = new AggregatePlan(agent);
+        if(!previous.isEmpty()) {
+            targetPlan.set(previous.globalPlan);
+            targetPlan.multiply(factorG.calcFactor(targetPlan, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+            
+            Plan modifiedA = new AggregatePlan(agent);
+            modifiedA.set(previous.aggregatePlan);
+            modifiedA.multiply(factorA.calcFactor(modifiedA, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+            targetPlan.subtract(modifiedA);
         }
-        x.add(childAggregatePlan);
+        targetPlan.add(childAggregatePlan);
         
-        return select(agent, x, combinationalPlans, incentive, historic);
+        return select(agent, targetPlan, combinationalPlans, incentive);
     }
 
     @Override
     public String toString() {
-        return "IterMaxMatch p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterMaxMatch p+a+"+combinatorG+"(g)*" + factorG + "-"+combinatorA+"(a)*"+factorA;
     }
 }
