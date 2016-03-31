@@ -79,9 +79,9 @@ public class IEPOSEvaluator {
         printMatrix("XStd"+id, logs, maxIteration, a -> a.getStdDev(), out);
         
         out.println("figure("+id+");");
+        out.println("plot(XAvg"+id+"');");
         out.println("xlabel('iteration');");
         out.println("ylabel('std deviation');");
-        out.println("plot(XAvg"+id+"');");
         out.print("legend('" + names.get(0) + "'");
         for(int i=1; i<names.size(); i++) {
             out.print(",'" + names.get(i) + "'");
