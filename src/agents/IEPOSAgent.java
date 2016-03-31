@@ -241,19 +241,20 @@ public class IEPOSAgent extends Agent {
                     Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
                     //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
                     //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+                    System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
                     if(iteration+1 < MAX_ITERATIONS) {
                         numNodes = numNodesSubtree;
                         betweenIterations();
                         broadcast(new IEPOSIteration(current.globalPlan, numNodes, 1, children.size()));
                         initIteration();
-                        if(iteration%10 == 0) {
+                        /*if(iteration%10 == 0) {
                             System.out.print(".");
                         }
                         if(iteration%100 == 0) {
                             System.out.print(" ");
-                        }
+                        }*/
                     } else {
-                        System.out.println(".");
+                        //System.out.println(".");
                         broadcast(new EPOSBroadcast(current.globalPlan));
                     }
                 } else {
