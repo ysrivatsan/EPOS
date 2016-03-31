@@ -111,7 +111,7 @@ public class EPOSExperiment extends SimulatedExperiment {
     }
 
     public final void initEPOS() {
-        System.out.println("Experiment " + expSeqNum + ", " + plansLocation + "/" + planConfigurations);
+        System.out.println("%Experiment " + expSeqNum + ", " + plansLocation + "/" + planConfigurations);
 
         Experiment.initEnvironment();
         init();
