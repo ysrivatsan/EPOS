@@ -56,7 +56,8 @@ public class IGreedyAgent extends Agent {
     private double avgNumChildren;
     private final Map<Finger, EPOSRequest> messageBuffer = new HashMap<>();
 
-    private final IterativeFitnessFunction fitnessFunction;
+    private final IterativeFitnessFunction fitnessFunctionPrototype;
+    private IterativeFitnessFunction fitnessFunction;
     private double robustness;
     
     private Plan costSignal;
@@ -79,7 +80,7 @@ public class IGreedyAgent extends Agent {
 
     public IGreedyAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
-        this.fitnessFunction = fitnessFunction;
+        this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
@@ -111,6 +112,7 @@ public class IGreedyAgent extends Agent {
             this.historic = null;
         }
         numNodes = -1;
+        fitnessFunction = fitnessFunctionPrototype.clone();
     }
     
     private void initIteration() {

@@ -49,12 +49,19 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
+        
+        double lowerBound = childAggregatePlan.min();
+        for(Plan p : combinationalPlans) {
+            lowerBound += p.min();
+        }
 
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(childAggregatePlan);
             testAggregatePlan.add(combinationalPlan);
+            
+            testAggregatePlan.add(1-lowerBound);
 
             Plan target = new GlobalPlan(agent);
             target.set(pattern);
@@ -99,5 +106,10 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     @Override
     public String toString() {
         return "IterMaxMatch p+a+"+combinatorG+"(g-a)*" + factor;
+    }
+    
+    @Override
+    public IterMaxMatchGmA clone() {
+        return new IterMaxMatchGmA(factor, combinatorG);
     }
 }

@@ -26,10 +26,8 @@ import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.TreeMap;
 import messages.EPOSBroadcast;
 import messages.EPOSRequest;
@@ -47,6 +45,7 @@ import protopeer.network.Message;
  * @author Evangelos
  */
 public class IEPOSAgent extends Agent {
+    private final static boolean OUTPUT_MOVIE = false;
     private final int MAX_ITERATIONS = 500;
     private int measurementEpoch;
     private int iteration;
@@ -61,7 +60,9 @@ public class IEPOSAgent extends Agent {
     private double avgNumChildren;
     private final Map<Finger, EPOSRequest> messageBuffer = new HashMap<>();
 
-    private final IterativeFitnessFunction fitnessFunction;
+    private IterativeFitnessFunction fitnessFunctionPrototype;
+    private IterativeFitnessFunction fitnessFunction;
+    private IterativeFitnessFunction fitnessFunctionRoot;
     private double robustness;
     
     private Plan costSignal;
@@ -85,7 +86,7 @@ public class IEPOSAgent extends Agent {
 
     public IEPOSAgent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
         super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
-        this.fitnessFunction = fitnessFunction;
+        this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
@@ -115,6 +116,10 @@ public class IEPOSAgent extends Agent {
             this.historic = null;
         }
         numNodes = -1;
+        fitnessFunction = fitnessFunctionPrototype.clone();
+        if(isRoot()) {
+            fitnessFunctionRoot = fitnessFunctionPrototype.clone();
+        }
     }
     
     private void initIteration() {
@@ -228,7 +233,7 @@ public class IEPOSAgent extends Agent {
                     this.readPlans();
                 }
                 if (this.isRoot()) {
-                    int selected = fitnessFunction.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
+                    int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
                     Plan selectedPlan = possiblePlans.get(selected);
                     current.selectedPlan.set(selectedPlan);
                     current.globalPlan.set(current.aggregatePlan);
@@ -241,20 +246,26 @@ public class IEPOSAgent extends Agent {
                     Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
                     //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
                     //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
-                    System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+                    if(OUTPUT_MOVIE) {
+                        System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+                    }
                     if(iteration+1 < MAX_ITERATIONS) {
                         numNodes = numNodesSubtree;
                         betweenIterations();
                         broadcast(new IEPOSIteration(current.globalPlan, numNodes, 1, children.size()));
                         initIteration();
-                        /*if(iteration%10 == 0) {
-                            System.out.print(".");
+                        if(!OUTPUT_MOVIE) {
+                            if(iteration%10 == 0) {
+                                System.out.print(".");
+                            }
+                            if(iteration%100 == 0) {
+                                System.out.print(" ");
+                            }
                         }
-                        if(iteration%100 == 0) {
-                            System.out.print(" ");
-                        }*/
                     } else {
-                        //System.out.println(".");
+                        if(!OUTPUT_MOVIE) {
+                            System.out.println(".");
+                        }
                         broadcast(new EPOSBroadcast(current.globalPlan));
                     }
                 } else {

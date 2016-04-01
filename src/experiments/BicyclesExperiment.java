@@ -63,10 +63,10 @@ public class BicyclesExperiment extends ExperimentLauncher {
                     String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
                 /**/
                 /*//for (String dataset : new String[]{"1.1","1.3","1.5","5.1","5.3","5.5","7.1","7.3","7.5"}) {
-                for (String dataset : new String[]{"5.5"}) {
+                for (String dataset : new String[]{"5.3"}) {
                     String location = "input-data/Archive";
                 /**/
-                    for (int i : new int[]{7}) {
+                    for (int i : new int[]{6}) {
                         List<FitnessFunction> comparedFunctions = new ArrayList<>();
                         switch (i) {
                             case 0:
@@ -112,18 +112,13 @@ public class BicyclesExperiment extends ExperimentLauncher {
                                 comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
                                 break;
                             case 5:
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new Factor1OverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new Factor1OverLayer(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new FactorMOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new FactorDepthOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new FactorNormalizeStd(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
+                                //comparedFunctions.add(new IterProbG(new Factor1(), new MostRecentCombinator()));
                                 break;
                             case 6:
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterNormMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
                                 break;
                             case 7:
                                 comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
@@ -179,7 +174,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, 2, numUser,
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,
                 new IEPOSAgent.Factory());
         //new IGreedyAgent.Factory());
         //new OPTAgent.Factory());

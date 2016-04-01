@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Peter
  */
-public abstract class IterativeFitnessFunction extends FitnessFunction {
+public abstract class IterativeFitnessFunction extends FitnessFunction implements Cloneable {
     public PlanCombinator combinatorG;
     public PlanCombinator combinatorA;
     public PlanCombinator combinatorS;
@@ -53,5 +53,20 @@ public abstract class IterativeFitnessFunction extends FitnessFunction {
 
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         return select(agent, aggregate, plans, costSignal, historic, previous);
+    }
+    
+    @Override
+    public IterativeFitnessFunction clone() {
+        IterativeFitnessFunction clone = null;
+        try {
+            clone = (IterativeFitnessFunction) super.clone();
+            clone.combinatorA = combinatorA;
+            clone.combinatorG = combinatorG;
+            clone.combinatorS = combinatorS;
+            clone.combinatorSC = combinatorSC;
+        } catch (CloneNotSupportedException ex) {
+            ex.printStackTrace();
+        }
+        return clone;
     }
 }

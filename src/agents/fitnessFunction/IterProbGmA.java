@@ -25,6 +25,7 @@ import agents.fitnessFunction.iterative.Factor;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.plan.GlobalPlan;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,10 +33,12 @@ import java.util.List;
  *
  * @author Peter
  */
-public class IterNormMaxMatchGmA extends IterativeFitnessFunction {
-    private Factor factor;
+public class IterProbGmA extends IterativeFitnessFunction {
 
-    public IterNormMaxMatchGmA(Factor factor, PlanCombinator combinator) {
+    private Factor factor;
+    private double[] prevProbs;
+
+    public IterProbGmA(Factor factor, PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
     }
@@ -50,49 +53,99 @@ public class IterNormMaxMatchGmA extends IterativeFitnessFunction {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
+        if (prevProbs == null) {
+            prevProbs = new double[combinationalPlans.size()];
+            Arrays.fill(prevProbs, 1);
+        }
+
+        double cumProb = 0;
+        double[] probs = new double[combinationalPlans.size()];
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
-            testAggregatePlan.add(childAggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 
             Plan target = new GlobalPlan(agent);
             target.set(pattern);
-            double f1 = Math.max(0.000000001,target.norm());
-            target.multiply(1.0/f1);
+            target.subtract(target.min());
             
-            double f2 = Math.max(0.000000001,testAggregatePlan.norm());
-            testAggregatePlan.multiply(1.0/f2);
+            //target.pow(2);
+            double f1 = 1.0/target.norm();
+            if(!Double.isFinite(f1)) {
+                f1 = 1.0;
+            }
+            target.multiply(f1);
             
+            testAggregatePlan.subtract(testAggregatePlan.min());
+            double f2 = 1.0 / testAggregatePlan.norm();
+            if (!Double.isFinite(f2)) {
+                f2 = 1.0;
+            }
+            testAggregatePlan.multiply(f2);
+
             double cost = testAggregatePlan.dot(target);
-            cost = f2*f2*(0.000001-cost*cost);
-            if (cost < minCost) {
+            /*if(cost < minCost) {
                 minCost = cost;
                 selected = i;
-            }
+            }*/
+            
+            //double prob = 1-cost*cost;
+            //double prob = 1/(0.0001+cost*cost);
+            //double prob = Math.exp(-cost*cost*400);
+            double prob = Math.exp(-cost*400);
+            probs[i] = prevProbs[i] * prob;
+            cumProb += probs[i];
         }
         
+        for(int i=0; i<combinationalPlans.size(); i++) {
+            probs[i] /= cumProb;
+            if(Double.isNaN(probs[i])) {
+                probs[i] = 1.0/combinationalPlans.size();
+            }
+        }
+
+        double rand = Math.random();
+        cumProb = 0;
+        for (int i = 0; i < combinationalPlans.size(); i++) {
+            cumProb += probs[i];
+            if (rand <= cumProb) {
+                selected = i;
+                break;
+            }
+        }
+
+        prevProbs = probs;
+
         return selected;
     }
 
     @Override
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
         Plan incentive = new GlobalPlan(agent);
-        incentive.set(1);
-        
+        incentive.set(0);
+
         Plan x = new GlobalPlan(agent);
-        if(previous.globalPlan != null) {
+        if (previous.globalPlan != null) {
             x.set(previous.globalPlan);
             x.subtract(previous.aggregatePlan);
             x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
         }
         x.add(childAggregatePlan);
-        
-        return select(agent, x, combinationalPlans, incentive, historic);
+        incentive.add(x);
+
+        return select(agent, childAggregatePlan, combinationalPlans, incentive, historic);
     }
 
     @Override
     public String toString() {
-        return "IterNormMaxMatch p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterProbGmA a+" + combinatorG + "(g-a)*" + factor;
+    }
+
+    @Override
+    public IterProbGmA clone() {
+        IterProbGmA clone = (IterProbGmA) super.clone();
+        clone.factor = factor;
+        clone.prevProbs = null;
+        return clone;
     }
 }

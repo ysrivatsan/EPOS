@@ -343,6 +343,12 @@ public class Plan implements Serializable {
             values[i] = Math.pow(values[i], x);
         }
     }
+    
+    /*public void log(double base) {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = Math.pow(values[i], x);
+        }
+    }*/
 
     public void reverse() {
         double average = avg();
