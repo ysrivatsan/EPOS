@@ -116,8 +116,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
                                 //comparedFunctions.add(new IterProbG(new Factor1(), new MostRecentCombinator()));
                                 break;
                             case 6:
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterUCB1Bandit());
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
+                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
                                 comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
                                 break;
                             case 7:

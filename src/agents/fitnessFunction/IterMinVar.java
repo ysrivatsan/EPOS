@@ -44,6 +44,7 @@ public abstract class IterMinVar extends IterativeFitnessFunction {
     public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
         double minVariance = Double.MAX_VALUE;
         int selected = -1;
+        int numOpt = 0;
 
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
@@ -55,6 +56,12 @@ public abstract class IterMinVar extends IterativeFitnessFunction {
             if (variance < minVariance) {
                 minVariance = variance;
                 selected = i;
+                numOpt = 1;
+            } else if(variance == minVariance) {
+                numOpt++;
+                if(Math.random()<=1.0/numOpt) {
+                    selected = i;
+                }
             }
         }
 
