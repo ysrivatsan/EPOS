@@ -63,10 +63,12 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
+    private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans previous = new AgentPlans();
     private AgentPlans historic;
 
     private List<Integer> selectedCombination = new ArrayList<>();
+    private LocalSearch localSearch = new LocalSearch();
 
     public static class Factory implements AgentFactory {
 
@@ -92,6 +94,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         if (this.history.size() > this.historySize) {
             this.history.remove(this.history.firstKey());
         }
+        prevAggregate.reset();
         previous.reset();
 
         if (previousPhase != null) {
@@ -119,14 +122,26 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     @Override
     public IGreedyUp up(List<IGreedyUp> msgs) {
         Plan childAggregatePlan = new AggregatePlan(this);
+        
+        
+        if(localSearch != null) {
+            List<Plan> childAggregatePlans = new ArrayList<>();
+            for(IGreedyUp msg : msgs) {
+                childAggregatePlans.add(msg.aggregatePlan);
+            }
+            childAggregatePlan = localSearch.calcAggregate(this, childAggregatePlans, previous.globalPlan);
+        } else {
+            for(IGreedyUp msg : msgs) {
+                childAggregatePlan.add(msg.aggregatePlan);
+            }
+        }
 
         for (IGreedyUp msg : msgs) {
             numNodesSubtree += msg.numNodes;
-            childAggregatePlan.add(msg.aggregatePlan);
         }
 
         // select best combination
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, previous, numNodes, numNodesSubtree, layer, avgNumChildren);
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren);
         current.selectedPlan = possiblePlans.get(selectedPlan);
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
@@ -170,16 +185,25 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     @Override
     public List<IGreedyDown> down(IGreedyDown parent) {
         current.globalPlan.set(parent.globalPlan);
+        if(parent.discard) {
+            current.aggregatePlan = previous.aggregatePlan;
+            current.selectedPlan = previous.selectedPlan;
+            current.selectedCombinationalPlan = previous.selectedCombinationalPlan;
+        }
         numNodes = parent.numNodes;
         layer = parent.hops;
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
-        fitnessFunction.updatePrevious(previous, current, iteration);
+        fitnessFunction.updatePrevious(prevAggregate, current, iteration);
+        previous = current;
 
         List<IGreedyDown> msgs = new ArrayList<>();
-        IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
         for (int i = 0; i < children.size(); i++) {
+            IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
+            if(localSearch != null) {
+                msg.discard = parent.discard || !localSearch.getSelected().get(i);
+            }
             msgs.add(msg);
         }
         return msgs;

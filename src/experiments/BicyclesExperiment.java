@@ -177,8 +177,8 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser, 200,
-                new IEPOSAgent.Factory());
-        //new IGreedyAgent.Factory());
+        //        new IEPOSAgent.Factory());
+        new IGreedyAgent.Factory());
         //new OPTAgent.Factory());
         return experiment;
     }

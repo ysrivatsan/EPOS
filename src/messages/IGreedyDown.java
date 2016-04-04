@@ -29,6 +29,7 @@ public class IGreedyDown extends DownMessage {
     public int numNodes;
     public int hops;
     public int sumChildren;
+    public boolean discard;
 
     public IGreedyDown(Plan globalPlan, int numNodes, int hops, int sumChildren) {
         this.globalPlan = globalPlan;
