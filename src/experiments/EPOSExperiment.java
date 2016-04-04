@@ -73,11 +73,11 @@ public class EPOSExperiment extends SimulatedExperiment {
     private Plan patternEnergyPlan;
     private int historySize;
     private int maxChildren;
-    private int maxAgents;
+    private int numIterations;
 
     private AgentFactory factory;
 
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory) {
+    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, int numIterations, AgentFactory factory) {
         this.expSeqNum = expSeqNum;
         this.experimentID = "Experiment " + expSeqNum + "/";
         this.priority = priority;
@@ -91,8 +91,8 @@ public class EPOSExperiment extends SimulatedExperiment {
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
         this.maxChildren = maxChildren;
-        this.maxAgents = maxAgents;
         this.factory = factory;
+        this.numIterations = numIterations;
 
         File dir = new File(plansLocation + "/" + planConfigurations);
         this.agentMeterIDs = dir.listFiles(new FileFilter() {
@@ -127,11 +127,11 @@ public class EPOSExperiment extends SimulatedExperiment {
                 if (peerIndex == 0) {
                     newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
                 }
-                newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), maxChildren));
-                //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
+                //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), maxChildren));
+                newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
                 newPeer.addPeerlet(new TreeProvider());
 
-                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize));
+                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, numIterations));
 
                 return newPeer;
             }

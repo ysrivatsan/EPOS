@@ -58,7 +58,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/log.log"))) {
             try (PrintStream out = System.out){//new PrintStream("output-data/matlab-script.m")) {
                 //for (int t : new int[]{0,2,4,6,8,10,12,14,16,18,20,22}) {
-                for (int t : new int[]{8}) {
+                for (int t : new int[]{10}) {
                     String location = "input-data/bicycle";
                     String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
                 /**/
@@ -117,6 +117,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                                 break;
                             case 6:
                                 comparedFunctions.add(new IterUCB1Bandit());
+                                comparedFunctions.add(new IterLocalSearch());
                                 comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
                                 comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
                                 comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
@@ -175,7 +176,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser,
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser, 200,
                 new IEPOSAgent.Factory());
         //new IGreedyAgent.Factory());
         //new OPTAgent.Factory());

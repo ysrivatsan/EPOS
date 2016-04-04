@@ -36,10 +36,11 @@ public class WeightedSumCombinator implements PlanCombinator {
     @Override
     public Plan combine(Plan target, Plan other, int iteration) {
         if (target == null) {
-            return other;
+            return other.clone();
         }
-        other.multiply(Math.pow(iteration,exp));
-        target.add(other);
+        Plan x = other.clone();
+        x.multiply(Math.pow(iteration,exp));
+        target.add(x);
         return target;
     }
 

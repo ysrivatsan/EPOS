@@ -21,13 +21,15 @@ import agents.Agent;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class Plan implements Serializable {
+public class Plan implements Serializable, Cloneable {
 
     private double[] values;
     private Type type;
@@ -355,6 +357,18 @@ public class Plan implements Serializable {
         for (int i = 0; i < values.length; i++) {
             values[i] = 2 * average - values[i];
         }
+    }
+    
+    @Override
+    public Plan clone() {
+        try {
+            Plan clone = (Plan) super.clone();
+            clone.values = Arrays.copyOf(values, values.length);
+            return clone;
+        } catch (CloneNotSupportedException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     @Override

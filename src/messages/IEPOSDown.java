@@ -15,27 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction.iterative;
+package messages;
 
 import agents.plan.Plan;
+import protopeer.network.Message;
 
 /**
  *
  * @author Peter
  */
-public class SumCombinator implements PlanCombinator {
+public class IEPOSDown extends DownMessage {
+    public Plan globalPlan;
+    public int numNodes;
+    public int hops;
+    public int sumChildren;
+    public int selected;
+    public boolean discard;
 
-    @Override
-    public Plan combine(Plan target, Plan other, int iteration) {
-        if (target == null) {
-            return other.clone();
-        }
-        target.add(other);
-        return target;
-    }
-
-    @Override
-    public String toString() {
-        return "sum";
+    public IEPOSDown(Plan globalPlan, int numNodes, int hops, int sumChildren, int selected) {
+        this.globalPlan = globalPlan;
+        this.numNodes = numNodes;
+        this.hops = hops;
+        this.sumChildren = sumChildren;
+        this.selected = selected;
     }
 }
