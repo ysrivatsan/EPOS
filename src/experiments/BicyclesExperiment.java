@@ -40,14 +40,19 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 1;
+    private final static int numExperiments = 10;
     private FitnessFunction fitnessFunction;
     private String location;
     private String dataset;
     private int numUser;
+    private int numChildren;
+    private int numIterations;
+    private LocalSearch ls;
 
-    public BicyclesExperiment(int numUser) {
+    public BicyclesExperiment(int numUser, int numChildren, int numIterations) {
         this.numUser = numUser;
+        this.numChildren = numChildren;
+        this.numIterations = numIterations;
     }
 
     private static MeasurementLog log = null;
@@ -56,17 +61,18 @@ public class BicyclesExperiment extends ExperimentLauncher {
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/log.log"))) {
-            try (PrintStream out = System.out){//new PrintStream("output-data/matlab-script.m")) {
+            try (PrintStream out = new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//System.out){//
                 //for (int t : new int[]{0,2,4,6,8,10,12,14,16,18,20,22}) {
-                for (int t : new int[]{10}) {
+                for (int t : new int[]{8}) {
                     String location = "input-data/bicycle";
                     String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
-                /**/
-                /*//for (String dataset : new String[]{"1.1","1.3","1.5","5.1","5.3","5.5","7.1","7.3","7.5"}) {
-                for (String dataset : new String[]{"5.3"}) {
+                /*
+                //for (String dataset : new String[]{"1.1","1.3","1.5","5.1","5.3","5.5","7.1","7.3","7.5"}) {
+                for (String dataset : new String[]{"5.1","5.3"}) {
                     String location = "input-data/Archive";
                 /**/
-                    for (int i : new int[]{6}) {
+                for(int c : new int[]{1,2,3,4,5,6}) {
+                    for (int i : new int[]{7}) {
                         List<FitnessFunction> comparedFunctions = new ArrayList<>();
                         switch (i) {
                             case 0:
@@ -112,20 +118,21 @@ public class BicyclesExperiment extends ExperimentLauncher {
                                 comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
                                 break;
                             case 5:
-                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
-                                //comparedFunctions.add(new IterProbG(new Factor1(), new MostRecentCombinator()));
+                                comparedFunctions.add(new IterUCB1Bandit());
                                 break;
                             case 6:
-                                comparedFunctions.add(new IterUCB1Bandit());
                                 comparedFunctions.add(new IterLocalSearch());
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
+                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
+                                break;
+                            case 7:
                                 comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
                                 comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
                                 comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
                                 break;
-                            case 7:
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
-                                //comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                //comparedFunctions.add(new IterMinVarGmA(new FactorNormalizeStd(), new SumCombinator()));
                             default:
                                 break;
                         }
@@ -139,20 +146,23 @@ public class BicyclesExperiment extends ExperimentLauncher {
                         List<MeasurementLog> logs = new ArrayList<>();
 
                         for (int numUser : comparedNumUser) {
-                            for (FitnessFunction fitnessFunction : comparedFunctions) {
-                                BicyclesExperiment launcher = new BicyclesExperiment(numUser);
-                                launcher.fitnessFunction = fitnessFunction;
-                                launcher.location = location;
-                                launcher.dataset = dataset;
-                                launcher.treeInstances = numExperiments;
-                                launcher.runDuration = 4;
-                                launcher.run();
+                            for(LocalSearch ls : new LocalSearch[]{null, new LocalSearch()}) {
+                                for (FitnessFunction fitnessFunction : comparedFunctions) {
+                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 1000);
+                                    launcher.fitnessFunction = fitnessFunction;
+                                    launcher.location = location;
+                                    launcher.dataset = dataset;
+                                    launcher.treeInstances = numExperiments;
+                                    launcher.runDuration = 4;
+                                    launcher.ls = ls;
+                                    launcher.run();
 
-                                names.add(launcher.getName());
-                                logs.add(log);
-                                oos.writeUTF(launcher.getName());
-                                oos.writeObject(log);
-                                log = null;
+                                    names.add(launcher.getName());
+                                    logs.add(log);
+                                    oos.writeUTF(launcher.getName());
+                                    oos.writeObject(log);
+                                    log = null;
+                                }
                             }
                         }
 
@@ -161,6 +171,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                         long t1 = System.currentTimeMillis();
                         System.out.println("%" + (t1 - t0) / 1000 + "s");
                     }
+                }
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -176,10 +187,10 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, 3, numUser, 200,
-        //        new IEPOSAgent.Factory());
-        new IGreedyAgent.Factory());
-        //new OPTAgent.Factory());
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, numChildren+1, numUser, numIterations,
+                //new IEPOSAgent.Factory(),ls);
+        new IGreedyAgent.Factory(),ls);
+        //new OPTAgent.Factory(),ls);
         return experiment;
     }
 
@@ -197,6 +208,6 @@ public class BicyclesExperiment extends ExperimentLauncher {
     }
 
     private String getName(int num) {
-        return getName() + " " + num;
+        return getName() + " " + num + (ls!=null?" +LS":"");
     }
 }
