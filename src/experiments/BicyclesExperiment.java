@@ -40,7 +40,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 10;
+    private final static int numExperiments = 1;
     private FitnessFunction fitnessFunction;
     private String location;
     private String dataset;
@@ -63,7 +63,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/log.log"))) {
             try (PrintStream out = new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//System.out){//
                 //for (int t : new int[]{0,2,4,6,8,10,12,14,16,18,20,22}) {
-                for (int t : new int[]{8}) {
+                for (int t : new int[]{10}) {
                     String location = "input-data/bicycle";
                     String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
                 /*
@@ -71,8 +71,8 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 for (String dataset : new String[]{"5.1","5.3"}) {
                     String location = "input-data/Archive";
                 /**/
-                for(int c : new int[]{1,2,3,4,5,6}) {
-                    for (int i : new int[]{7}) {
+                for(int c : new int[]{2}) {
+                    for (int i : new int[]{6}) {
                         List<FitnessFunction> comparedFunctions = new ArrayList<>();
                         switch (i) {
                             case 0:
@@ -146,9 +146,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
                         List<MeasurementLog> logs = new ArrayList<>();
 
                         for (int numUser : comparedNumUser) {
-                            for(LocalSearch ls : new LocalSearch[]{null, new LocalSearch()}) {
+                            for(LocalSearch ls : new LocalSearch[]{new LocalSearch()}) {
                                 for (FitnessFunction fitnessFunction : comparedFunctions) {
-                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 1000);
+                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 100);
                                     launcher.fitnessFunction = fitnessFunction;
                                     launcher.location = location;
                                     launcher.dataset = dataset;
@@ -188,8 +188,8 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 fitnessFunction, DateTime.parse("0001-01-01"), 5, numChildren+1, numUser, numIterations,
-                //new IEPOSAgent.Factory(),ls);
-        new IGreedyAgent.Factory(),ls);
+                new IEPOSAgent.Factory(),ls);
+        //new IGreedyAgent.Factory(),ls);
         //new OPTAgent.Factory(),ls);
         return experiment;
     }

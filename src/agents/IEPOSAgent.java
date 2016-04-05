@@ -42,7 +42,7 @@ import protopeer.measurement.MeasurementLog;
  * @author Evangelos
  */
 public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
-    private final static boolean OUTPUT_MOVIE = false;
+    private final static boolean OUTPUT_MOVIE = true;
     private int measurementEpoch;
 
     private final int planSize;
