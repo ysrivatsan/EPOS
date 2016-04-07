@@ -42,7 +42,7 @@ import protopeer.measurement.MeasurementLog;
  * @author Evangelos
  */
 public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
-    private final static boolean OUTPUT_MOVIE = true;
+    private final static boolean OUTPUT_MOVIE = false;
     private int measurementEpoch;
 
     private final int planSize;
@@ -199,6 +199,11 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
         if(OUTPUT_MOVIE) {
             System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+            if(prevAggregate.globalPlan==null) {
+                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+new GlobalPlan(this)+";");
+            } else {
+                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+prevAggregate.globalPlan+";");
+            }
         } else {
             if(iteration%10 == 9) {
                 System.out.print(".");

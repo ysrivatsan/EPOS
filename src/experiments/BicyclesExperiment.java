@@ -40,7 +40,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 1;
+    private final static int numExperiments = 100;
     private FitnessFunction fitnessFunction;
     private String location;
     private String dataset;
@@ -61,9 +61,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/log.log"))) {
-            try (PrintStream out = new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//System.out){//
+            try (PrintStream out = System.out){//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
                 //for (int t : new int[]{0,2,4,6,8,10,12,14,16,18,20,22}) {
-                for (int t : new int[]{10}) {
+                for (int t : new int[]{8}) {
                     String location = "input-data/bicycle";
                     String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
                 /*
@@ -72,7 +72,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
                     String location = "input-data/Archive";
                 /**/
                 for(int c : new int[]{2}) {
-                    for (int i : new int[]{6}) {
+                    for (int i : new int[]{7}) {
                         List<FitnessFunction> comparedFunctions = new ArrayList<>();
                         switch (i) {
                             case 0:
@@ -130,8 +130,14 @@ public class BicyclesExperiment extends ExperimentLauncher {
                                 break;
                             case 7:
                                 comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.5)));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.8)));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.9)));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.95)));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.99)));
+                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator3()));
+                                //comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+                                //comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
                                 break;
                             default:
                                 break;
@@ -146,9 +152,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
                         List<MeasurementLog> logs = new ArrayList<>();
 
                         for (int numUser : comparedNumUser) {
-                            for(LocalSearch ls : new LocalSearch[]{new LocalSearch()}) {
+                            for(LocalSearch ls : new LocalSearch[]{null/*,new LocalSearch()*/}) {
                                 for (FitnessFunction fitnessFunction : comparedFunctions) {
-                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 100);
+                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 200);
                                     launcher.fitnessFunction = fitnessFunction;
                                     launcher.location = location;
                                     launcher.dataset = dataset;

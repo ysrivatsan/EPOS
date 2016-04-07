@@ -214,6 +214,14 @@ public class Plan implements Serializable, Cloneable {
         return Math.sqrt(normSqr());
     }
     
+    public double norm(double p) {
+        double norm = 0;
+        for (double state : values) {
+            norm += Math.pow(Math.abs(state),p);
+        }
+        return Math.pow(norm,p);
+    }
+    
     public double normSqr() {
         double sum = 0.0;
         for (double state : values) {
