@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.joda.time.DateTime;
 import protopeer.Experiment;
@@ -40,161 +41,118 @@ import protopeer.measurement.MeasurementLog;
  */
 public class BicyclesExperiment extends ExperimentLauncher {
 
-    private final static int numExperiments = 100;
+    private AgentFactory agentFactory;
     private FitnessFunction fitnessFunction;
     private String location;
     private String dataset;
     private int numUser;
     private int numChildren;
     private int numIterations;
-    private LocalSearch ls;
-
-    public BicyclesExperiment(int numUser, int numChildren, int numIterations) {
-        this.numUser = numUser;
-        this.numChildren = numChildren;
-        this.numIterations = numIterations;
-    }
+    private LocalSearch localSearch;
 
     private static MeasurementLog log = null;
 
     public static void main(String[] args) throws FileNotFoundException {
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/log.log"))) {
-            try (PrintStream out = System.out){//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
-                //for (int t : new int[]{0,2,4,6,8,10,12,14,16,18,20,22}) {
-                for (int t : new int[]{8}) {
-                    String location = "input-data/bicycle";
-                    String dataset = "user_plans_unique_"+t+"to"+(t+2)+"_force_trips";
-                /*
-                //for (String dataset : new String[]{"1.1","1.3","1.5","5.1","5.3","5.5","7.1","7.3","7.5"}) {
-                for (String dataset : new String[]{"5.1","5.3"}) {
-                    String location = "input-data/Archive";
-                /**/
-                for(int c : new int[]{2}) {
-                    for (int i : new int[]{7}) {
-                        List<FitnessFunction> comparedFunctions = new ArrayList<>();
-                        switch (i) {
-                            case 0:
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorDepthOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorNormalizeStd(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
-                                break;
-                            case 1:
-                                comparedFunctions.add(new IterMinVarG(new Factor1OverN(), new WeightedSumCombinator()));
-                                comparedFunctions.add(new IterMinVarG(new Factor1OverLayer(), new WeightedSumCombinator()));
-                                comparedFunctions.add(new IterMinVarG(new FactorMOverN(), new WeightedSumCombinator()));
-                                comparedFunctions.add(new IterMinVarG(new FactorMOverNmM(), new WeightedSumCombinator()));
-                                comparedFunctions.add(new IterMinVarG(new FactorDepthOverN(), new WeightedSumCombinator()));
-                                comparedFunctions.add(new IterMinVarG(new FactorNormalizeStd(), new WeightedSumCombinator()));
-                                break;
-                            case 2:
-                                comparedFunctions.add(new IterMinVarGmT(new Factor1OverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmT(new Factor1OverLayer(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmT(new FactorMOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmT(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmT(new FactorDepthOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmT(new FactorNormalizeStd(), new SumCombinator()));
-                                break;
-                            case 3:
-                                comparedFunctions.add(new IterMinVarHGmA(new Factor1OverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                comparedFunctions.add(new IterMinVarHGmA(new Factor1OverLayer(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                comparedFunctions.add(new IterMinVarHGmA(new FactorMOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                comparedFunctions.add(new IterMinVarHGmA(new FactorMOverNmM(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                comparedFunctions.add(new IterMinVarHGmA(new FactorDepthOverN(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                comparedFunctions.add(new IterMinVarHGmA(new FactorNormalizeStd(), new Factor1(), new SumCombinator(), new MostRecentCombinator()));
-                                break;
-                            case 4:
-                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1OverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1OverLayer(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorDepthOverN(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorNormalizeStd(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
-                                break;
-                            case 5:
-                                comparedFunctions.add(new IterUCB1Bandit());
-                                break;
-                            case 6:
-                                comparedFunctions.add(new IterLocalSearch());
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
-                                comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
-                                break;
-                            case 7:
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.5)));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.8)));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.9)));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.95)));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.99)));
-                                comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator3()));
-                                //comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
-                                //comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
-                                break;
-                            default:
-                                break;
-                        }
 
-                        List<Integer> comparedNumUser = new ArrayList<>();
-                        comparedNumUser.add(9999); // max user
-                        //comparedNumUser.add(1000);
-                        //comparedNumUser.add(50);
+        BicyclesExperiment launcher = new BicyclesExperiment();
+        launcher.numExperiments = 20;
+        launcher.runDuration = 4;
+        launcher.numIterations = 200;
+        launcher.numUser = 99999;
+
+        String[] datasets = null;
+        switch (0) {
+            case 0:
+                launcher.location = "input-data/bicycle";
+                datasets = Arrays.stream(new int[]{8}).mapToObj(t -> "user_plans_unique_" + t + "to" + (t + 2) + "_force_trips").toArray(n -> new String[n]);
+                break;
+            case 1:
+                launcher.location = "input-data/Archive";
+                datasets = new String[]{"5.1", "5.3"};
+                break;
+        }
+
+        int[] numChildren = new int[]{2};
+        LocalSearch[] localSearch = new LocalSearch[]{null};
+
+        List<List<FitnessFunction>> ffConfigs = new ArrayList<>();
+        List<FitnessFunction> f = new ArrayList<>();
+        f.add(new IterMinVarGmA(new Factor1OverN(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new FactorMOverN(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new FactorDepthOverN(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new FactorNormalizeStd(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
+        ffConfigs.add(f);
+        f = new ArrayList<>();
+        f.add(new IterLocalSearch());
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new Factor1(), new SumCombinator()));
+        f.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+        f.add(new IterMaxMatchGmA(new Factor1(), new SumCombinator()));
+        f.add(new IterProbGmA(new Factor1(), new SumCombinator()));
+        ffConfigs.add(f);
+        f = new ArrayList<>();
+        //comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.0)));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.1)));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.2)));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.3)));
+        f.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator2(0.4)));
+        //comparedFunctions.add(new IterMinVarGmA(new FactorMOverNmM(), new WeightedSumCombinator3()));
+        //comparedFunctions.add(new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()));
+        //comparedFunctions.add(new IterProbGmA(new Factor1(), new SumCombinator()));
+        ffConfigs.add(f);
+
+        try (PrintStream out = System.out) {//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
+            for (int ffConfigId = 0; ffConfigId < ffConfigs.size(); ffConfigId++) {
+                List<FitnessFunction> comparedFunctions = ffConfigs.get(ffConfigId);
+
+                for (String dataset : datasets) {
+                    launcher.dataset = dataset;
+
+                    for (int nc : numChildren) {
+                        launcher.numChildren = nc;
 
                         List<String> names = new ArrayList<>();
                         List<MeasurementLog> logs = new ArrayList<>();
 
-                        for (int numUser : comparedNumUser) {
-                            for(LocalSearch ls : new LocalSearch[]{null/*,new LocalSearch()*/}) {
-                                for (FitnessFunction fitnessFunction : comparedFunctions) {
-                                    BicyclesExperiment launcher = new BicyclesExperiment(numUser, c, 200);
-                                    launcher.fitnessFunction = fitnessFunction;
-                                    launcher.location = location;
-                                    launcher.dataset = dataset;
-                                    launcher.treeInstances = numExperiments;
-                                    launcher.runDuration = 4;
-                                    launcher.ls = ls;
-                                    launcher.run();
+                        for (LocalSearch ls : localSearch) {
+                            launcher.localSearch = ls;
 
-                                    names.add(launcher.getName());
-                                    logs.add(log);
-                                    oos.writeUTF(launcher.getName());
-                                    oos.writeObject(log);
-                                    log = null;
-                                }
+                            for (FitnessFunction fitnessFunction : comparedFunctions) {
+                                launcher.fitnessFunction = fitnessFunction;
+                                launcher.run();
+
+                                names.add(launcher.getName());
+                                logs.add(log);
+                                log = null;
                             }
                         }
 
-                        IEPOSEvaluator.evaluateLogs(i + 1, names, logs, out);
+                        IEPOSEvaluator.evaluateLogs(ffConfigId + 1, names, logs, out);
 
                         long t1 = System.currentTimeMillis();
                         System.out.println("%" + (t1 - t0) / 1000 + "s");
                     }
                 }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
         }
     }
 
     @Override
     public EPOSExperiment createExperiment(int num) {
+        System.out.println("%Experiment " + getName(num) + ", " + location + "/" + dataset);
+
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 location, dataset, null,
                 "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, numChildren+1, numUser, numIterations,
-                new IEPOSAgent.Factory(),ls);
+                fitnessFunction, DateTime.parse("0001-01-01"), 5, numChildren + 1, numUser, numIterations,
+                new IEPOSAgent.Factory(), localSearch);
         //new IGreedyAgent.Factory(),ls);
         //new OPTAgent.Factory(),ls);
         return experiment;
@@ -210,10 +168,10 @@ public class BicyclesExperiment extends ExperimentLauncher {
     }
 
     private String getName() {
-        return fitnessFunction.toString();
+        return fitnessFunction.toString() + (localSearch != null ? " +LS" : "");
     }
 
     private String getName(int num) {
-        return getName() + " " + num + (ls!=null?" +LS":"");
+        return getName() + " " + num;
     }
 }

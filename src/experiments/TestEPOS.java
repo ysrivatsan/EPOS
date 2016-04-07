@@ -94,7 +94,7 @@ public class TestEPOS extends SimulatedExperiment {
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), v[(int) (Math.random() * v.length)]));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, 24, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize));
+                    newPeer.addPeerlet(new EPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, 24, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize));
 
                     return newPeer;
                 }

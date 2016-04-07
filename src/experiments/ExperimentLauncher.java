@@ -12,14 +12,14 @@ import protopeer.util.quantities.Time;
  */
 public abstract class ExperimentLauncher {
     //Simulation Parameters
-    int treeInstances;
+    int numExperiments;
     int runDuration;
     
 
     public abstract EPOSExperiment createExperiment(int num);
     
     public final void run() {
-        for(int i=0;i<treeInstances;i++){
+        for(int i=0;i<numExperiments;i++){
             final EPOSExperiment test = createExperiment(i);
             test.initEPOS();
             test.runSimulation(Time.inSeconds(runDuration));

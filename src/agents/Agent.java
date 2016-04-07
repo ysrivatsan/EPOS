@@ -54,7 +54,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<Finger> children = new ArrayList<>();
     private TopologicalState topologicalState = TopologicalState.DISCONNECTED;
     
-    private final String experimentID;
     private final String plansLocation;
     private final String planConfigurations;
     private final String treeStamp;
@@ -75,8 +74,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize) {
-        this.experimentID = experimentID;
+    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize) {
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
         this.treeStamp = treeStamp;

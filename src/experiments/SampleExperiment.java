@@ -18,7 +18,6 @@
 package experiments;
 
 import agents.*;
-import agents.fitnessFunction.MinDeviationFitnessFunction;
 import agents.fitnessFunction.SampleFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
@@ -33,7 +32,7 @@ public class SampleExperiment extends ExperimentLauncher {
 
     public static void main(String[] args) {
         ExperimentLauncher launcher = new SampleExperiment();
-        launcher.treeInstances = 1;
+        launcher.numExperiments = 1;
         launcher.runDuration = 25;
         launcher.run();
     }
@@ -45,7 +44,7 @@ public class SampleExperiment extends ExperimentLauncher {
                 "input-data/samples", "equalAgents", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 // with factor 0, results are the same (excl. root), compared to factor 80
-                new SampleFitnessFunction(80), DateTime.parse("0001-01-01"), 5, 3, 15, 500, new EPOSAgent.Factory());
+                new SampleFitnessFunction(80), DateTime.parse("0001-01-01"), 5, 3, 15, 500, new EPOSAgent.Factory(),null);
                 //new SampleFitnessFunction(80), DateTime.parse("0001-01-01"), 5, 3, 14, new OPTAgent.Factory());
                 //new SampleFitnessFunction(0), DateTime.parse("0001-01-01"), 5, 3, 15, new EPOSAgent.Factory());
                 //new SampleFitnessFunction(0), DateTime.parse("0001-01-01"), 5, 3, 14, new OPTAgent.Factory());

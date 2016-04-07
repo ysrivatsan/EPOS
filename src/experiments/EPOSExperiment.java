@@ -50,8 +50,7 @@ import tree.centralized.server.TreeServer;
  */
 public class EPOSExperiment extends SimulatedExperiment {
 
-    private final String expSeqNum;
-    private String experimentID;
+    private final String experimentID;
 
     //Simulation Parameters
     private final int N;
@@ -79,14 +78,13 @@ public class EPOSExperiment extends SimulatedExperiment {
 
     private AgentFactory factory;
 
-    public EPOSExperiment(String expSeqNum, RankPriority priority, DescriptorType descriptor, TreeType type, String plansLocation, String planConfigurations, String TISFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, int numIterations, AgentFactory factory, LocalSearch ls) {
-        this.expSeqNum = expSeqNum;
-        this.experimentID = "Experiment " + expSeqNum + "/";
+    public EPOSExperiment(String id, RankPriority priority, DescriptorType descriptor, TreeType type, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, int numIterations, AgentFactory factory, LocalSearch ls) {
+        this.experimentID = id;
         this.priority = priority;
         this.descriptor = descriptor;
         this.type = type;
-        this.plansLocation = plansLocation;
-        this.planConfigurations = planConfigurations;
+        this.plansLocation = folder;
+        this.planConfigurations = config;
         this.treeStamp = treeStamp;
         this.aggregationPhase = aggregationPhase;
         this.fitnessFunction = fitnessFunction;
@@ -97,7 +95,7 @@ public class EPOSExperiment extends SimulatedExperiment {
         this.numIterations = numIterations;
         this.ls = ls;
 
-        File dir = new File(plansLocation + "/" + planConfigurations);
+        File dir = new File(folder + "/" + config);
         this.agentMeterIDs = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
@@ -110,16 +108,14 @@ public class EPOSExperiment extends SimulatedExperiment {
 
         this.N = Math.min(maxAgents, agentMeterIDs.length);
         this.planSize = getPlanSize();
-        this.patternEnergyPlan = loadPatternPlan(plansLocation + "/" + TISFile);
+        this.patternEnergyPlan = loadPatternPlan(folder + "/" + costFile);
     }
 
     public final void initEPOS() {
-        System.out.println("%Experiment " + expSeqNum + ", " + plansLocation + "/" + planConfigurations);
-
         Experiment.initEnvironment();
         init();
 
-        final File folder = new File("peersLog/" + experimentID);
+        final File folder = new File("peersLog/Experiment " + experimentID);
         clearExperimentFile(folder);
         folder.mkdirs();
 
@@ -134,7 +130,7 @@ public class EPOSExperiment extends SimulatedExperiment {
                 //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
                 newPeer.addPeerlet(new TreeProvider());
 
-                newPeer.addPeerlet(factory.create(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, numIterations, ls));
+                newPeer.addPeerlet(factory.create(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, numIterations, ls));
 
                 return newPeer;
             }

@@ -38,8 +38,8 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(String experimentID, String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, int numIterations) {
-        super(experimentID, plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
+    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, int numIterations) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
         this.numIterations = numIterations;
     }
 
