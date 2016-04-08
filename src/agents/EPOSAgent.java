@@ -50,16 +50,16 @@ public class EPOSAgent extends Agent {
 
     private final FitnessFunction fitnessFunction;
     private double robustness;
-    
+
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
     private List<Integer> selectedCombination;
     private Plan childAggregatePlan;
 
-    public static class Factory implements AgentFactory {
+    public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch ls) {
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
             return new EPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize);
         }
     }
@@ -221,7 +221,7 @@ public class EPOSAgent extends Agent {
         } else if (message instanceof EPOSBroadcast) {
             EPOSBroadcast broadcast = (EPOSBroadcast) message;
             current.globalPlan.set(broadcast.globalPlan);
-            
+
             history.put(currentPhase, current);
 
             this.robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, current);

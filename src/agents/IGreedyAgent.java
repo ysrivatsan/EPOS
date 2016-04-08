@@ -45,7 +45,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown> {
 
-    private final static boolean OUTPUT_MOVIE = false;
+    private boolean outputMovie;
     private int measurementEpoch;
 
     private final int planSize;
@@ -68,25 +68,29 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private AgentPlans historic;
 
     private List<Integer> selectedCombination = new ArrayList<>();
-    private LocalSearch localSearch = new LocalSearch();
+    private LocalSearch localSearch;
 
-    public static class Factory implements AgentFactory {
+    public static class Factory extends AgentFactory {
+        public boolean outputMovie;
+        
+        public Factory(boolean outputMovie) {
+            this.outputMovie = outputMovie;
+        }
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch ls) {
-            if (!(fitnessFunction instanceof IterativeFitnessFunction)) {
-                throw new IllegalArgumentException("Fitness function has to be iterative");
-            }
-            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations);
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
         }
     }
 
-    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations) {
+    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie) {
         super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, numIterations);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
+        this.localSearch = localSearch;
+        this.outputMovie = outputMovie;
     }
 
     @Override
@@ -164,7 +168,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
-        if (OUTPUT_MOVIE) {
+        if (outputMovie) {
             System.out.println("D(1:" + planSize + "," + (iteration + 1) + ")=" + current.globalPlan + ";");
         } else {
             if (iteration % 10 == 9) {

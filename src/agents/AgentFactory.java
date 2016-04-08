@@ -20,11 +20,18 @@ package agents;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import org.joda.time.DateTime;
+import protopeer.measurement.MeasurementLog;
 
 /**
  *
  * @author Peter
  */
-public interface AgentFactory {
-    public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch ls);
+public abstract class AgentFactory {
+    public int numIterations;
+    public FitnessFunction fitnessFunction;
+    public LocalSearch localSearch;
+    
+    public MeasurementLog log;
+    
+    public abstract Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
 }

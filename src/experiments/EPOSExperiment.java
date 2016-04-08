@@ -21,7 +21,6 @@ import agents.AgentFactory;
 import agents.LocalSearch;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
-import agents.fitnessFunction.FitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
@@ -67,18 +66,15 @@ public class EPOSExperiment extends SimulatedExperiment {
     private File[] agentMeterIDs;
     private DateTime aggregationPhase;
     private String plansFormat = ".plans";
-    private FitnessFunction fitnessFunction;
     private int planSize;
     private DateTime historicAggregationPhase;
-    private Plan patternEnergyPlan;
+    private Plan costSignal;
     private int historySize;
     private int maxChildren;
-    private int numIterations;
-    private LocalSearch ls;
 
     private AgentFactory factory;
 
-    public EPOSExperiment(String id, RankPriority priority, DescriptorType descriptor, TreeType type, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, FitnessFunction fitnessFunction, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, int numIterations, AgentFactory factory, LocalSearch ls) {
+    public EPOSExperiment(String id, RankPriority priority, DescriptorType descriptor, TreeType type, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory) {
         this.experimentID = id;
         this.priority = priority;
         this.descriptor = descriptor;
@@ -87,13 +83,10 @@ public class EPOSExperiment extends SimulatedExperiment {
         this.planConfigurations = config;
         this.treeStamp = treeStamp;
         this.aggregationPhase = aggregationPhase;
-        this.fitnessFunction = fitnessFunction;
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
         this.maxChildren = maxChildren;
         this.factory = factory;
-        this.numIterations = numIterations;
-        this.ls = ls;
 
         File dir = new File(folder + "/" + config);
         this.agentMeterIDs = dir.listFiles(new FileFilter() {
@@ -108,7 +101,7 @@ public class EPOSExperiment extends SimulatedExperiment {
 
         this.N = Math.min(maxAgents, agentMeterIDs.length);
         this.planSize = getPlanSize();
-        this.patternEnergyPlan = loadPatternPlan(folder + "/" + costFile);
+        this.costSignal = loadPatternPlan(folder + "/" + costFile);
     }
 
     public final void initEPOS() {
@@ -130,7 +123,7 @@ public class EPOSExperiment extends SimulatedExperiment {
                 //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
                 newPeer.addPeerlet(new TreeProvider());
 
-                newPeer.addPeerlet(factory.create(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, numIterations, ls));
+                newPeer.addPeerlet(factory.create(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, aggregationPhase, historicAggregationPhase, costSignal, historySize));
 
                 return newPeer;
             }

@@ -45,15 +45,12 @@ import protopeer.measurement.MeasurementLog;
 public class BicyclesExperiment extends ExperimentLauncher {
 
     private AgentFactory agentFactory;
-    private FitnessFunction fitnessFunction;
     private String dataset;
     private int numUser;
     private int numChildren;
     private int numIterations;
-    private LocalSearch localSearch;
     private String name;
 
-    private static MeasurementLog log = null;
     private static int currentConfig = -1;
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -61,7 +58,7 @@ public class BicyclesExperiment extends ExperimentLauncher {
         new File("output-data").mkdir();
 
         BicyclesExperiment launcher = new BicyclesExperiment();
-        launcher.numExperiments = 1;
+        launcher.numExperiments = 20;
         launcher.runDuration = 4;
         launcher.numIterations = 100;
         launcher.numUser = 99999;
@@ -91,14 +88,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
         )));
 
         outer.add(new Dim(o -> launcher.agentFactory = (AgentFactory) o, Arrays.asList(
-                new IEPOSAgent.Factory()
-        //new IGreedyAgent.Factory()
+                new IEPOSAgent.Factory(false)
+        //new IGreedyAgent.Factory(false)
         //new OPTAgent.Factory()
-        )));
-
-        inner.add(new Dim(o -> launcher.localSearch = (LocalSearch) o, Arrays.asList(
-                (Object) null
-        //new LocalSearch(),
         )));
 
         Map<Integer, List<IterativeFitnessFunction>> ffConfigs = new HashMap<>();
@@ -135,7 +127,13 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 new IterMaxMatchGmA(new FactorMOverNmM(), new SumCombinator()),
                 new IterProbGmA(new Factor1(), new SumCombinator())
         ));
-        inner.add(new Dim(o -> launcher.fitnessFunction = (IterativeFitnessFunction) o, new Iterable<IterativeFitnessFunction>() {
+        
+        inner.add(new Dim(o -> launcher.agentFactory.localSearch = (LocalSearch) o, Arrays.asList(
+                (Object) null
+        //new LocalSearch(),
+        )));
+        
+        inner.add(new Dim(o -> launcher.agentFactory.fitnessFunction = (IterativeFitnessFunction) o, new Iterable<IterativeFitnessFunction>() {
             @Override
             public Iterator<IterativeFitnessFunction> iterator() {
                 return ffConfigs.get(currentConfig).iterator();
@@ -187,15 +185,15 @@ public class BicyclesExperiment extends ExperimentLauncher {
                     }
 
                     // perform experiment
+                    launcher.agentFactory.log = new MeasurementLog();
                     launcher.name = merge(outerName) + " - " + merge(innerName);
                     launcher.run();
                     names.add(merge(innerName));
-                    logs.add(log); // set in method evaluateRun
-                    log = null;
+                    logs.add(launcher.agentFactory.log); // set in method evaluateRun
                 }
 
                 // plot result
-                IEPOSEvaluator.evaluateLogs(plotNumber, merge(outerName), names, launcher.fitnessFunction.getRobustnessMeasure(), logs, out);
+                IEPOSEvaluator.evaluateLogs(plotNumber, merge(outerName), names, launcher.agentFactory.fitnessFunction.getRobustnessMeasure(), logs, out);
 
                 long t1 = System.currentTimeMillis();
                 System.out.println("%" + (t1 - t0) / 1000 + "s");
@@ -209,23 +207,16 @@ public class BicyclesExperiment extends ExperimentLauncher {
 
         String location = dataset.substring(0, dataset.lastIndexOf('/'));
         String config = dataset.substring(dataset.lastIndexOf('/') + 1);
+        
+        agentFactory.numIterations = numIterations;
 
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
                 RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
                 location, config, null,
-                "3BR" + num, DateTime.parse("0001-01-01"),
-                fitnessFunction, DateTime.parse("0001-01-01"), 5, numChildren + 1, numUser, numIterations,
-                agentFactory, localSearch);
+                "3BR" + num, DateTime.parse("0001-01-01"), 
+                DateTime.parse("0001-01-01"), 5, numChildren + 1, numUser,
+                agentFactory);
         return experiment;
-    }
-
-    @Override
-    public void evaluateRun() {
-        if (log == null) {
-            log = Experiment.getSingleton().getRootMeasurementLog();
-        } else {
-            log.mergeWith(Experiment.getSingleton().getRootMeasurementLog());
-        }
     }
 
     private String getName(int num) {

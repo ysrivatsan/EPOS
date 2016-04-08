@@ -42,8 +42,9 @@ import protopeer.measurement.MeasurementLog;
  * @author Evangelos
  */
 public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
-    private final static boolean OUTPUT_MOVIE = false;
+    private boolean outputMovie;
     private int measurementEpoch;
+    private MeasurementLog log;
 
     private final int planSize;
     private final int historySize;
@@ -68,15 +69,16 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private List<Integer> selectedCombination = new ArrayList<>();
     private LocalSearch localSearch;
 
-    public static class Factory implements AgentFactory {
-        public IterativeFitnessFunction fitnessFunction;
+    public static class Factory extends AgentFactory {
+        public boolean outputMovie;
+        
+        public Factory(boolean outputMovie) {
+            this.outputMovie = outputMovie;
+        }
         
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch ls) {
-            if(!(fitnessFunction instanceof IterativeFitnessFunction)) {
-                throw new IllegalArgumentException("Fitness function has to be iterative");
-            }
-            return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction)fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations, ls);
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, log, outputMovie);
         }
     
         @Override
@@ -85,13 +87,15 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch ls) {
+    public IEPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, MeasurementLog log, boolean outputMovie) {
         super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, numIterations);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
-        this.localSearch = ls;
+        this.localSearch = localSearch;
+        this.log = log;
+        this.outputMovie = outputMovie;
     }
 
     @Override
@@ -200,10 +204,10 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
         // Log + output
         double robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
-        Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
+        log.log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
-        if(OUTPUT_MOVIE) {
+        if(outputMovie) {
             System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
             if(prevAggregate.globalPlan==null) {
                 System.out.println("T(1:"+planSize+","+(iteration+1)+")="+new GlobalPlan(this)+";");

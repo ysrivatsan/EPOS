@@ -68,7 +68,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final int planSize;
     
     final List<Plan> possiblePlans = new ArrayList<>();
-    MeasurementLog log;
     
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
@@ -87,7 +86,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     @Override
     public void init(Peer peer) {
         super.init(peer);
-        this.log = new MeasurementLog();
         this.loadCoordinationPhases();
     }
 
