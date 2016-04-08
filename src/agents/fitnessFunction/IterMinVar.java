@@ -69,6 +69,10 @@ public abstract class IterMinVar extends IterativeFitnessFunction {
         //System.out.println(v + " " + plan.variance());
         return v;*/
     }
+    
+    public String getRobustnessMeasure() {
+        return "std deviation";
+    }
 
     @Override
     public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {

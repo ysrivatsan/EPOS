@@ -65,7 +65,7 @@ public class IEPOSEvaluator {
         });
     }
 
-    public static void evaluateLogs(int id, List<String> names, List<MeasurementLog> logs, PrintStream out) {
+    public static void evaluateLogs(int id, String name, List<String> names, String measure, List<MeasurementLog> logs, PrintStream out) {
         int maxIteration = 0;
         for (MeasurementLog log : logs) {
             for (Object tag : log.getTagsOfExactType(Integer.class)) {
@@ -73,25 +73,30 @@ public class IEPOSEvaluator {
             }
         }
 
-        printMatrix("XAvg"+id, logs, maxIteration, a -> a.getAverage(), out);
-        printMatrix("XMax"+id, logs, maxIteration, a -> a.getMax(), out);
-        printMatrix("XMin"+id, logs, maxIteration, a -> a.getMin(), out);
-        printMatrix("XStd"+id, logs, maxIteration, a -> a.getStdDev(), out);
-        
-        out.println("figure("+id+");");
-        out.println("plot(XAvg"+id+"');");
+        printMatrix("XAvg" + id, logs, maxIteration, a -> a.getAverage(), out);
+        printMatrix("XMax" + id, logs, maxIteration, a -> a.getMax(), out);
+        printMatrix("XMin" + id, logs, maxIteration, a -> a.getMin(), out);
+        printMatrix("XStd" + id, logs, maxIteration, a -> a.getStdDev(), out);
+
+        out.println("figure(" + id + ");");
+        out.println("plot(XAvg" + id + "');");
         out.println("xlabel('iteration');");
-        out.println("ylabel('std deviation');");
-        out.print("legend('" + names.get(0) + "'");
-        for(int i=1; i<names.size(); i++) {
-            out.print(",'" + names.get(i) + "'");
+        out.println("ylabel('" + measure + "');");
+        out.print("legend('" + toMatlabString(names.get(0)) + "'");
+        for (int i = 1; i < names.size(); i++) {
+            out.print(",'" + toMatlabString(names.get(i)) + "'");
         }
         out.println(");");
+        out.println("title('" + toMatlabString(name) + "');");
     }
-    
+
+    private static String toMatlabString(String str) {
+        return str.replace("_", "\\_");
+    }
+
     private static void printMatrix(String name, List<MeasurementLog> logs, int maxIteration, Function<Aggregate, Double> function, PrintStream out) {
         out.println(name + " = [");
-        for(MeasurementLog log : logs) {
+        for (MeasurementLog log : logs) {
             out.print(function.apply(log.getAggregate(0)));
             for (int i = 1; i <= maxIteration; i++) {
                 out.print(", " + function.apply(log.getAggregate(i)));

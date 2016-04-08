@@ -29,6 +29,10 @@ import java.util.List;
 public abstract class FitnessFunction {
 
     public abstract double getRobustness(Plan plan, Plan costSignal, AgentPlans historic);
+    
+    public String getRobustnessMeasure() {
+        return "score";
+    }
 
     public int select(Agent agent, List<Plan> plans, Plan costSignal) {
         return 0;
