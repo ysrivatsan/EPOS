@@ -40,6 +40,7 @@ import protopeer.Peer;
 import protopeer.PeerFactory;
 import protopeer.SimulatedExperiment;
 import protopeer.servers.bootstrap.SimplePeerIdentifierGenerator;
+import tree.BalanceType;
 import tree.centralized.client.TreeClient;
 import tree.centralized.server.TreeServer;
 
@@ -55,9 +56,7 @@ public class EPOSExperiment extends SimulatedExperiment {
     private final int N;
 
     // Tree building
-    private final RankPriority priority;
-    private final DescriptorType descriptor;
-    private final TreeType type;
+    private final NetworkArchitecture architecture;
 
     // EPOS Agent
     private String plansLocation;
@@ -70,22 +69,18 @@ public class EPOSExperiment extends SimulatedExperiment {
     private DateTime historicAggregationPhase;
     private Plan costSignal;
     private int historySize;
-    private int maxChildren;
 
     private AgentFactory factory;
 
-    public EPOSExperiment(String id, RankPriority priority, DescriptorType descriptor, TreeType type, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxChildren, int maxAgents, AgentFactory factory) {
+    public EPOSExperiment(String id, NetworkArchitecture architecture, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
         this.experimentID = id;
-        this.priority = priority;
-        this.descriptor = descriptor;
-        this.type = type;
+        this.architecture = architecture;
         this.plansLocation = folder;
         this.planConfigurations = config;
         this.treeStamp = treeStamp;
         this.aggregationPhase = aggregationPhase;
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
-        this.maxChildren = maxChildren;
         this.factory = factory;
 
         File dir = new File(folder + "/" + config);
@@ -116,12 +111,7 @@ public class EPOSExperiment extends SimulatedExperiment {
             @Override
             public Peer createPeer(int peerIndex, Experiment experiment) {
                 Peer newPeer = new Peer(peerIndex);
-                if (peerIndex == 0) {
-                    newPeer.addPeerlet(new TreeServer(N, priority, descriptor, type));
-                }
-                newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), maxChildren));
-                //newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, maxChildren));
-                newPeer.addPeerlet(new TreeProvider());
+                architecture.addPeerlets(newPeer, peerIndex, N);
 
                 newPeer.addPeerlet(factory.create(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, aggregationPhase, historicAggregationPhase, costSignal, historySize));
 

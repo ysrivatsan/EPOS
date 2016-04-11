@@ -23,6 +23,7 @@ import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
 import org.joda.time.DateTime;
+import tree.BalanceType;
 
 /**
  * @author Peter
@@ -39,16 +40,24 @@ public class SampleExperiment extends ExperimentLauncher {
 
     @Override
     public EPOSExperiment createExperiment(int num) {
+        TreeArchitecture architecture = new TreeArchitecture();
+        architecture.priority = RankPriority.HIGH_RANK;
+        architecture.rank = DescriptorType.RANK;
+        architecture.type = TreeType.SORTED_HtL;
+        architecture.balance = BalanceType.WEIGHT_BALANCED;
+        architecture.maxChildren = 3;
+        architecture.rankGenerator = idx -> (double)idx;
+        
         AgentFactory agentFactory = new EPOSAgent.Factory();
         //AgentFactory agentFactory = new OPTAgent.Factory();
         agentFactory.fitnessFunction = new SampleFitnessFunction(80);
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
-        EPOSExperiment experiment = new EPOSExperiment("01",
-                RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
+        
+        EPOSExperiment experiment = new EPOSExperiment("01", architecture,
                 "input-data/samples", "equalAgents", "cost.txt",
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 // with factor 0, results are the same (excl. root), compared to factor 80
-                DateTime.parse("0001-01-01"), 5, 3, 15, agentFactory);
+                DateTime.parse("0001-01-01"), 5, 15, agentFactory);
         return experiment;
     }
 }

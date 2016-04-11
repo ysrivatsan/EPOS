@@ -28,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -37,15 +36,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.joda.time.DateTime;
-import protopeer.Experiment;
 import protopeer.measurement.MeasurementLog;
+import tree.BalanceType;
 
 /**
  * @author Peter
@@ -55,10 +53,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private AgentFactory agentFactory;
     private String dataset;
     private int numUser;
-    private int numChildren;
     private int numIterations;
     private String title;
     private String label;
+    private NetworkArchitecture architecture;
 
     private static int currentConfig = -1;
     private static BicyclesExperiment launcher;
@@ -76,12 +74,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         launcher.numIterations = 1000;
         launcher.numUser = 99999;
 
-        class Dim {
+        class Dim<T> {
 
-            Function<Object, Object> func;
-            Iterable<? extends Object> iterable;
+            Function<T, Object> func;
+            Iterable<? extends T> iterable;
 
-            public Dim(Function<Object, Object> func, Iterable<? extends Object> iterable) {
+            public Dim(Function<T, Object> func, Iterable<? extends T> iterable) {
                 this.func = func;
                 this.iterable = iterable;
             }
@@ -90,25 +88,44 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         List<Dim> outer = new ArrayList<>();
         List<Dim> inner = new ArrayList<>();
 
-        outer.add(new Dim(o -> launcher.dataset = (String) o, Arrays.asList(Stream.concat(Arrays.stream(new String[]{
+        outer.add(new Dim<>(o -> launcher.architecture = o, Arrays.asList(
+                new TreeArchitecture()
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).priority = o, Arrays.asList(
+                RankPriority.HIGH_RANK
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).rank = o, Arrays.asList(
+                DescriptorType.RANK
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).type = o, Arrays.asList(
+                TreeType.SORTED_HtL
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).balance = o, Arrays.asList(
+                BalanceType.WEIGHT_BALANCED
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).rankGenerator = o, Arrays.asList(
+                (IntFunction<Double>) (int idx) -> Math.random()
+                //(IntFunction<Double>) idx -> (double)idx
+        )));
+        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).maxChildren = o, Arrays.asList(
+                2
+        )));
+        
+        outer.add(new Dim<>(o -> launcher.dataset = o, Arrays.asList(Stream.concat(Arrays.stream(new String[]{
             "5.1"//, "5.3"
         }).map(s -> "input-data/Archive/" + s), Arrays.stream(new int[]{
             //8
         }).mapToObj(t -> "input-data/bicycle/user_plans_unique_" + t + "to" + (t + 2) + "_force_trips")).toArray(n -> new String[n]))));
 
-        outer.add(new Dim(o -> launcher.numChildren = (Integer) o, Arrays.asList(
-                2
-        )));
-
-        outer.add(new Dim(o -> launcher.agentFactory = (AgentFactory) o, Arrays.asList(
+        outer.add(new Dim<>(o -> launcher.agentFactory = o, Arrays.asList(
                 new IEPOSAgent.Factory(false)
         //new IGreedyAgent.Factory(false)
         //new OPTAgent.Factory()
         )));
 
         Map<Integer, List<IterativeFitnessFunction>> ffConfigs = new HashMap<>();
-        outer.add(new Dim(o -> currentConfig = (Integer) o, Arrays.asList(
-                0
+        outer.add(new Dim<>(o -> currentConfig = o, Arrays.asList(
+                2
         )));
         ffConfigs.put(0, Arrays.asList(
                 new IterMinVarGmA(new Factor1OverN(), new SumCombinator()),
@@ -143,17 +160,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 new IterProbGmA(new Factor1(), new SumCombinator())
         ));
         
-        inner.add(new Dim(o -> launcher.agentFactory.localSearch = (LocalSearch) o, Arrays.asList(
-                (Object) null
+        inner.add(new Dim<>(o -> launcher.agentFactory.localSearch = o, Arrays.asList(
+                (LocalSearch) null
         //new LocalSearch(),
         )));
         
-        inner.add(new Dim(o -> launcher.agentFactory.fitnessFunction = (IterativeFitnessFunction) o, new Iterable<IterativeFitnessFunction>() {
-            @Override
-            public Iterator<IterativeFitnessFunction> iterator() {
-                return ffConfigs.get(currentConfig).iterator();
-            }
-        }));
+        inner.add(new Dim<>(o -> launcher.agentFactory.fitnessFunction = o, () -> ffConfigs.get(currentConfig).iterator()));
         
         try (PrintStream out = System.out) {//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
             int plotNumber = 0;
@@ -256,10 +268,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         agentFactory.numIterations = numIterations;
 
         EPOSExperiment experiment = new EPOSExperiment(getName(num),
-                RankPriority.HIGH_RANK, DescriptorType.RANK, TreeType.SORTED_HtL,
+                architecture,
                 location, config, null,
                 "3BR" + num, DateTime.parse("0001-01-01"), 
-                DateTime.parse("0001-01-01"), 5, numChildren + 1, numUser,
+                DateTime.parse("0001-01-01"), 5, numUser,
                 agentFactory);
         return experiment;
     }
@@ -273,6 +285,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         try {
             BicyclesExperiment clone = (BicyclesExperiment) super.clone();
             clone.agentFactory = agentFactory.clone();
+            clone.architecture = architecture.clone();
             return clone;
         } catch (CloneNotSupportedException ex) {
             Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
