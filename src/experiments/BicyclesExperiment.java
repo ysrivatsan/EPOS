@@ -33,7 +33,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.joda.time.DateTime;
 import protopeer.Experiment;
@@ -42,25 +50,30 @@ import protopeer.measurement.MeasurementLog;
 /**
  * @author Peter
  */
-public class BicyclesExperiment extends ExperimentLauncher {
+public class BicyclesExperiment extends ExperimentLauncher implements Cloneable, Runnable {
 
     private AgentFactory agentFactory;
     private String dataset;
     private int numUser;
     private int numChildren;
     private int numIterations;
-    private String name;
+    private String title;
+    private String label;
 
     private static int currentConfig = -1;
+    private static BicyclesExperiment launcher;
 
     public static void main(String[] args) throws FileNotFoundException {
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
 
-        BicyclesExperiment launcher = new BicyclesExperiment();
-        launcher.numExperiments = 20;
+        //ExecutorService executorService = Executors.newCachedThreadPool(); // not supported by ProtoPeer? (see debug.log)
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        
+        launcher = new BicyclesExperiment();
+        launcher.numExperiments = 1;
         launcher.runDuration = 4;
-        launcher.numIterations = 100;
+        launcher.numIterations = 1000;
         launcher.numUser = 99999;
 
         class Dim {
@@ -94,7 +107,9 @@ public class BicyclesExperiment extends ExperimentLauncher {
         )));
 
         Map<Integer, List<IterativeFitnessFunction>> ffConfigs = new HashMap<>();
-        outer.add(new Dim(o -> currentConfig = (Integer) o, Arrays.asList(2)));
+        outer.add(new Dim(o -> currentConfig = (Integer) o, Arrays.asList(
+                0
+        )));
         ffConfigs.put(0, Arrays.asList(
                 new IterMinVarGmA(new Factor1OverN(), new SumCombinator()),
                 new IterMinVarGmA(new Factor1OverLayer(), new SumCombinator()),
@@ -139,9 +154,10 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 return ffConfigs.get(currentConfig).iterator();
             }
         }));
-
+        
         try (PrintStream out = System.out) {//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
             int plotNumber = 0;
+            List<Future> plotFutures = new ArrayList<>();
             
             // outer loops
             List<Iterator<? extends Object>> outerState = repeat(outer.size(), (Iterator<? extends Object>) null);
@@ -162,10 +178,13 @@ public class BicyclesExperiment extends ExperimentLauncher {
                 }
 
                 // init plot
-                List<String> names = new ArrayList<>();
-                List<MeasurementLog> logs = new ArrayList<>();
+                final List<String> labels = new ArrayList<>();
+                final List<MeasurementLog> logs = new ArrayList<>();
+                final String title = merge(outerName);
                 plotNumber++;
 
+                final List<Future> experimentFutures = new ArrayList<>();
+                
                 // inner loops
                 List<Iterator<? extends Object>> innerState = repeat(inner.size(), (Iterator<? extends Object>) null);
                 List<String> innerName = repeat(inner.size(), (String) null);
@@ -186,24 +205,50 @@ public class BicyclesExperiment extends ExperimentLauncher {
 
                     // perform experiment
                     launcher.agentFactory.log = new MeasurementLog();
-                    launcher.name = merge(outerName) + " - " + merge(innerName);
-                    launcher.run();
-                    names.add(merge(innerName));
+                    launcher.title = title;
+                    launcher.label = merge(innerName);
+                    experimentFutures.add(executorService.submit(launcher));
+                    
+                    labels.add(launcher.label);
                     logs.add(launcher.agentFactory.log); // set in method evaluateRun
+                    
+                    launcher = launcher.clone();
+                    launcher.agentFactory.log = null;
                 }
 
                 // plot result
-                IEPOSEvaluator.evaluateLogs(plotNumber, merge(outerName), names, launcher.agentFactory.fitnessFunction.getRobustnessMeasure(), logs, out);
-
-                long t1 = System.currentTimeMillis();
-                System.out.println("%" + (t1 - t0) / 1000 + "s");
+                int curPlotNumber = plotNumber;
+                String curMeasure = launcher.agentFactory.fitnessFunction.getRobustnessMeasure();
+                plotFutures.add(executorService.submit(() -> {
+                    try {
+                        for(Future f : experimentFutures) {
+                            f.get();
+                        }
+                        synchronized(out) {
+                            System.out.println();
+                            IEPOSEvaluator.evaluateLogs(curPlotNumber, title, labels, curMeasure, logs, out);
+                        }
+                    } catch (InterruptedException | ExecutionException ex) {
+                        Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }));
             }
+            
+            for(Future f : plotFutures) {
+                f.get();
+            }
+            executorService.shutdown();
+            
+            long t1 = System.currentTimeMillis();
+            System.out.println("%" + (t1 - t0) / 1000 + "s");
+        } catch (InterruptedException | ExecutionException ex) {
+            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     @Override
     public EPOSExperiment createExperiment(int num) {
-        System.out.print("%Experiment " + getName(num) + ": ");
+        System.out.println("%Experiment " + getName(num) + ":");
 
         String location = dataset.substring(0, dataset.lastIndexOf('/'));
         String config = dataset.substring(dataset.lastIndexOf('/') + 1);
@@ -220,7 +265,19 @@ public class BicyclesExperiment extends ExperimentLauncher {
     }
 
     private String getName(int num) {
-        return name + " - " + num;
+        return title + " - " + label + " - " + num;
+    }
+    
+    @Override
+    public BicyclesExperiment clone() {
+        try {
+            BicyclesExperiment clone = (BicyclesExperiment) super.clone();
+            clone.agentFactory = agentFactory.clone();
+            return clone;
+        } catch (CloneNotSupportedException ex) {
+            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     private static <T> List<T> repeat(int times, T item) {

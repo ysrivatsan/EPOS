@@ -65,7 +65,7 @@ public class IEPOSEvaluator {
         });
     }
 
-    public static void evaluateLogs(int id, String name, List<String> names, String measure, List<MeasurementLog> logs, PrintStream out) {
+    public static void evaluateLogs(int id, String title, List<String> labels, String measure, List<MeasurementLog> logs, PrintStream out) {
         int maxIteration = 0;
         for (MeasurementLog log : logs) {
             for (Object tag : log.getTagsOfExactType(Integer.class)) {
@@ -82,12 +82,12 @@ public class IEPOSEvaluator {
         out.println("plot(XAvg" + id + "');");
         out.println("xlabel('iteration');");
         out.println("ylabel('" + measure + "');");
-        out.print("legend('" + toMatlabString(names.get(0)) + "'");
-        for (int i = 1; i < names.size(); i++) {
-            out.print(",'" + toMatlabString(names.get(i)) + "'");
+        out.print("legend('" + toMatlabString(labels.get(0)) + "'");
+        for (int i = 1; i < labels.size(); i++) {
+            out.print(",'" + toMatlabString(labels.get(i)) + "'");
         }
         out.println(");");
-        out.println("title('" + toMatlabString(name) + "');");
+        out.println("title('" + toMatlabString(title) + "');");
     }
 
     private static String toMatlabString(String str) {

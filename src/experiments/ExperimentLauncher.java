@@ -15,7 +15,6 @@ public abstract class ExperimentLauncher {
     int numExperiments;
     int runDuration;
     
-
     public abstract EPOSExperiment createExperiment(int num);
     
     public final void run() {

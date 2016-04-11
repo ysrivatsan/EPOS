@@ -216,7 +216,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             }
         } else {
             if(iteration%10 == 9) {
-                System.out.print(".");
+                System.out.print("%");
             }
             if(iteration%100 == 99) {
                 System.out.print(" ");

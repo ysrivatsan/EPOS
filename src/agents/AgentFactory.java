@@ -26,7 +26,7 @@ import protopeer.measurement.MeasurementLog;
  *
  * @author Peter
  */
-public abstract class AgentFactory {
+public abstract class AgentFactory implements Cloneable {
     public int numIterations;
     public FitnessFunction fitnessFunction;
     public LocalSearch localSearch;
@@ -34,4 +34,9 @@ public abstract class AgentFactory {
     public MeasurementLog log;
     
     public abstract Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
+    
+    @Override
+    public AgentFactory clone() throws CloneNotSupportedException {
+        return (AgentFactory) super.clone();
+    }
 }
