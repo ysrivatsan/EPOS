@@ -21,6 +21,7 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import dsutil.generic.state.ArithmeticState;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,13 +50,13 @@ public class OPTAgent extends Agent {
     public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, costSignal, fitnessFunction);
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new OPTAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, outFolder, plansFormat, planSize, costSignal, fitnessFunction);
         }
     }
 
-    public OPTAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
+    public OPTAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, File outFolder, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase);
         this.fitnessFunction = fitnessFunction;
     }
 

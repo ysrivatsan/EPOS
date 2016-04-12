@@ -19,8 +19,9 @@ package agents;
 
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
+import java.io.File;
+import java.util.Objects;
 import org.joda.time.DateTime;
-import protopeer.measurement.MeasurementLog;
 
 /**
  *
@@ -31,12 +32,43 @@ public abstract class AgentFactory implements Cloneable {
     public FitnessFunction fitnessFunction;
     public LocalSearch localSearch;
     
-    public MeasurementLog log;
-    
-    public abstract Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
+    public abstract Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
     
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {
         return (AgentFactory) super.clone();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 67 * hash + this.numIterations;
+        hash = 67 * hash + Objects.hashCode(this.fitnessFunction);
+        hash = 67 * hash + Objects.hashCode(this.localSearch);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AgentFactory other = (AgentFactory) obj;
+        if (this.numIterations != other.numIterations) {
+            return false;
+        }
+        if (!Objects.equals(this.fitnessFunction, other.fitnessFunction)) {
+            return false;
+        }
+        if (!Objects.equals(this.localSearch, other.localSearch)) {
+            return false;
+        }
+        return true;
     }
 }

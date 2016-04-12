@@ -19,13 +19,8 @@ package experiments;
 
 import agents.network.TreeArchitecture;
 import agents.AgentFactory;
-import agents.LocalSearch;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
-import dsutil.generic.RankPriority;
-import dsutil.protopeer.services.topology.trees.DescriptorType;
-import dsutil.protopeer.services.topology.trees.TreeProvider;
-import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -41,18 +36,12 @@ import protopeer.LiveExperiment;
 import protopeer.Peer;
 import protopeer.PeerFactory;
 import protopeer.SimulatedExperiment;
-import protopeer.servers.bootstrap.SimplePeerIdentifierGenerator;
-import tree.BalanceType;
-import tree.centralized.client.TreeClient;
-import tree.centralized.server.TreeServer;
 
 /**
  *
  * @author Evangelos
  */
-public class EPOSExperiment extends LiveExperiment {
-
-    private final String experimentID;
+public class EPOSExperiment extends SimulatedExperiment {
 
     //Simulation Parameters
     private final int N;
@@ -61,53 +50,48 @@ public class EPOSExperiment extends LiveExperiment {
     private final TreeArchitecture architecture;
 
     // EPOS Agent
-    private String plansLocation;
-    private String planConfigurations;
-    private String treeStamp; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
-    private File[] agentMeterIDs;
-    private DateTime aggregationPhase;
-    private String plansFormat = ".plans";
-    private int planSize;
-    private DateTime historicAggregationPhase;
-    private Plan costSignal;
-    private int historySize;
+    private final String inFolder;
+    private final File outFolder;
+    private final String config;
+    private final String treeStamp; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
+    private final File[] agentMeterIDs;
+    private final DateTime aggregationPhase;
+    private final String plansFormat = ".plans";
+    private final int planSize;
+    private final DateTime historicAggregationPhase;
+    private final Plan costSignal;
+    private final int historySize;
 
-    private AgentFactory factory;
+    private final AgentFactory factory;
 
-    public EPOSExperiment(String id, TreeArchitecture architecture, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
-        this.experimentID = id;
+    public EPOSExperiment(String inFolder, File outFolder, String config, String costFile, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
+        this.outFolder = outFolder;
         this.architecture = architecture;
-        this.plansLocation = folder;
-        this.planConfigurations = config;
+        this.inFolder = inFolder;
+        this.config = config;
         this.treeStamp = treeStamp;
         this.aggregationPhase = aggregationPhase;
         this.historicAggregationPhase = historicAggregationPhase;
         this.historySize = historySize;
         this.factory = factory;
 
-        File dir = new File(folder + "/" + config);
-        this.agentMeterIDs = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.isDirectory();
-            }
-        });
+        File dir = new File(inFolder + "/" + config);
+        this.agentMeterIDs = dir.listFiles((File pathname) -> pathname.isDirectory());
         if (agentMeterIDs == null) {
             System.out.println("ERROR: directory " + dir.getPath() + " is empty");
         }
 
         this.N = Math.min(maxAgents, agentMeterIDs.length);
         this.planSize = getPlanSize();
-        this.costSignal = loadPatternPlan(folder + "/" + costFile);
+        this.costSignal = loadCostSignal(inFolder + "/" + costFile);
     }
 
     public final void initEPOS() {
         Experiment.initEnvironment();
         init();
 
-        final File folder = new File("peersLog/Experiment " + experimentID);
-        clearExperimentFile(folder);
-        folder.mkdirs();
+        clearExperimentFile(outFolder);
+        outFolder.mkdirs();
 
         PeerFactory peerFactory = new PeerFactory() {
             @Override
@@ -115,7 +99,7 @@ public class EPOSExperiment extends LiveExperiment {
                 Peer newPeer = new Peer(peerIndex);
                 architecture.addPeerlets(newPeer, peerIndex, N);
 
-                newPeer.addPeerlet(factory.create(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, aggregationPhase, historicAggregationPhase, costSignal, historySize));
+                newPeer.addPeerlet(factory.create(inFolder, config, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, outFolder, aggregationPhase, historicAggregationPhase, costSignal, historySize));
 
                 return newPeer;
             }
@@ -124,11 +108,11 @@ public class EPOSExperiment extends LiveExperiment {
         startPeers(0, N);
     }
 
-    public final Plan loadPatternPlan(String TISLocation) {
+    public final Plan loadCostSignal(String filename) {
         Plan patternEnergyPlan = new GlobalPlan();
         List<Double> vals = new ArrayList<>();
 
-        File file = new File(TISLocation);
+        File file = new File(filename);
         if (file.exists()) {
             try (Scanner scanner = new Scanner(file)) {
                 scanner.useLocale(Locale.US);

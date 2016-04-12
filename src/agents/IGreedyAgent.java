@@ -18,25 +18,18 @@
 package agents;
 
 import agents.plan.AggregatePlan;
-import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
-import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
-import messages.EPOSRequest;
-import messages.IEPOSDown;
-import messages.IEPOSUp;
 import messages.IGreedyDown;
 import messages.IGreedyUp;
 import org.joda.time.DateTime;
 import protopeer.Experiment;
-import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -78,13 +71,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
         }
     }
 
-    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, numIterations);
+    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;

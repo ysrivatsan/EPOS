@@ -21,13 +21,14 @@ import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
 import agents.fitnessFunction.*;
-import agents.network.IndexRankGenerator;
 import agents.network.RandomRankGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,11 +41,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 import org.joda.time.DateTime;
+import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
 
@@ -52,6 +52,7 @@ import tree.BalanceType;
  * @author Peter
  */
 public class BicyclesExperiment extends ExperimentLauncher implements Cloneable, Runnable {
+    private long id = System.currentTimeMillis();
 
     private AgentFactory agentFactory;
     private String dataset;
@@ -60,6 +61,8 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private String title;
     private String label;
     private TreeArchitecture architecture;
+    
+    private MeasurementLog log;
 
     private static int currentConfig = -1;
     private static BicyclesExperiment launcher;
@@ -72,9 +75,9 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         
         launcher = new BicyclesExperiment();
-        launcher.numExperiments = 1;
-        launcher.runDuration = 4;
-        launcher.numIterations = 200;
+        launcher.numExperiments = 5;
+        launcher.numIterations = 20;
+        launcher.runDuration = 4*launcher.numIterations;
         launcher.numUser = 99999;
         launcher.architecture = new TreeArchitecture();
         launcher.architecture.priority = RankPriority.HIGH_RANK;
@@ -95,9 +98,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         List<Dim> outer = new ArrayList<>();
         List<Dim> inner = new ArrayList<>();
 
-        inner.add(new Dim<>(o -> launcher.architecture.balance = o, Arrays.asList(
-                BalanceType.WEIGHT_BALANCED
-                //BalanceType.LIST
+        Map<String,BalanceType> treeBalance = new HashMap<>();
+        treeBalance.put("BALANCED", BalanceType.WEIGHT_BALANCED);
+        treeBalance.put("LIST", BalanceType.LIST);
+        inner.add(new Dim<>(o -> launcher.architecture.balance = treeBalance.get(o), Arrays.asList(
+                "BALANCED"
+                //"LIST"
         )));
         outer.add(new Dim<>(o -> launcher.architecture.rankGenerator = o, Arrays.asList(
                 new RandomRankGenerator()
@@ -107,11 +113,16 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 2
         )));
         
-        outer.add(new Dim<>(o -> launcher.dataset = o, Arrays.asList(Stream.concat(Arrays.stream(new String[]{
-            "5.1"//, "5.3"
-        }).map(s -> "input-data/Archive/" + s), Arrays.stream(new int[]{
-            //8
-        }).mapToObj(t -> "input-data/bicycle/user_plans_unique_" + t + "to" + (t + 2) + "_force_trips")).toArray(n -> new String[n]))));
+        outer.add(new Dim<>(s -> {
+            if(s.startsWith("E")) {
+                return launcher.dataset = "input-data/Archive/" + s.charAt(s.length()-3) + "." + s.charAt(s.length()-1);
+            } else {
+                int num = Integer.parseInt(s.substring(s.indexOf('_')+1));
+                return launcher.dataset = "input-data/bicycle/user_plans_unique_" + num + "to" + (num + 2) + "_force_trips";
+            }
+        }, Arrays.asList(
+            "E_5_1"//, "B_8"
+        )));
 
         outer.add(new Dim<>(o -> launcher.agentFactory = o, Arrays.asList(
                 new IEPOSAgent.Factory(false)
@@ -186,12 +197,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 }
 
                 // init plot
-                final List<String> labels = new ArrayList<>();
-                final List<MeasurementLog> logs = new ArrayList<>();
-                final String title = merge(outerName);
+                List<String> labels = new ArrayList<>();
+                List<MeasurementLog> logs = new ArrayList<>();
+                String title = merge(outerName);
                 plotNumber++;
-
-                final List<Future> experimentFutures = new ArrayList<>();
                 
                 // inner loops
                 List<Iterator<? extends Object>> innerState = repeat(inner.size(), (Iterator<? extends Object>) null);
@@ -212,34 +221,23 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                     }
 
                     // perform experiment
-                    launcher.agentFactory.log = new MeasurementLog();
                     launcher.title = title;
                     launcher.label = merge(innerName);
-                    experimentFutures.add(executorService.submit(launcher));
+                    launcher.run();
                     
                     labels.add(launcher.label);
-                    logs.add(launcher.agentFactory.log); // set in method evaluateRun
+                    logs.add(launcher.log); // set in method evaluateRun
                     
                     launcher = launcher.clone();
-                    launcher.agentFactory.log = null;
+                    launcher.log = null;
                 }
 
                 // plot result
                 int curPlotNumber = plotNumber;
                 String curMeasure = launcher.agentFactory.fitnessFunction.getRobustnessMeasure();
-                plotFutures.add(executorService.submit(() -> {
-                    try {
-                        for(Future f : experimentFutures) {
-                            f.get();
-                        }
-                        synchronized(out) {
-                            System.out.println();
-                            IEPOSEvaluator.evaluateLogs(curPlotNumber, title, labels, curMeasure, logs, out);
-                        }
-                    } catch (InterruptedException | ExecutionException ex) {
-                        Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }));
+                IEPOSEvaluator.evaluateLogs(curPlotNumber, title, labels, curMeasure, logs, out);
+                //TODO: make evaluator stand alone (store title, labels etc. in log)
+                //TODO: make evaluator accessible from separate main method (with experiment id as parameter)
             }
             
             for(Future f : plotFutures) {
@@ -263,13 +261,29 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         
         agentFactory.numIterations = numIterations;
 
-        EPOSExperiment experiment = new EPOSExperiment(getName(num),
+        File outFolder = new File("peersLog/Experiment " + id + " - " + num);
+        EPOSExperiment experiment = new EPOSExperiment(
+                location, outFolder, config, null,
                 architecture,
-                location, config, null,
                 "3BR" + num, DateTime.parse("0001-01-01"), 
                 DateTime.parse("0001-01-01"), 5, numUser,
                 agentFactory);
         return experiment;
+    }
+    
+    @Override
+    public void evaluateRun(int num) {
+        if(num == 0) {
+            log = new MeasurementLog();
+        }
+        try {
+            LogReplayer replayer = new LogReplayer();
+            File f = new File("peersLog/Experiment " + id + " - " + num).listFiles()[0];
+            MeasurementLog log = replayer.loadLogFromFile(f.getPath());
+            this.log.mergeWith(log);
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private String getName(int num) {

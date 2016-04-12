@@ -58,6 +58,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final String planConfigurations;
     private final String treeStamp;
     private final String agentMeterID;
+    private final File outFolder;
     
     DateTime currentPhase;
     DateTime previousPhase = null;
@@ -69,18 +70,21 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     final List<Plan> possiblePlans = new ArrayList<>();
     
+    private MeasurementFileDumper measurementDumper;
+    
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize) {
+    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase) {
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
         this.treeStamp = treeStamp;
         this.agentMeterID = agentMeterID;
-        this.currentPhase = initialPhase;
         this.plansFormat = plansFormat;
         this.planSize = planSize;
+        this.outFolder = outFolder;
+        this.currentPhase = initialPhase;
     }
     
     @Override
@@ -109,7 +113,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         loadAgentTimer.schedule(Time.inMilliseconds(2000));
     }
     
-    private void runActiveState() {
+    void runActiveState() {
         Timer loadAgentTimer = getPeer().getClock().createNewTimer();
         loadAgentTimer.addTimerListener(new TimerListener() {
             public void timerExpired(Timer timer) {
@@ -200,19 +204,24 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         }
     }
     
-    MeasurementFileDumper measurementDumper;
-    private void scheduleMeasurements() {
-        if(isRoot()) {
-            //measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
+    private MeasurementFileDumper getMeasurementDumper() {
+        if(measurementDumper == null) {
+            measurementDumper = new MeasurementFileDumper(outFolder.getPath() + "/" + getPeer().getIndexNumber());
         }
+        return measurementDumper;
+    }
+    
+    private void scheduleMeasurements() {
         getPeer().getMeasurementLogger().addMeasurementLoggerListener(new MeasurementLoggerListener() {
             @Override
             public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
-                measure(log, epochNumber);
-                if(isRoot()) {
-                   // measurementDumper.measurementEpochEnded(log, epochNumber);
+                if(epochNumber >= 2) {
+                    measure(log, epochNumber);
+                    if(isRoot()) {
+                       getMeasurementDumper().measurementEpochEnded(log, epochNumber);
+                    }
+                    log.shrink(epochNumber, epochNumber + 1);
                 }
-                log.shrink(epochNumber, epochNumber + 1);
             }
         });
     }

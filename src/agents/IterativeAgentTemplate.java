@@ -17,6 +17,7 @@
  */
 package agents;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,9 @@ import messages.UpMessage;
 import org.joda.time.DateTime;
 import protopeer.Finger;
 import protopeer.network.Message;
+import protopeer.time.Timer;
+import protopeer.time.TimerListener;
+import protopeer.util.quantities.Time;
 
 /**
  *
@@ -38,19 +42,45 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, String plansFormat, int planSize, int numIterations) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize);
+    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, int numIterations) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase);
         this.numIterations = numIterations;
+        this.iteration = numIterations;
+    }
+    
+    @Override
+    void runActiveState() {
+        if (iteration < numIterations-1) {
+            Timer loadAgentTimer = getPeer().getClock().createNewTimer();
+            loadAgentTimer.addTimerListener(new TimerListener() {
+                public void timerExpired(Timer timer) {
+                    runIteration();
+                    runActiveState();
+                }
+            });
+            loadAgentTimer.schedule(Time.inMilliseconds(1000));
+        } else {
+            super.runActiveState();
+        }
     }
 
     @Override
     final void runPhase() {
-        iteration = 0;
+        iteration = -1;
         possiblePlans.clear();
+        
         initPhase();
-        initIteration();
-        if (isLeaf()) {
-            goUp();
+        runIteration();
+    }
+    
+    private final void runIteration() {
+        iteration++;
+
+        if (iteration < numIterations) {
+            initIteration();
+            if (isLeaf()) {
+                goUp();
+            }
         }
     }
 
@@ -93,15 +123,7 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
         for (int i = 0; i < msgs.size(); i++) {
             getPeer().sendMessage(children.get(i).getNetworkAddress(), msgs.get(i));
         }
-
-        iteration++;
-
-        if (iteration < numIterations) {
-            initIteration();
-            if (isLeaf()) {
-                goUp();
-            }
-        }
+        //runIteration();
     }
 
     abstract void initPhase();

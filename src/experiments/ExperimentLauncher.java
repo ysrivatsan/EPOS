@@ -22,11 +22,10 @@ public abstract class ExperimentLauncher {
             final EPOSExperiment test = createExperiment(i);
             test.initEPOS();
             test.runSimulation(Time.inSeconds(runDuration));
-            evaluateRun();
+            evaluateRun(i);
         }
     }
     
-    public void evaluateRun() {
-        
+    public void evaluateRun(int i) {
     }
 }

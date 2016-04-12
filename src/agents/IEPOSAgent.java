@@ -24,6 +24,7 @@ import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,8 +44,6 @@ import protopeer.measurement.MeasurementLog;
  */
 public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private boolean outputMovie;
-    private int measurementEpoch;
-    private MeasurementLog log;
 
     private final int planSize;
     private final int historySize;
@@ -77,8 +76,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
         
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, log, outputMovie);
+        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
         }
     
         @Override
@@ -87,14 +86,13 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, MeasurementLog log, boolean outputMovie) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, plansFormat, planSize, numIterations);
+    public IEPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch;
-        this.log = log;
         this.outputMovie = outputMovie;
     }
 
@@ -204,7 +202,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
         // Log + output
         robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
-        log.log(measurementEpoch, iteration, robustness);
+        //log.log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
         if(outputMovie) {
@@ -262,21 +260,6 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        this.measurementEpoch = epochNumber+1;
-    }
-
-    private void writeGraphData(int epochNumber) {
-        System.out.println(getPeer().getNetworkAddress().toString() + ","
-                + ((parent != null) ? parent.getNetworkAddress().toString() : "-") + ","
-                + findSelectedPlan());
-    }
-
-    private int findSelectedPlan() {
-        for (int i = 0; i < possiblePlans.size(); i++) {
-            if (possiblePlans.get(i).equals(current.selectedPlan)) {
-                return i;
-            }
-        }
-        return -1;
+        log.log(epochNumber, iteration, robustness);
     }
 }

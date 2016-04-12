@@ -23,6 +23,7 @@ import agents.fitnessFunction.SampleFitnessFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
+import java.io.File;
 import org.joda.time.DateTime;
 import tree.BalanceType;
 
@@ -54,8 +55,9 @@ public class SampleExperiment extends ExperimentLauncher {
         agentFactory.fitnessFunction = new SampleFitnessFunction(80);
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
         
-        EPOSExperiment experiment = new EPOSExperiment("01", architecture,
-                "input-data/samples", "equalAgents", "cost.txt",
+        EPOSExperiment experiment = new EPOSExperiment(
+                "input-data/samples", new File("peersLog/Experiment 01"), "equalAgents", "cost.txt",
+                architecture,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 // with factor 0, results are the same (excl. root), compared to factor 80
                 DateTime.parse("0001-01-01"), 5, 15, agentFactory);
