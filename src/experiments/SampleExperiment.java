@@ -17,6 +17,7 @@
  */
 package experiments;
 
+import agents.network.TreeArchitecture;
 import agents.*;
 import agents.fitnessFunction.SampleFitnessFunction;
 import dsutil.generic.RankPriority;

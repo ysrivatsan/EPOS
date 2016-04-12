@@ -17,9 +17,12 @@
  */
 package experiments;
 
+import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
 import agents.fitnessFunction.*;
+import agents.network.IndexRankGenerator;
+import agents.network.RandomRankGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -56,7 +59,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private int numIterations;
     private String title;
     private String label;
-    private NetworkArchitecture architecture;
+    private TreeArchitecture architecture;
 
     private static int currentConfig = -1;
     private static BicyclesExperiment launcher;
@@ -71,8 +74,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         launcher = new BicyclesExperiment();
         launcher.numExperiments = 1;
         launcher.runDuration = 4;
-        launcher.numIterations = 1000;
+        launcher.numIterations = 200;
         launcher.numUser = 99999;
+        launcher.architecture = new TreeArchitecture();
+        launcher.architecture.priority = RankPriority.HIGH_RANK;
+        launcher.architecture.rank = DescriptorType.RANK;
+        launcher.architecture.type = TreeType.SORTED_HtL;
 
         class Dim<T> {
 
@@ -88,26 +95,15 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         List<Dim> outer = new ArrayList<>();
         List<Dim> inner = new ArrayList<>();
 
-        outer.add(new Dim<>(o -> launcher.architecture = o, Arrays.asList(
-                new TreeArchitecture()
-        )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).priority = o, Arrays.asList(
-                RankPriority.HIGH_RANK
-        )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).rank = o, Arrays.asList(
-                DescriptorType.RANK
-        )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).type = o, Arrays.asList(
-                TreeType.SORTED_HtL
-        )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).balance = o, Arrays.asList(
+        inner.add(new Dim<>(o -> launcher.architecture.balance = o, Arrays.asList(
                 BalanceType.WEIGHT_BALANCED
+                //BalanceType.LIST
         )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).rankGenerator = o, Arrays.asList(
-                (IntFunction<Double>) (int idx) -> Math.random()
-                //(IntFunction<Double>) idx -> (double)idx
+        outer.add(new Dim<>(o -> launcher.architecture.rankGenerator = o, Arrays.asList(
+                new RandomRankGenerator()
+                //new IndexRankGenerator()
         )));
-        outer.add(new Dim<>(o -> ((TreeArchitecture)launcher.architecture).maxChildren = o, Arrays.asList(
+        inner.add(new Dim<>(o -> launcher.architecture.maxChildren = o, Arrays.asList(
                 2
         )));
         
@@ -145,7 +141,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 new IterProbGmA(new Factor1(), new SumCombinator())
         ));
         ffConfigs.put(2, Arrays.asList(
-                new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()),
+                //new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()),
                 new IterMinVarGmA(new Factor1(), new SumCombinator())
         ));
         ffConfigs.put(3, Arrays.asList(

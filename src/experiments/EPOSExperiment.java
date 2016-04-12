@@ -17,6 +17,7 @@
  */
 package experiments;
 
+import agents.network.TreeArchitecture;
 import agents.AgentFactory;
 import agents.LocalSearch;
 import agents.plan.GlobalPlan;
@@ -36,6 +37,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import org.joda.time.DateTime;
 import protopeer.Experiment;
+import protopeer.LiveExperiment;
 import protopeer.Peer;
 import protopeer.PeerFactory;
 import protopeer.SimulatedExperiment;
@@ -48,7 +50,7 @@ import tree.centralized.server.TreeServer;
  *
  * @author Evangelos
  */
-public class EPOSExperiment extends SimulatedExperiment {
+public class EPOSExperiment extends LiveExperiment {
 
     private final String experimentID;
 
@@ -56,7 +58,7 @@ public class EPOSExperiment extends SimulatedExperiment {
     private final int N;
 
     // Tree building
-    private final NetworkArchitecture architecture;
+    private final TreeArchitecture architecture;
 
     // EPOS Agent
     private String plansLocation;
@@ -72,7 +74,7 @@ public class EPOSExperiment extends SimulatedExperiment {
 
     private AgentFactory factory;
 
-    public EPOSExperiment(String id, NetworkArchitecture architecture, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
+    public EPOSExperiment(String id, TreeArchitecture architecture, String folder, String config, String costFile, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
         this.experimentID = id;
         this.architecture = architecture;
         this.plansLocation = folder;

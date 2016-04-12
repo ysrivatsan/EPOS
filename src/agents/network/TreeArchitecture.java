@@ -15,13 +15,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments;
+package agents.network;
 
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
 import java.util.function.IntFunction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import protopeer.Experiment;
 import protopeer.Peer;
 import protopeer.servers.bootstrap.SimplePeerIdentifierGenerator;
@@ -33,21 +35,30 @@ import tree.centralized.server.TreeServer;
  *
  * @author Peter
  */
-public class TreeArchitecture extends NetworkArchitecture {
+public class TreeArchitecture implements Cloneable {
     public RankPriority priority;
     public DescriptorType rank;
     public TreeType type;
     public BalanceType balance;
     public int maxChildren;
-    public IntFunction<Double> rankGenerator;
+    public RankGenerator rankGenerator;
     
-    @Override
     public void addPeerlets(Peer peer, int peerIndex, int numNodes) {
         if (peerIndex == 0) {
             peer.addPeerlet(new TreeServer(numNodes, priority, rank, type, balance));
         }
-        peer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), rankGenerator.apply(peerIndex), maxChildren+1));
+        peer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), rankGenerator.getRank(peerIndex), maxChildren+1));
         peer.addPeerlet(new TreeProvider());
+    }
+    
+    @Override
+    public TreeArchitecture clone() {
+        try {
+            return (TreeArchitecture) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            Logger.getLogger(TreeArchitecture.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
     
     @Override

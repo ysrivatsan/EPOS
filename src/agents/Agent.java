@@ -200,7 +200,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         }
     }
     
-        MeasurementFileDumper measurementDumper;
+    MeasurementFileDumper measurementDumper;
     private void scheduleMeasurements() {
         if(isRoot()) {
             //measurementDumper = new MeasurementFileDumper("peersLog/" + experimentID + getPeer().getIdentifier().toString());
