@@ -41,7 +41,7 @@ public class SampleExperiment extends ExperimentLauncher {
     }
 
     @Override
-    public EPOSExperiment createExperiment(int num) {
+    public IEPOSExperiment createExperiment(int num) {
         TreeArchitecture architecture = new TreeArchitecture();
         architecture.priority = RankPriority.HIGH_RANK;
         architecture.rank = DescriptorType.RANK;
@@ -55,7 +55,7 @@ public class SampleExperiment extends ExperimentLauncher {
         agentFactory.fitnessFunction = new SampleFitnessFunction(80);
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
         
-        EPOSExperiment experiment = new EPOSExperiment(
+        IEPOSExperiment experiment = new IEPOSExperiment(
                 "input-data/samples", new File("peersLog/Experiment 01"), "equalAgents", "cost.txt",
                 architecture,
                 "3BR" + num, DateTime.parse("0001-01-01"),

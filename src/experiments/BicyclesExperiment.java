@@ -45,14 +45,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.joda.time.DateTime;
 import protopeer.measurement.LogReplayer;
+import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
+import util.Util;
 
 /**
  * @author Peter
  */
 public class BicyclesExperiment extends ExperimentLauncher implements Cloneable, Runnable {
-    private long id = System.currentTimeMillis();
+    private String peersLog;
 
     private AgentFactory agentFactory;
     private String dataset;
@@ -71,13 +73,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
 
-        //ExecutorService executorService = Executors.newCachedThreadPool(); // not supported by ProtoPeer? (see debug.log)
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        IEPOSEvaluator evaluator = new MatlabEvaluator();
         
         launcher = new BicyclesExperiment();
-        launcher.numExperiments = 5;
+        launcher.numExperiments = 1;
         launcher.numIterations = 20;
-        launcher.runDuration = 4*launcher.numIterations;
+        launcher.runDuration = 4+launcher.numIterations;
         launcher.numUser = 99999;
         launcher.architecture = new TreeArchitecture();
         launcher.architecture.priority = RankPriority.HIGH_RANK;
@@ -152,8 +153,8 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 new IterProbGmA(new Factor1(), new SumCombinator())
         ));
         ffConfigs.put(2, Arrays.asList(
-                //new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()),
-                new IterMinVarGmA(new Factor1(), new SumCombinator())
+                new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator())
+                //new IterMinVarGmA(new Factor1(), new SumCombinator())
         ));
         ffConfigs.put(3, Arrays.asList(
                 new IterMinVarGmA(new FactorMOverNmM(), new SumCombinator()),
@@ -176,11 +177,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         
         try (PrintStream out = System.out) {//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
             int plotNumber = 0;
-            List<Future> plotFutures = new ArrayList<>();
             
             // outer loops
-            List<Iterator<? extends Object>> outerState = repeat(outer.size(), (Iterator<? extends Object>) null);
-            List<String> outerName = repeat(outer.size(), (String) null);
+            List<Iterator<? extends Object>> outerState = Util.repeat(outer.size(), (Iterator<? extends Object>) null);
+            List<String> outerName = Util.repeat(outer.size(), (String) null);
             while (true) {
                 boolean boi = true, eoi = false; // begin/end of iteration
                 for (int i = 0; i < outer.size() && (boi || eoi); i++) {
@@ -197,14 +197,13 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 }
 
                 // init plot
-                List<String> labels = new ArrayList<>();
-                List<MeasurementLog> logs = new ArrayList<>();
-                String title = merge(outerName);
+                List<String> experiments = new ArrayList<>();
+                String title = Util.merge(outerName);
                 plotNumber++;
                 
                 // inner loops
-                List<Iterator<? extends Object>> innerState = repeat(inner.size(), (Iterator<? extends Object>) null);
-                List<String> innerName = repeat(inner.size(), (String) null);
+                List<Iterator<? extends Object>> innerState = Util.repeat(inner.size(), (Iterator<? extends Object>) null);
+                List<String> innerName = Util.repeat(inner.size(), (String) null);
                 while (true) {
                     boi = true; eoi = false; // begin/end of iteration
                     for (int i = 0; i < inner.size() && (boi || eoi); i++) {
@@ -221,39 +220,44 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                     }
 
                     // perform experiment
+                    launcher.peersLog = "peersLog/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
-                    launcher.label = merge(innerName);
+                    launcher.label = Util.merge(innerName);
                     launcher.run();
+                    launcher.evaluateRun();
                     
-                    labels.add(launcher.label);
-                    logs.add(launcher.log); // set in method evaluateRun
+                    experiments.add(launcher.peersLog);
                     
-                    launcher = launcher.clone();
                     launcher.log = null;
                 }
 
                 // plot result
-                int curPlotNumber = plotNumber;
-                String curMeasure = launcher.agentFactory.fitnessFunction.getRobustnessMeasure();
-                IEPOSEvaluator.evaluateLogs(curPlotNumber, title, labels, curMeasure, logs, out);
-                //TODO: make evaluator stand alone (store title, labels etc. in log)
-                //TODO: make evaluator accessible from separate main method (with experiment id as parameter)
+                evaluator.evaluateLogs(plotNumber, experiments, out);
             }
-            
-            for(Future f : plotFutures) {
-                f.get();
-            }
-            executorService.shutdown();
             
             long t1 = System.currentTimeMillis();
             System.out.println("%" + (t1 - t0) / 1000 + "s");
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Override
+    public void run() {
+        File peersLog = new File(this.peersLog);
+        Util.clearDirectory(peersLog);
+        peersLog.mkdir();
+        
+        MeasurementFileDumper logger = new MeasurementFileDumper(this.peersLog + "/info");
+        MeasurementLog log = new MeasurementLog();
+        log.log(1, "title=" + title, 0);
+        log.log(1, "label=" + label, 0);
+        log.log(1, "measure=" + launcher.agentFactory.fitnessFunction.getRobustnessMeasure(), 0);
+        logger.measurementEpochEnded(log, 2);
+        
+        super.run();
     }
 
     @Override
-    public EPOSExperiment createExperiment(int num) {
+    public IEPOSExperiment createExperiment(int num) {
         System.out.println("%Experiment " + getName(num) + ":");
 
         String location = dataset.substring(0, dataset.lastIndexOf('/'));
@@ -261,26 +265,24 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         
         agentFactory.numIterations = numIterations;
 
-        File outFolder = new File("peersLog/Experiment " + id + " - " + num);
-        EPOSExperiment experiment = new EPOSExperiment(
+        File outFolder = new File(peersLog);
+        IEPOSExperiment experiment = new IEPOSExperiment(
                 location, outFolder, config, null,
                 architecture,
                 "3BR" + num, DateTime.parse("0001-01-01"), 
                 DateTime.parse("0001-01-01"), 5, numUser,
                 agentFactory);
+        
         return experiment;
     }
     
-    @Override
-    public void evaluateRun(int num) {
-        if(num == 0) {
-            log = new MeasurementLog();
-        }
+    public void evaluateRun() {
         try {
             LogReplayer replayer = new LogReplayer();
-            File f = new File("peersLog/Experiment " + id + " - " + num).listFiles()[0];
-            MeasurementLog log = replayer.loadLogFromFile(f.getPath());
-            this.log.mergeWith(log);
+            log = new MeasurementLog();
+            for(File f : new File(peersLog).listFiles()) {
+                log.mergeWith(replayer.loadLogFromFile(f.getPath()));
+            }
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -301,32 +303,5 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
-    }
-
-    private static <T> List<T> repeat(int times, T item) {
-        List<T> list = new ArrayList<>(times);
-        for (int i = 0; i < times; i++) {
-            list.add(item);
-        }
-        return list;
-    }
-
-    private static String merge(List<String> list) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<String> iter = list.iterator();
-        String s = null;
-        while (iter.hasNext() && (s = iter.next()) == null) {
-        }
-        if (s != null) {
-            sb.append(s);
-        }
-        while (iter.hasNext()) {
-            s = iter.next();
-            if (s != null) {
-                sb.append(' ');
-                sb.append(s);
-            }
-        }
-        return sb.toString();
     }
 }

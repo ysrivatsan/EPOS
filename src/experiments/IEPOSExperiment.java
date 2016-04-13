@@ -41,7 +41,7 @@ import protopeer.SimulatedExperiment;
  *
  * @author Evangelos
  */
-public class EPOSExperiment extends SimulatedExperiment {
+public class IEPOSExperiment extends SimulatedExperiment {
 
     //Simulation Parameters
     private final int N;
@@ -64,7 +64,7 @@ public class EPOSExperiment extends SimulatedExperiment {
 
     private final AgentFactory factory;
 
-    public EPOSExperiment(String inFolder, File outFolder, String config, String costFile, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
+    public IEPOSExperiment(String inFolder, File outFolder, String config, String costFile, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
         this.outFolder = outFolder;
         this.architecture = architecture;
         this.inFolder = inFolder;
@@ -90,9 +90,6 @@ public class EPOSExperiment extends SimulatedExperiment {
         Experiment.initEnvironment();
         init();
 
-        clearExperimentFile(outFolder);
-        outFolder.mkdirs();
-
         PeerFactory peerFactory = new PeerFactory() {
             @Override
             public Peer createPeer(int peerIndex, Experiment experiment) {
@@ -109,7 +106,7 @@ public class EPOSExperiment extends SimulatedExperiment {
     }
 
     public final Plan loadCostSignal(String filename) {
-        Plan patternEnergyPlan = new GlobalPlan();
+        Plan costSignal = new GlobalPlan();
         List<Double> vals = new ArrayList<>();
 
         File file = new File(filename);
@@ -128,22 +125,17 @@ public class EPOSExperiment extends SimulatedExperiment {
             }
         }
 
-        patternEnergyPlan.init(vals.size());
+        costSignal.init(vals.size());
         for (int i = 0; i < vals.size(); i++) {
-            patternEnergyPlan.setValue(i, vals.get(i));
+            costSignal.setValue(i, vals.get(i));
         }
 
-        return patternEnergyPlan;
+        return costSignal;
     }
 
     private int getPlanSize() {
         File file = agentMeterIDs[0];
-        File[] planFiles = file.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(plansFormat);
-            }
-        });
+        File[] planFiles = file.listFiles((File dir, String name) -> name.endsWith(plansFormat));
         file = planFiles[0];
         try (Scanner scanner = new Scanner(file)) {
             scanner.useLocale(Locale.US);
@@ -155,17 +147,4 @@ public class EPOSExperiment extends SimulatedExperiment {
         return -1;
     }
 
-    public final void clearExperimentFile(File experiment) {
-        File[] files = experiment.listFiles();
-        if (files != null) { //some JVMs return null for empty dirs
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    clearExperimentFile(f);
-                } else {
-                    f.delete();
-                }
-            }
-        }
-        experiment.delete();
-    }
 }

@@ -15,11 +15,11 @@ public abstract class ExperimentLauncher {
     int numExperiments;
     int runDuration;
     
-    public abstract EPOSExperiment createExperiment(int num);
+    public abstract IEPOSExperiment createExperiment(int num);
     
-    public final void run() {
+    public void run() {
         for(int i=0;i<numExperiments;i++){
-            final EPOSExperiment test = createExperiment(i);
+            final IEPOSExperiment test = createExperiment(i);
             test.initEPOS();
             test.runSimulation(Time.inSeconds(runDuration));
             evaluateRun(i);

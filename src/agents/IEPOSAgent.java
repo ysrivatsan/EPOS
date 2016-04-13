@@ -20,22 +20,16 @@ package agents;
 import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
-import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
-import messages.EPOSRequest;
 import messages.IEPOSDown;
 import messages.IEPOSUp;
 import org.joda.time.DateTime;
-import protopeer.Experiment;
-import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 
 /**

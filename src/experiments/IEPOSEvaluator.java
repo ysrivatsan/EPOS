@@ -17,92 +17,73 @@
  */
 package experiments;
 
-import agents.fitnessFunction.FitnessFunction;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import protopeer.measurement.Aggregate;
 import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementLog;
-import protopeer.measurement.MeasurementLoggerListener;
 
 /**
  *
  * @author Peter
  */
-public class IEPOSEvaluator {
-
-    public static void readLogs(String experimentID) {
+public abstract class IEPOSEvaluator {
+    
+    public final void evaluateLogs(int id, List<String> experiments, PrintStream out) {
+        String title = "#" + id;
+        String measure = "";
+        List<String> labels = new ArrayList<>();
+        List<List<Aggregate>> iterationAggregates = new ArrayList<>();
+        
         LogReplayer replayer = new LogReplayer();
-
-        File folder = new File("peersLog/Experiment " + experimentID);
-        if (!folder.isDirectory()) {
-            System.err.println("No dictionary " + folder.getPath());
-            return;
-        }
-        try {
-            File[] listOfFiles = folder.listFiles();
-            for (int i = 0; i < listOfFiles.length; i++) {
-                if (listOfFiles[i].isFile() && !listOfFiles[i].isHidden()) {
-                    MeasurementLog log = replayer.loadLogFromFile(folder.getPath() + "/" + listOfFiles[i].getName());
-                    System.out.println(log.getTagsOfExactType(Integer.class).size());
-                    replayer.mergeLog(log);
+        for(String experiment : experiments) {
+            try {
+                MeasurementLog log = new MeasurementLog();
+                for(File f : new File(experiment).listFiles()) {
+                    MeasurementLog l = replayer.loadLogFromFile(f.getPath());
+                    log.mergeWith(l);
                 }
+        
+                int maxIteration = 0;
+                for (Object tag : log.getTagsOfExactType(Integer.class)) {
+                    maxIteration = Math.max(maxIteration, (Integer) tag);
+                }
+                
+                List<Aggregate> list = new ArrayList<>();
+                for(int i = 0; i <= maxIteration; i++) {
+                    list.add(log.getAggregate(i));
+                }
+                iterationAggregates.add(list);
+                
+                String label = experiment;
+                for(Object o : log.getTagsOfType(String.class)) {
+                    String s = (String)o;
+                    int split = s.indexOf('=');
+                    switch(s.substring(0, split)) {
+                        case "title":
+                            title = s.substring(split+1);
+                            break;
+                        case "measure":
+                            measure = s.substring(split+1);
+                            break;
+                        case "label":
+                            label = s.substring(split+1);
+                            break;
+                    }
+                }
+                labels.add(label);
+            } catch (IOException | ClassNotFoundException ex) {
+                Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
             }
-            evaluateLog(replayer);
-        } catch (IOException | ClassNotFoundException ex) {
         }
+        
+        evaluate(id, title, measure, labels, iterationAggregates, out);
     }
-
-    public static void evaluateLog(LogReplayer replayer) {
-        replayer.replayTo(new MeasurementLoggerListener() {
-            public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
-
-            }
-        });
-    }
-
-    public static void evaluateLogs(int id, String title, List<String> labels, String measure, List<MeasurementLog> logs, PrintStream out) {
-        int maxIteration = 0;
-        for (MeasurementLog log : logs) {
-            for (Object tag : log.getTagsOfExactType(Integer.class)) {
-                maxIteration = Math.max(maxIteration, (Integer) tag);
-            }
-        }
-
-        printMatrix("XAvg" + id, logs, maxIteration, a -> a.getAverage(), out);
-        printMatrix("XMax" + id, logs, maxIteration, a -> a.getMax(), out);
-        printMatrix("XMin" + id, logs, maxIteration, a -> a.getMin(), out);
-        printMatrix("XStd" + id, logs, maxIteration, a -> a.getStdDev(), out);
-
-        out.println("figure(" + id + ");");
-        out.println("plot(XAvg" + id + "');");
-        out.println("xlabel('iteration');");
-        out.println("ylabel('" + measure + "');");
-        out.print("legend('" + toMatlabString(labels.get(0)) + "'");
-        for (int i = 1; i < labels.size(); i++) {
-            out.print(",'" + toMatlabString(labels.get(i)) + "'");
-        }
-        out.println(");");
-        out.println("title('" + toMatlabString(title) + "');");
-    }
-
-    private static String toMatlabString(String str) {
-        return str.replace("_", "\\_");
-    }
-
-    private static void printMatrix(String name, List<MeasurementLog> logs, int maxIteration, Function<Aggregate, Double> function, PrintStream out) {
-        out.println(name + " = [");
-        for (MeasurementLog log : logs) {
-            out.print(function.apply(log.getAggregate(0)));
-            for (int i = 1; i <= maxIteration; i++) {
-                out.print(", " + function.apply(log.getAggregate(i)));
-            }
-            out.println(";");
-        }
-        out.println("];");
-    }
+    
+    abstract void evaluate(int id, String title, String measure, List<String> labels, List<List<Aggregate>> iterationAggregates, PrintStream out);
 }
