@@ -66,7 +66,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     public static class Factory extends AgentFactory {
         public boolean outputMovie;
         
-        public Factory(boolean outputMovie) {
+        public Factory() {
             this.outputMovie = outputMovie;
         }
 

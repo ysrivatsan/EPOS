@@ -19,6 +19,7 @@ package util;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,5 +68,9 @@ public class Util {
             }
         }
         return sb.toString();
+    }
+    
+    public static List<String> trimSplit(String str, String regex) {
+        return Arrays.asList(Arrays.stream(str.split(regex)).map(s -> s.trim()).toArray(n -> new String[n]));
     }
 }

@@ -21,24 +21,21 @@ import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.IterLocalSearch;
-import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.plan.Plan;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import messages.DownMessage;
-import messages.UpMessage;
-import org.apache.commons.collections15.CollectionUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Evangelos
  */
-public class LocalSearch {
+public class LocalSearch implements Cloneable {
     private Plan aggregate;
     private List<Plan> prevAggregates;
     private List<Boolean> useNew;
-    private FitnessFunction fitnessFunction = new IterLocalSearch();
+    private final FitnessFunction fitnessFunction = new IterLocalSearch();
 
     void initPhase() {
     }
@@ -111,5 +108,15 @@ public class LocalSearch {
             }
         }
         return aggregate;
+    }
+
+    @Override
+    public LocalSearch clone() {
+        try {
+            return (LocalSearch) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            Logger.getLogger(LocalSearch.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

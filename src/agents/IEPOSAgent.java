@@ -65,10 +65,6 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     public static class Factory extends AgentFactory {
         public boolean outputMovie;
         
-        public Factory(boolean outputMovie) {
-            this.outputMovie = outputMovie;
-        }
-        
         @Override
         public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
             return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
@@ -86,7 +82,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
-        this.localSearch = localSearch;
+        this.localSearch = localSearch==null?null:localSearch.clone();
         this.outputMovie = outputMovie;
     }
 
