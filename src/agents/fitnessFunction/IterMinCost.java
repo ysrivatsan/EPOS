@@ -22,6 +22,7 @@ import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
+import agents.fitnessFunction.costFunction.CostFunction;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.DoubleStream;
@@ -31,52 +32,26 @@ import java.util.stream.DoubleStream;
  * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
-public abstract class IterMinVar extends IterativeFitnessFunction {
+public abstract class IterMinCost extends IterativeFitnessFunction {
+    private CostFunction costFunc;
 
-    public IterMinVar(PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
+    public IterMinCost(CostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
         super(combinatorG, combinatorA, combinatorS, combinatorSC);
+        this.costFunc = costFunc;
     }
-    
-    private static double[][] A;
-    private static double[] B;
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
-        return Math.sqrt(plan.variance());
-        /*Plan c = plan.clone();
-        c.subtract(c.avg());
-        return c.norm(1);*/
-        /*int n = plan.getNumberOfStates();
-        if(A == null) {
-            Random rand = new Random(1);
-            A = new double[n][n];
-            B = new double[n];
-            
-            for(int i=0; i<n; i++) {
-                for(int j=0; j<n; j++) {
-                    A[i][j] = rand.nextGaussian();
-                }
-                B[i] = rand.nextGaussian();
-            }
-        }
-        double v = 0;
-        for(int i=0; i<n; i++) {
-            for(int j=0; j<n; j++) {
-                v += A[i][j]*plan.getValue(i)*plan.getValue(j);
-            }
-            v += B[i]*plan.getValue(i);
-        }
-        //System.out.println(v + " " + plan.variance());
-        return v;*/
+        return costFunc.calcCost(plan, costSignal);
     }
     
     public String getRobustnessMeasure() {
-        return "std deviation";
+        return costFunc.getMetric();
     }
 
     @Override
     public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
-        double minVariance = Double.MAX_VALUE;
+        double minCost = Double.MAX_VALUE;
         int selected = -1;
         int numOpt = 0;
 
@@ -86,13 +61,12 @@ public abstract class IterMinVar extends IterativeFitnessFunction {
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 
-            //double variance = testAggregatePlan.variance();
-            double variance = getRobustness(testAggregatePlan, pattern, null);
-            if (variance < minVariance) {
-                minVariance = variance;
+            double cost = getRobustness(testAggregatePlan, pattern, null);
+            if (cost < minCost) {
+                minCost = cost;
                 selected = i;
                 numOpt = 1;
-            } else if(variance == minVariance) {
+            } else if(cost == minCost) {
                 numOpt++;
                 if(Math.random()<=1.0/numOpt) {
                     selected = i;

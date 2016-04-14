@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction;
+package agents.fitnessFunction.costFunction;
 
 import agents.plan.Plan;
 
@@ -23,7 +23,7 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-@FunctionalInterface
 public interface CostFunction {
     public double calcCost(Plan plan, Plan costSignal);
+    public String getMetric();
 }

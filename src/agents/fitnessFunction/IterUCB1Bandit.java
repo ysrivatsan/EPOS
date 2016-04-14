@@ -59,15 +59,11 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
 
             selected = (int) (Math.random() * plans.size());
         } else {
-            double prevVar = previous.globalPlan.variance();
-            if(prevVar < minVar) {
-                for(int i=0;i<estimate.length;i++) {
-                    estimate[i] *= prevVar / minVar;
-                }
-                minVar = prevVar;
-            }
-            //minVar = Math.min(minVar, prevVar);
-            double reward = minVar / prevVar;
+            Plan g = previous.globalPlan.clone();
+            Plan s = previous.selectedCombinationalPlan.clone();
+            g.subtract(g.avg());
+            s.subtract(s.avg());
+            double reward = 0.5-0.5*g.dot(s) / Math.max(0.000001, g.norm()*s.norm());
             
             estimate[prevSelected] += (reward - estimate[prevSelected]) / timesSelected[prevSelected];
 

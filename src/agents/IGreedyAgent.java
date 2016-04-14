@@ -65,10 +65,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     public static class Factory extends AgentFactory {
         public boolean outputMovie;
-        
-        public Factory() {
-            this.outputMovie = outputMovie;
-        }
 
         @Override
         public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
@@ -82,7 +78,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
-        this.localSearch = localSearch;
+        this.localSearch = localSearch==null?null:localSearch.clone();
         this.outputMovie = outputMovie;
     }
 
@@ -157,20 +153,25 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         this.history.put(this.currentPhase, current);
 
         // Log + output
-        double robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
-        Experiment.getSingleton().getRootMeasurementLog().log(measurementEpoch, iteration, robustness);
+        robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
+        //log.log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
-        if (outputMovie) {
-            System.out.println("D(1:" + planSize + "," + (iteration + 1) + ")=" + current.globalPlan + ";");
-        } else {
-            if (iteration % 10 == 9) {
-                System.out.print(".");
+        if(outputMovie) {
+            System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+            if(prevAggregate.globalPlan==null) {
+                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+new GlobalPlan(this)+";");
+            } else {
+                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+prevAggregate.globalPlan+";");
             }
-            if (iteration % 100 == 99) {
+        } else {
+            if(iteration%10 == 9) {
+                System.out.print("%");
+            }
+            if(iteration%100 == 99) {
                 System.out.print(" ");
             }
-            if (iteration + 1 == numIterations) {
+            if(iteration+1 == numIterations) {
                 System.out.println("");
             }
         }
@@ -208,7 +209,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        this.measurementEpoch = epochNumber + 1;
+        log.log(epochNumber, iteration, robustness);
     }
 
     private void writeGraphData(int epochNumber) {

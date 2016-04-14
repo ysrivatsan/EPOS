@@ -23,6 +23,8 @@ import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
+import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import java.util.List;
 
@@ -31,30 +33,27 @@ import java.util.List;
  * weight B according to optimum without aggregate and equal Bi
  * @author Peter
  */
-public class IterMinVarGmA extends IterMinVar {
+public class IterMinCostGmA extends IterMinCost {
     private final Factor factor;
     
-    public IterMinVarGmA(Factor factor, PlanCombinator combinator) {
-        super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+    public IterMinCostGmA(CostFunction costFunc, Factor factor, PlanCombinator combinator) {
+        super(costFunc, combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
     }
     
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
-        Plan targetPlan = new AggregatePlan(agent);
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        Plan modifiedCostSignal = costSignal.clone();
         if(!previous.isEmpty()) {
-            targetPlan.add(previous.globalPlan);
-            targetPlan.subtract(previous.aggregatePlan);
-            targetPlan.multiply(factor.calcFactor(targetPlan, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
-            targetPlan.add(childAggregatePlan);
-        } else {
-            targetPlan.set(childAggregatePlan);
+            modifiedCostSignal.add(previous.globalPlan);
+            modifiedCostSignal.subtract(previous.aggregatePlan);
+            modifiedCostSignal.multiply(factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren));
         }
-        return select(agent, targetPlan, combinationalPlans, pattern);
+        return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);
     }
 
     @Override
     public String toString() {
-        return "IterMinVar p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterMinCost p+a+"+combinatorG+"(g-a)*" + factor;
     }
 }

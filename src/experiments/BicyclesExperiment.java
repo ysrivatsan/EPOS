@@ -21,6 +21,11 @@ import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
 import agents.fitnessFunction.*;
+import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.DirectionCostFunction;
+import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
+import agents.fitnessFunction.costFunction.QuadraticCostFunction;
+import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -63,11 +68,11 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private String title;
     private String label;
     private TreeArchitecture architecture;
-    
-    private MeasurementLog log;
 
     private static String currentConfig = null;
     private static BicyclesExperiment launcher;
+    
+    private static Map<String,Consumer<AgentFactory>> agentFactoryProperties = new HashMap<>();
 
     public static void main(String[] args) {
         long t0 = System.currentTimeMillis();
@@ -130,11 +135,19 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 System.err.println(x + " not a valid agentFactory; valid: " + agentFactories.keySet().toString());
             }
         });
-        assignments.put("outputMovie", (String x) -> {    try {
-            launcher.agentFactory.getClass().getDeclaredField("outputMovie").setBoolean(launcher.agentFactory, Boolean.parseBoolean(x));
+        assignments.put("outputMovie", (String x) -> {    
+            agentFactoryProperties.put("outputMovie", (a) -> {
+                try {
+                    a.getClass().getDeclaredField("outputMovie").setBoolean(launcher.agentFactory, Boolean.parseBoolean(x));
+                } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+                    System.err.println(x + " not a valid boolean; valid: [true, false]");
+                }
+            });
+            /*try {
+                launcher.agentFactory.getClass().getDeclaredField("outputMovie").setBoolean(launcher.agentFactory, Boolean.parseBoolean(x));
             } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
                 System.err.println(x + " not a valid boolean; valid: [true, false]");
-            }
+            }*/
         });
         assignments.put("fitnessFunction", (x) -> currentConfig = x);
         
@@ -142,7 +155,8 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         localSearches.put("", null);
         localSearches.put("LS", new LocalSearch());
         assignments.put("localSearch", (x) -> {
-            launcher.agentFactory.localSearch = localSearches.get(x);
+            agentFactoryProperties.put("localSearch", (a) -> a.localSearch = localSearches.get(x));
+            //launcher.agentFactory.localSearch = localSearches.get(x);
             if(!localSearches.containsKey(x)) {
                 System.err.println(x + " not a valid local search strategy; valid: " + localSearches.keySet().toString());
             }
@@ -191,7 +205,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 System.err.println("Property " + var + " not supported");
             }
         }
-        inner.add(new Dim<>(o -> launcher.agentFactory.fitnessFunction = o, () -> ffConfigs.get(currentConfig).iterator()));
+        inner.add(new Dim<>((o) -> {
+            agentFactoryProperties.put("fitnessFunction", (a) -> a.fitnessFunction = o);
+            //launcher.agentFactory.fitnessFunction = o;
+        }, () -> ffConfigs.get(currentConfig).iterator()));
         
         for(Dim d : init) {
             d.func.accept(d.iterable.iterator().next());
@@ -229,7 +246,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 while (true) {
                     boi = true; eoi = false; // begin/end of iteration
                     for (int i = 0; i < inner.size() && (boi || eoi); i++) {
-                    if ((boi = innerState.get(i) == null) || (eoi = !innerState.get(i).hasNext())) {
+                        if ((boi = innerState.get(i) == null) || (eoi = !innerState.get(i).hasNext())) {
                             innerState.set(i, inner.get(i).iterable.iterator());
                         }
                         Object obj = innerState.get(i).next();
@@ -242,16 +259,16 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                     }
 
                     // perform experiment
+                    for(Consumer<AgentFactory> c : agentFactoryProperties.values()) {
+                        c.accept(launcher.agentFactory);
+                    }
                     launcher.runDuration = 4+launcher.numIterations;
                     launcher.peersLog = "peersLog/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
-                    launcher.evaluateRun();
                     
                     experiments.add(launcher.peersLog);
-                    
-                    launcher.log = null;
                 }
 
                 // plot result
@@ -298,18 +315,6 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         
         return experiment;
     }
-    
-    public void evaluateRun() {
-        try {
-            LogReplayer replayer = new LogReplayer();
-            log = new MeasurementLog();
-            for(File f : new File(peersLog).listFiles()) {
-                log.mergeWith(replayer.loadLogFromFile(f.getPath()));
-            }
-        } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     private String getName(int num) {
         return title + " - " + label + " - " + num;
@@ -332,21 +337,37 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         String[] parts = s.split("[\\(,\\)]");
         IterativeFitnessFunction ff = null;
         
-        parts[0] = parts[0].trim();
-        if(parts.length > 1) {
-            parts[1] = parts[1].trim();
-            parts[2] = parts[2].trim();
+        for(int i=0; i<parts.length; i++) {
+            parts[i] = parts[i].trim();
         }
         
         try {
             Map<String,Constructor> ffs = new HashMap<>();
-            ffs.put("MinVarGmA", IterMinVarGmA.class.getConstructor(Factor.class, PlanCombinator.class));
+            ffs.put("MinCostGmA", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
+            ffs.put("MinCostG", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
+            ffs.put("MinCostHGmA", IterMinCostHGmA.class.getConstructor(CostFunction.class, Factor.class, Factor.class, PlanCombinator.class, PlanCombinator.class));
             ffs.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             ffs.put("LocalSearch", IterLocalSearch.class.getConstructor());
             ffs.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             ffs.put("UCB1", IterUCB1Bandit.class.getConstructor());
-            ffs.put("MinVarG", IterMinVarG.class.getConstructor(Factor.class, PlanCombinator.class));
 
+            if(!ffs.containsKey(parts[0])) {
+                System.err.println(parts[0] + " is not a valid fitness function; valid: " + ffs.keySet());
+            }
+            
+            Constructor ffConst = ffs.get(parts[0]);
+            if(ffConst.getParameterCount() > parts.length-1) {
+                System.err.println("Too few parameters for fitness function " + parts[0] + " (" + ffConst.getParameterCount() + " expected)");
+            }
+
+            Map<Class,Map<String,?>> params = new HashMap<>();
+            Map<String,CostFunction> costFuncs = new HashMap<>();
+            costFuncs.put("std", new StdDevCostFunction());
+            costFuncs.put("dot", new DirectionCostFunction());
+            costFuncs.put("match", new MatchEstimateCostFunction());
+            costFuncs.put("rand", new QuadraticCostFunction());
+            params.put(CostFunction.class, costFuncs);
+            
             Map<String,Factor> factors = new HashMap<>();
             factors.put("1", new Factor1());
             factors.put("1/l", new Factor1OverLayer());
@@ -356,35 +377,26 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             factors.put("m/n", new FactorMOverN());
             factors.put("m/n-m", new FactorMOverNmM());
             factors.put("std", new FactorNormalizeStd());
-
+            params.put(Factor.class, factors);
+            
             Map<String,PlanCombinator> combinators = new HashMap<>();
             combinators.put("sum", new SumCombinator());
             combinators.put("avg", new AvgCombinator());
             combinators.put("prev", new MostRecentCombinator());
             combinators.put("wsum", new WeightedSumCombinator2());
-
-            if(!ffs.containsKey(parts[0])) {
-                System.err.println(parts[0] + " is not a valid fitness function; valid: " + ffs.keySet());
-            }
-            if(parts.length > 1) {
-                if(!factors.containsKey(parts[1])) {
-                    System.err.println(parts[1] + " is not a valid factor; valid: " + factors.keySet());
+            params.put(PlanCombinator.class, combinators);
+            
+            Object[] args = new Object[ffConst.getParameterCount()];
+            Class[] types = ffConst.getParameterTypes();
+            for(int i=0; i<args.length; i++) {
+                Map<String,? extends Object> options = params.get(types[i]);
+                if(!options.containsKey(parts[i+1])) {
+                    System.err.println(parts[i+1] + " is not a valid "+types[i].getSimpleName()+"; valid: " + options.keySet());
                 }
-                if(!combinators.containsKey(parts[2])) {
-                    System.err.println(parts[2] + " is not a valid combinator; valid: " + combinators.keySet());
-                }
-            }
-        
-            Constructor ffConst = ffs.get(parts[0]);
-            if(ffConst.getParameterCount() > parts.length) {
-                System.err.println("Too few parameters for fitness function " + parts[0] + " (" + ffConst.getParameterCount() + " expected)");
+                args[i] = options.get(parts[i+1]);
             }
             
-            if(ffConst.getParameterCount() == 2) {
-                ff = (IterativeFitnessFunction) ffConst.newInstance(factors.get(parts[1]), combinators.get(parts[2]));
-            } else {
-                ff = (IterativeFitnessFunction) ffConst.newInstance();
-            }
+            ff = (IterativeFitnessFunction) ffConst.newInstance(args);
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
             Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }

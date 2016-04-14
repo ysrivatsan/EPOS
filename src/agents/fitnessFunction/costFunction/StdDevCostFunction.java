@@ -15,30 +15,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction;
+package agents.fitnessFunction.costFunction;
 
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 
 /**
- * 
+ *
  * @author Peter
  */
-public class MatchEstimateCostFunction implements CostFunction {
+public class StdDevCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
-        Plan cPlan = plan.clone();
-        cPlan.subtract(cPlan.avg());
-        
-        // estimate target signal based on cost signal
-        Plan cCost = plan.clone();
-        cCost.subtract(cCost.avg());
-        cCost.multiply(-1);
-        cCost.multiply(cPlan.stdDeviation()/cCost.stdDeviation());
-        
-        // cost is the difference of the plan and the target signal
-        cPlan.subtract(cCost);
-        return Math.sqrt(cPlan.norm());
+        Plan p = plan.clone();
+        p.add(costSignal);
+        return Math.sqrt(p.variance());
     }
 
+    @Override
+    public String toString() {
+        return "StdDevCost";
+    }
+
+    @Override
+    public String getMetric() {
+        return "std deviation";
+    }
 }
