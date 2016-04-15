@@ -51,7 +51,7 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
         return select(agent, aggregate, plans, costSignal, historic);
     }
 
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         return select(agent, aggregate, plans, costSignal, historic, previous);
     }
     

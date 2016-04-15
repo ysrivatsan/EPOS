@@ -20,13 +20,24 @@ package agents.fitnessFunction;
 import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
+import agents.fitnessFunction.costFunction.CostFunction;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public abstract class FitnessFunction {
+public abstract class FitnessFunction implements CostFunction {
+    
+    @Override
+    public final double calcCost(Plan plan, Plan costSignal) {
+        return getRobustness(plan, costSignal, null);
+    }
+    
+    @Override
+    public final String getMetric() {
+        return getRobustnessMeasure();
+    }
 
     public abstract double getRobustness(Plan plan, Plan costSignal, AgentPlans historic);
     

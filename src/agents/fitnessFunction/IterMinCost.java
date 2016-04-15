@@ -33,7 +33,7 @@ import java.util.stream.DoubleStream;
  * @author Peter
  */
 public abstract class IterMinCost extends IterativeFitnessFunction {
-    private CostFunction costFunc;
+    CostFunction costFunc;
 
     public IterMinCost(CostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
         super(combinatorG, combinatorA, combinatorS, combinatorSC);
@@ -78,6 +78,6 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
-    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren);
+    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
 
 }

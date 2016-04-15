@@ -41,7 +41,7 @@ public class IterMinCostG extends IterMinCost {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan modifiedCostSignal = costSignal.clone();
         if(!previous.isEmpty()) {
             modifiedCostSignal.add(previous.globalPlan);
@@ -52,6 +52,6 @@ public class IterMinCostG extends IterMinCost {
 
     @Override
     public String toString() {
-        return "IterMinCost p+"+combinatorG+"(g)*" + factor;
+        return "IterMinCost "+costFunc.toString()+" p+"+combinatorG+"(g)*" + factor;
     }
 }

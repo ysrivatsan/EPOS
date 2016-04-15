@@ -17,17 +17,14 @@
  */
 package agents;
 
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
-import dsutil.generic.state.ArithmeticState;
 import dsutil.protopeer.services.topology.trees.TreeApplicationInterface;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -38,7 +35,6 @@ import protopeer.Finger;
 import protopeer.Peer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
-import protopeer.measurement.MeasurementLogger;
 import protopeer.measurement.MeasurementLoggerListener;
 import protopeer.network.Message;
 import protopeer.time.Timer;
@@ -71,12 +67,13 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<Plan> possiblePlans = new ArrayList<>();
     
     private MeasurementFileDumper measurementDumper;
+    List<CostFunction> measures;
     
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase) {
+    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
         this.plansLocation = plansLocation;
         this.planConfigurations = planConfigurations;
         this.treeStamp = treeStamp;
@@ -85,6 +82,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.planSize = planSize;
         this.outFolder = outFolder;
         this.currentPhase = initialPhase;
+        this.measures = measures;
     }
     
     @Override

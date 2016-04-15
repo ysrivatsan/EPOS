@@ -19,7 +19,10 @@ package agents;
 
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.costFunction.CostFunction;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.joda.time.DateTime;
 
@@ -31,12 +34,15 @@ public abstract class AgentFactory implements Cloneable {
     public int numIterations;
     public FitnessFunction fitnessFunction;
     public LocalSearch localSearch;
+    public List<CostFunction> measures = new ArrayList<>();
     
     public abstract Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
     
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {
-        return (AgentFactory) super.clone();
+        AgentFactory f = (AgentFactory) super.clone();
+        f.measures = new ArrayList<>(measures);
+        return f;
     }
 
     @Override

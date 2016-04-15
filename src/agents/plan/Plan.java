@@ -20,9 +20,6 @@ package agents.plan;
 import agents.Agent;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.joda.time.DateTime;
 
 /**
@@ -57,24 +54,25 @@ public class Plan implements Serializable, Cloneable {
         this.setType(type);
         agent.initPlan(this, planStr);
     }
-    
+
     public void init(int length) {
         values = new double[length];
     }
-    
+
     public void setValue(int idx, double value) {
         values[idx] = value;
     }
-    
+
     /**
      * not recommended - generates new copy of the array
-     * @param value 
+     *
+     * @param value
      */
     public void addValue(double value) {
-        values = Arrays.copyOf(values, values.length+1);
-        values[values.length-1] = value;
+        values = Arrays.copyOf(values, values.length + 1);
+        values[values.length - 1] = value;
     }
-    
+
     public double getValue(int idx) {
         return values[idx];
     }
@@ -119,7 +117,7 @@ public class Plan implements Serializable, Cloneable {
     public void setConfiguration(String config) {
         this.configuration = config;
     }
-    
+
     public int getNumberOfStates() {
         return values.length;
     }
@@ -148,6 +146,9 @@ public class Plan implements Serializable, Cloneable {
     public double entropy() {
         double sum = sum();
         double entropy = 0.0;
+        if(sum == 0) {
+            return 0;
+        }
         for (double state : values) {
             double p = state / sum;
             if (p == 0.0) {
@@ -160,14 +161,7 @@ public class Plan implements Serializable, Cloneable {
     }
 
     public double stdDeviation() {
-        double average = avg();
-        double sumSquare = 0.0;
-        for (double state : values) {
-            sumSquare += Math.pow((state - average), 2.0);
-        }
-        double variance = sumSquare / values.length;
-        double stdDev = Math.sqrt(variance);
-        return stdDev;
+        return Math.sqrt(variance());
     }
 
     public double variance() {
@@ -185,8 +179,11 @@ public class Plan implements Serializable, Cloneable {
         for (double state : values) {
             sumSquare += Math.pow((state - average), 2.0);
         }
-        double variance = sumSquare / values.length;
+        double variance = sumSquare / (values.length - 1);
         double stDev = Math.sqrt(variance);
+        if(stDev == 0) {
+            return 0;
+        }
         return stDev / average;
     }
 
@@ -209,23 +206,23 @@ public class Plan implements Serializable, Cloneable {
         }
         return minimum;
     }
-    
+
     public double norm() {
         return Math.sqrt(normSqr());
     }
-    
+
     public double norm(double p) {
         double norm = 0;
         for (double state : values) {
-            norm += Math.pow(Math.abs(state),p);
+            norm += Math.pow(Math.abs(state), p);
         }
-        return Math.pow(norm,p);
+        return Math.pow(norm, p);
     }
-    
+
     public double normSqr() {
         double sum = 0.0;
         for (double state : values) {
-            sum += state*state;
+            sum += state * state;
         }
         return sum;
     }
@@ -347,26 +344,25 @@ public class Plan implements Serializable, Cloneable {
             values[i] *= factor;
         }
     }
-    
+
     public void pow(double x) {
         for (int i = 0; i < values.length; i++) {
             values[i] = Math.pow(values[i], x);
         }
     }
-    
+
     /*public void log(double base) {
         for (int i = 0; i < values.length; i++) {
             values[i] = Math.pow(values[i], x);
         }
     }*/
-
     public void reverse() {
         double average = avg();
         for (int i = 0; i < values.length; i++) {
             values[i] = 2 * average - values[i];
         }
     }
-    
+
     @Override
     public Plan clone() {
         try {

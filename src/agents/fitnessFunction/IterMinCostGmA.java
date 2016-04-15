@@ -26,6 +26,7 @@ import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
+import agents.plan.GlobalPlan;
 import java.util.List;
 
 /**
@@ -42,18 +43,25 @@ public class IterMinCostGmA extends IterMinCost {
     }
     
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
-        Plan modifiedCostSignal = costSignal.clone();
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        Plan modifiedCostSignal = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
             modifiedCostSignal.add(previous.globalPlan);
             modifiedCostSignal.subtract(previous.aggregatePlan);
             modifiedCostSignal.multiply(factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren));
+            
+            Plan c = costSignal.clone();
+            if(numNodesSubtree < numNodes) {
+                c.multiply(numNodesSubtree/(double)numNodes + iteration*numNodesSubtree/(double)(numNodes-numNodesSubtree));
+            }
+            modifiedCostSignal.add(c);
         }
+        
         return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);
     }
 
     @Override
     public String toString() {
-        return "IterMinCost p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterMinCost "+costFunc.toString()+" p+a+"+combinatorG+"(g-a)*" + factor;
     }
 }

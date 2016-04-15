@@ -17,6 +17,7 @@
  */
 package agents;
 
+import agents.fitnessFunction.costFunction.CostFunction;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,8 +43,8 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, int numIterations) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase);
+    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, measure);
         this.numIterations = numIterations;
         this.iteration = numIterations;
     }

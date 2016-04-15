@@ -127,7 +127,8 @@ public class IEPOSExperiment extends SimulatedExperiment {
 
         costSignal.init(vals.size());
         for (int i = 0; i < vals.size(); i++) {
-            costSignal.setValue(i, vals.get(i));
+            costSignal.setValue(i, 10*Math.sin(i*2*Math.PI/vals.size()));
+            //costSignal.setValue(i, vals.get(i));
         }
 
         return costSignal;

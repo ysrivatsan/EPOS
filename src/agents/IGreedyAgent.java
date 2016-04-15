@@ -20,6 +20,7 @@ package agents;
 import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.fitnessFunction.IterativeFitnessFunction;
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.io.File;
@@ -52,7 +53,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     private IterativeFitnessFunction fitnessFunctionPrototype;
     private IterativeFitnessFunction fitnessFunction;
-    private double robustness;
+    private List<Double> measurements = new ArrayList<>();
 
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
@@ -68,18 +69,21 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         @Override
         public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie);
+            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, measures);
         }
     }
 
-    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations);
+    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations, measures);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch==null?null:localSearch.clone();
         this.outputMovie = outputMovie;
+        if(measures.isEmpty()) {
+            measures.add(fitnessFunctionPrototype);
+        }
     }
 
     @Override
@@ -101,7 +105,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     void initIteration() {
-        robustness = 0.0;
+        measurements.clear();
         current = new AgentPlans();
         current.globalPlan = new GlobalPlan(this);
         current.aggregatePlan = new AggregatePlan(this);
@@ -134,7 +138,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren);
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = possiblePlans.get(selectedPlan);
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
@@ -153,17 +157,21 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         this.history.put(this.currentPhase, current);
 
         // Log + output
-        robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
-        //log.log(measurementEpoch, iteration, robustness);
-        //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
-        //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+        for(CostFunction func : measures) {
+            measurements.add(func.calcCost(current.globalPlan, costSignal));
+        }
         if(outputMovie) {
-            System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
-            if(prevAggregate.globalPlan==null) {
-                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+new GlobalPlan(this)+";");
-            } else {
-                System.out.println("T(1:"+planSize+","+(iteration+1)+")="+prevAggregate.globalPlan+";");
+            if(iteration == 0) {
+                System.out.println("C(1:"+planSize+","+(iteration+1)+")="+costSignal+";");
             }
+            System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+            
+            Plan c = costSignal.clone();
+            if(prevAggregate.globalPlan != null) {
+                c.multiply(1+iteration);
+                c.add(prevAggregate.globalPlan);
+            }
+            System.out.println("T(1:"+planSize+","+(iteration+1)+")="+c+";");
         } else {
             if(iteration%10 == 9) {
                 System.out.print("%");
@@ -192,7 +200,9 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         layer = parent.hops;
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
-        robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
+        for(CostFunction func : measures) {
+            measurements.add(func.calcCost(current.globalPlan, costSignal));
+        }
         fitnessFunction.updatePrevious(prevAggregate, current, iteration);
         previous = current;
 
@@ -209,7 +219,11 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        log.log(epochNumber, iteration, robustness);
+        if(isRoot()) {
+            for(int i=0; i<measures.size(); i++) {
+                log.log(epochNumber, iteration, measurements.get(i));
+            }
+        }
     }
 
     private void writeGraphData(int epochNumber) {

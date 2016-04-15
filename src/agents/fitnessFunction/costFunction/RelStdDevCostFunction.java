@@ -18,55 +18,28 @@
 package agents.fitnessFunction.costFunction;
 
 import agents.plan.Plan;
-import java.util.Random;
 
 /**
  *
  * @author Peter
  */
-public class QuadraticCostFunction implements CostFunction {
-    
-    private double[][] A;
-    private double[] B;
+public class RelStdDevCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
         Plan p = plan.clone();
         p.add(costSignal);
-        plan = p;
-        
-        int n = plan.getNumberOfStates();
-        if(A == null) {
-            Random rand = new Random(1);
-            A = new double[n][n];
-            B = new double[n];
-            
-            for(int i=0; i<n; i++) {
-                for(int j=0; j<n; j++) {
-                    A[i][j] = rand.nextGaussian();
-                }
-                //A[i][i] += 1;
-                B[i] = 0;//rand.nextDouble();
-            }
-        }
-        double v = 0;
-        for(int i=0; i<n; i++) {
-            for(int j=0; j<n; j++) {
-                v += A[i][j]*plan.getValue(i)*plan.getValue(j);
-            }
-            v += B[i]*plan.getValue(i);
-        }
-        return v;
+        return p.relativeStdDeviation();
     }
 
     @Override
     public String toString() {
-        return "QuadraticCost";
+        return "RelStdDevCost";
     }
 
     @Override
     public String getMetric() {
-        return "cost";
+        return "rel std deviation";
     }
     
 }

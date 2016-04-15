@@ -120,7 +120,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(0);
 

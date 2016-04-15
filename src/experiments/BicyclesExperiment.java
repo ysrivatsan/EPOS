@@ -23,8 +23,10 @@ import agents.*;
 import agents.fitnessFunction.*;
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.DirectionCostFunction;
+import agents.fitnessFunction.costFunction.EntropyCostFunction;
 import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
+import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
@@ -73,7 +75,17 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private static BicyclesExperiment launcher;
     
     private static Map<String,Consumer<AgentFactory>> agentFactoryProperties = new HashMap<>();
-
+    
+    private static final Map<String,CostFunction> costFuncs = new HashMap<>();
+    static {
+        costFuncs.put("std", new StdDevCostFunction());
+        costFuncs.put("dot", new DirectionCostFunction());
+        costFuncs.put("match", new MatchEstimateCostFunction());
+        costFuncs.put("rand", new QuadraticCostFunction());
+        costFuncs.put("relStd", new RelStdDevCostFunction());
+        costFuncs.put("entropy", new EntropyCostFunction());
+    }
+    
     public static void main(String[] args) {
         long t0 = System.currentTimeMillis();
         new File("output-data").mkdir();
@@ -150,6 +162,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             }*/
         });
         assignments.put("fitnessFunction", (x) -> currentConfig = x);
+        assignments.put("measure", (x) -> {
+            agentFactoryProperties.put("measures", (a) -> {
+                a.measures.clear();
+                a.measures.add(costFuncs.get(x));
+            });
+        });
         
         Map<String, LocalSearch> localSearches = new HashMap<>();
         localSearches.put("", null);
@@ -361,11 +379,6 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             }
 
             Map<Class,Map<String,?>> params = new HashMap<>();
-            Map<String,CostFunction> costFuncs = new HashMap<>();
-            costFuncs.put("std", new StdDevCostFunction());
-            costFuncs.put("dot", new DirectionCostFunction());
-            costFuncs.put("match", new MatchEstimateCostFunction());
-            costFuncs.put("rand", new QuadraticCostFunction());
             params.put(CostFunction.class, costFuncs);
             
             Map<String,Factor> factors = new HashMap<>();

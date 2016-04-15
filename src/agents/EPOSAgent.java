@@ -21,6 +21,7 @@ import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.io.File;
@@ -66,7 +67,7 @@ public class EPOSAgent extends Agent {
     }
 
     public EPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase);
+        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, new ArrayList<>());
         this.fitnessFunction = fitnessFunction;
         this.planSize = planSize;
         this.historySize = historySize;
