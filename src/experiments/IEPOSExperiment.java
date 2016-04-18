@@ -17,6 +17,7 @@
  */
 package experiments;
 
+import agents.Agent;
 import agents.network.TreeArchitecture;
 import agents.AgentFactory;
 import agents.plan.GlobalPlan;
@@ -94,11 +95,9 @@ public class IEPOSExperiment extends SimulatedExperiment {
         PeerFactory peerFactory = new PeerFactory() {
             @Override
             public Peer createPeer(int peerIndex, Experiment experiment) {
+                Agent newAgent = factory.create(inFolder, config, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, outFolder, aggregationPhase, historicAggregationPhase, costSignal, historySize);
                 Peer newPeer = new Peer(peerIndex);
-                architecture.addPeerlets(newPeer, peerIndex, N);
-
-                newPeer.addPeerlet(factory.create(inFolder, config, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, planSize, outFolder, aggregationPhase, historicAggregationPhase, costSignal, historySize));
-
+                architecture.addPeerlets(newPeer, newAgent, peerIndex, N);
                 return newPeer;
             }
         };

@@ -49,7 +49,7 @@ public class SampleExperiment extends ExperimentLauncher {
         architecture.type = TreeType.SORTED_HtL;
         architecture.balance = BalanceType.WEIGHT_BALANCED;
         architecture.maxChildren = 3;
-        architecture.rankGenerator = idx -> (double)idx;
+        architecture.rankGenerator = (idx, agent) -> (double)idx;
         
         AgentFactory agentFactory = new EPOSAgent.Factory();
         //AgentFactory agentFactory = new OPTAgent.Factory();

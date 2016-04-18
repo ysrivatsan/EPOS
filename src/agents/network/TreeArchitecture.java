@@ -17,12 +17,13 @@
  */
 package agents.network;
 
+import agents.Agent;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeProvider;
 import dsutil.protopeer.services.topology.trees.TreeType;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import protopeer.Experiment;
@@ -42,14 +43,15 @@ public class TreeArchitecture implements Cloneable {
     public TreeType type;
     public BalanceType balance;
     public int maxChildren;
-    public Function<Integer,Double> rankGenerator;
+    public BiFunction<Integer, Agent, Double> rankGenerator;
     
-    public void addPeerlets(Peer peer, int peerIndex, int numNodes) {
+    public void addPeerlets(Peer peer, Agent agent, int peerIndex, int numNodes) {
         if (peerIndex == 0) {
             peer.addPeerlet(new TreeServer(numNodes, priority, rank, type, balance));
         }
-        peer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), rankGenerator.apply(peerIndex), maxChildren+1));
+        peer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), rankGenerator.apply(peerIndex, agent), maxChildren+1));
         peer.addPeerlet(new TreeProvider());
+        peer.addPeerlet(agent);
     }
     
     @Override

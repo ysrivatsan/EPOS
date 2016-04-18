@@ -28,6 +28,8 @@ import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
+import agents.network.NumPlanRankGenerator;
+import agents.network.StdRankGenerator;
 import agents.plan.FilePlanGenerator;
 import agents.plan.FuncPlanGenerator;
 import agents.plan.PlanGenerator;
@@ -49,12 +51,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.joda.time.DateTime;
-import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
@@ -122,9 +123,11 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         assignments.put("architecture.type", (x) -> launcher.architecture.type = TreeType.valueOf(x));
         assignments.put("architecture.balance", (x) -> launcher.architecture.balance = BalanceType.valueOf(x));
         
-        Map<String, Function<Integer,Double>> rankGenerators = new HashMap<>();
-        rankGenerators.put("RandomRank", (idx) -> Math.random());
-        rankGenerators.put("IndexRank", (idx) -> (double)idx);
+        Map<String, BiFunction<Integer,Agent,Double>> rankGenerators = new HashMap<>();
+        rankGenerators.put("RandomRank", (idx, agent) -> Math.random());
+        rankGenerators.put("IndexRank", (idx, agent) -> (double)idx);
+        rankGenerators.put("StdRank", new StdRankGenerator());
+        rankGenerators.put("NumPlanRank", new NumPlanRankGenerator());
         assignments.put("architecture.rankGenerator", (x) -> {
             launcher.architecture.rankGenerator = rankGenerators.get(x);
             if(!rankGenerators.containsKey(x)) {
@@ -240,7 +243,6 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         }
         inner.add(new Dim<>((o) -> {
             agentFactoryProperties.put("fitnessFunction", (a) -> a.fitnessFunction = o);
-            //launcher.agentFactory.fitnessFunction = o;
         }, () -> ffConfigs.get(currentConfig).iterator()));
         
         for(Dim d : init) {

@@ -19,6 +19,7 @@ package agents;
 
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
+import agents.plan.PlanReader;
 import agents.plan.PossiblePlan;
 import dsutil.protopeer.services.topology.trees.TreeApplicationInterface;
 import java.io.File;
@@ -54,6 +55,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final String planConfigurations;
     private final String treeStamp;
     private final String agentMeterID;
+    public final File inFolder;
     private final File outFolder;
     
     DateTime currentPhase;
@@ -80,6 +82,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.agentMeterID = agentMeterID;
         this.plansFormat = plansFormat;
         this.planSize = planSize;
+        this.inFolder = new File(plansLocation + "/" + planConfigurations + "/" + agentMeterID);
         this.outFolder = outFolder;
         this.currentPhase = initialPhase;
         this.measures = measures;
@@ -138,16 +141,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     void readPlans() {
         possiblePlans.clear();
-        File file = new File(this.plansLocation + "/" + this.planConfigurations + "/" + this.agentMeterID + "/" + this.currentPhase.toString("yyyy-MM-dd") + this.plansFormat);
-        try (Scanner scanner = new Scanner(file)) {
-            scanner.useLocale(Locale.US);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                this.possiblePlans.add(new PossiblePlan(this, line));
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        possiblePlans.addAll(PlanReader.readPlans(this, inFolder.getPath() + "/" + currentPhase.toString("yyyy-MM-dd") + plansFormat));
     }
 
     @Override
