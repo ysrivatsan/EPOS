@@ -4,3 +4,6 @@
 /log/
 /peersLog/
 /output-data/
+dist/input-data/
+dist/peersLog/
+dist/output-data/

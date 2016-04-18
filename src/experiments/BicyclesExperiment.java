@@ -77,6 +77,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
 
     private static String currentConfig = null;
     private static BicyclesExperiment launcher;
+    private static String outFile = null;
     
     private static Map<String,Consumer<AgentFactory>> agentFactoryProperties = new HashMap<>();
     
@@ -112,6 +113,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         launcher.architecture = new TreeArchitecture();
         
         Map<String, Consumer<String>> assignments = new HashMap<>();
+        assignments.put("out", (x) -> outFile = x);
         assignments.put("numExperiments", (x) -> launcher.numExperiments = Integer.parseInt(x));
         assignments.put("numIterations", (x) -> launcher.numIterations = Integer.parseInt(x));
         assignments.put("numUser", (x) -> launcher.numUser = Integer.parseInt(x));
@@ -245,7 +247,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             d.func.accept(d.iterable.iterator().next());
         }
         
-        try (PrintStream out = System.out) {//new PrintStream("output-data/E"+System.currentTimeMillis()+".m")) {//
+        try (PrintStream out = outFile == null ? System.out : new PrintStream(outFile)) {
             int plotNumber = 0;
             
             // outer loops
@@ -308,6 +310,8 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             
             long t1 = System.currentTimeMillis();
             System.out.println("%" + (t1 - t0) / 1000 + "s");
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
