@@ -28,6 +28,9 @@ import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
+import agents.plan.FilePlanGenerator;
+import agents.plan.FuncPlanGenerator;
+import agents.plan.PlanGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -70,6 +73,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private String title;
     private String label;
     private TreeArchitecture architecture;
+    private PlanGenerator planGenerator;
 
     private static String currentConfig = null;
     private static BicyclesExperiment launcher;
@@ -137,6 +141,18 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             }
         });
         
+        Map<String, PlanGenerator> planGenerators = new HashMap<>();
+        planGenerators.put("zero", new FuncPlanGenerator((x) -> 0.0));
+        planGenerators.put("one", new FuncPlanGenerator((x) -> 1.0));
+        planGenerators.put("sin", new FuncPlanGenerator((x) -> 10*Math.sin(x*2*Math.PI)));
+        assignments.put("costSignal", (x) -> {
+            if(planGenerators.containsKey(x)) {
+                launcher.planGenerator = planGenerators.get(x);
+            } else {
+                launcher.planGenerator = new FilePlanGenerator(x);
+            }
+        });
+        
         Map<String, AgentFactory> agentFactories = new HashMap<>();
         agentFactories.put("IEPOS", new IEPOSAgent.Factory());
         agentFactories.put("IGreedy", new IGreedyAgent.Factory());
@@ -155,17 +171,14 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                     System.err.println(x + " not a valid boolean; valid: [true, false]");
                 }
             });
-            /*try {
-                launcher.agentFactory.getClass().getDeclaredField("outputMovie").setBoolean(launcher.agentFactory, Boolean.parseBoolean(x));
-            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-                System.err.println(x + " not a valid boolean; valid: [true, false]");
-            }*/
         });
         assignments.put("fitnessFunction", (x) -> currentConfig = x);
         assignments.put("measure", (x) -> {
             agentFactoryProperties.put("measures", (a) -> {
                 a.measures.clear();
-                a.measures.add(costFuncs.get(x));
+                if(!x.isEmpty()) {
+                    a.measures.add(costFuncs.get(x));
+                }
             });
         });
         
@@ -325,11 +338,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
 
         File outFolder = new File(peersLog);
         IEPOSExperiment experiment = new IEPOSExperiment(
-                location, outFolder, config, null,
+                location, outFolder, config,
                 architecture,
                 "3BR" + num, DateTime.parse("0001-01-01"), 
                 DateTime.parse("0001-01-01"), 5, numUser,
-                agentFactory);
+                agentFactory,
+                planGenerator);
         
         return experiment;
     }
@@ -362,7 +376,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         try {
             Map<String,Constructor> ffs = new HashMap<>();
             ffs.put("MinCostGmA", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
-            ffs.put("MinCostG", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
+            ffs.put("MinCostG", IterMinCostG.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
             ffs.put("MinCostHGmA", IterMinCostHGmA.class.getConstructor(CostFunction.class, Factor.class, Factor.class, PlanCombinator.class, PlanCombinator.class));
             ffs.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             ffs.put("LocalSearch", IterLocalSearch.class.getConstructor());

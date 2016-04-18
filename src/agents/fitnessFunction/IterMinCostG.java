@@ -52,6 +52,6 @@ public class IterMinCostG extends IterMinCost {
 
     @Override
     public String toString() {
-        return "IterMinCost "+costFunc.toString()+" p+"+combinatorG+"(g)*" + factor;
+        return "IterMinCostG "+costFunc.toString()+" p+"+combinatorG+"(g)*" + factor;
     }
 }

@@ -26,8 +26,8 @@ import java.util.Random;
  */
 public class QuadraticCostFunction implements CostFunction {
     
-    private double[][] A;
-    private double[] B;
+    private static double[][] A;
+    private static double[] B;
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
@@ -43,11 +43,33 @@ public class QuadraticCostFunction implements CostFunction {
             
             for(int i=0; i<n; i++) {
                 for(int j=0; j<n; j++) {
+                    //A[i][j] = -1/n; // min var
+                    //A[i][j] = (((i+j)%2)==0?1:-1)*rand.nextDouble(); // 1'*A*1 == 0
                     A[i][j] = rand.nextGaussian();
                 }
-                //A[i][i] += 1;
-                B[i] = 0;//rand.nextDouble();
+                //A[i][i] += 1; // min var
+                B[i] = rand.nextDouble();
             }
+            
+            double[][] AA = new double[n][n];
+            for(int i=0; i<n; i++) {
+                for(int j=0; j<n; j++) {
+                    for(int k=0; k<n; k++) {
+                        AA[i][j] -= A[i][k]*A[k][j];
+                    }
+                }
+            }
+            //A = AA; // convexify
+            
+            /*
+            System.out.println("A = [");
+            for(int i=0; i<n; i++) {
+                for(int j=0; j<n; j++) {
+                    System.out.print(A[i][j] + (j==n-1?"":","));
+                }
+                System.out.println((i==n-1?"":";"));
+            }
+            System.out.println("]");*/
         }
         double v = 0;
         for(int i=0; i<n; i++) {

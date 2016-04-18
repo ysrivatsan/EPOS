@@ -21,6 +21,7 @@ import agents.network.TreeArchitecture;
 import agents.AgentFactory;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
+import agents.plan.PlanGenerator;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -64,7 +65,7 @@ public class IEPOSExperiment extends SimulatedExperiment {
 
     private final AgentFactory factory;
 
-    public IEPOSExperiment(String inFolder, File outFolder, String config, String costFile, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory) {
+    public IEPOSExperiment(String inFolder, File outFolder, String config, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory, PlanGenerator planGenerator) {
         this.outFolder = outFolder;
         this.architecture = architecture;
         this.inFolder = inFolder;
@@ -83,7 +84,7 @@ public class IEPOSExperiment extends SimulatedExperiment {
 
         this.N = Math.min(maxAgents, agentMeterIDs.length);
         this.planSize = getPlanSize();
-        this.costSignal = loadCostSignal(inFolder + "/" + costFile);
+        this.costSignal = planGenerator.generatePlan(planSize);
     }
 
     public final void initEPOS() {
@@ -103,35 +104,6 @@ public class IEPOSExperiment extends SimulatedExperiment {
         };
         initPeers(0, N, peerFactory);
         startPeers(0, N);
-    }
-
-    public final Plan loadCostSignal(String filename) {
-        Plan costSignal = new GlobalPlan();
-        List<Double> vals = new ArrayList<>();
-
-        File file = new File(filename);
-        if (file.exists()) {
-            try (Scanner scanner = new Scanner(file)) {
-                scanner.useLocale(Locale.US);
-                while (scanner.hasNextDouble()) {
-                    vals.add(scanner.nextDouble());
-                }
-            } catch (FileNotFoundException | NoSuchElementException e) {
-                e.printStackTrace();
-            }
-        } else {
-            for (int i = 0; i < planSize; i++) {
-                vals.add(0.0);
-            }
-        }
-
-        costSignal.init(vals.size());
-        for (int i = 0; i < vals.size(); i++) {
-            costSignal.setValue(i, 10*Math.sin(i*2*Math.PI/vals.size()));
-            //costSignal.setValue(i, vals.get(i));
-        }
-
-        return costSignal;
     }
 
     private int getPlanSize() {
