@@ -26,8 +26,8 @@ import java.util.Random;
  */
 public class QuadraticCostFunction implements CostFunction {
     
-    private static double[][] A;
-    private static double[] B;
+    private double[][] A;
+    private double[] B;
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
@@ -37,7 +37,7 @@ public class QuadraticCostFunction implements CostFunction {
         
         int n = plan.getNumberOfStates();
         if(A == null) {
-            Random rand = new Random(1);
+            Random rand = new Random();
             A = new double[n][n];
             B = new double[n];
             

@@ -196,9 +196,6 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         this.history.put(this.currentPhase, current);
 
         // Log + output
-        for(CostFunction func : measures) {
-            measurements.add(func.calcCost(current.globalPlan, costSignal));
-        }
         //robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
         //log.log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);

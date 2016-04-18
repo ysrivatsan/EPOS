@@ -24,9 +24,7 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
-import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
-import agents.plan.GlobalPlan;
 import java.util.List;
 
 /**

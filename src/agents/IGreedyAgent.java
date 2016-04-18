@@ -157,9 +157,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         this.history.put(this.currentPhase, current);
 
         // Log + output
-        for(CostFunction func : measures) {
-            measurements.add(func.calcCost(current.globalPlan, costSignal));
-        }
         if(outputMovie) {
             if(iteration == 0) {
                 System.out.println("C(1:"+planSize+","+(iteration+1)+")="+costSignal+";");

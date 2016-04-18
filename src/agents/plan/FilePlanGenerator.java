@@ -40,7 +40,7 @@ public class FilePlanGenerator implements PlanGenerator {
     public Plan generatePlan(int size) {
         File file = new File(filename);
         if (!file.exists()) {
-            return null;
+            throw new IllegalArgumentException("File " + filename + " doesn't exist.");
         }
         
         Plan plan = new GlobalPlan();

@@ -23,9 +23,8 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.DoubleStream;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
@@ -51,7 +50,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
 
     @Override
     public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
-        double minCost = Double.MAX_VALUE;
+        double minCost = Double.POSITIVE_INFINITY;
         int selected = -1;
         int numOpt = 0;
 
