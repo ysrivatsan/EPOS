@@ -35,9 +35,8 @@ public class Util {
                 for (File f : files) {
                     if (f.isDirectory()) {
                         clearDirectory(f);
-                    } else {
-                        f.delete();
                     }
+                    f.delete();
                 }
             }
         }
