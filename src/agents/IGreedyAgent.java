@@ -69,7 +69,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         @Override
         public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, measures);
+            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, new ArrayList<>(measures));
         }
     }
 

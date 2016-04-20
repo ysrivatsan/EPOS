@@ -184,7 +184,7 @@ public class Plan implements Serializable, Cloneable {
         if(stDev == 0) {
             return 0;
         }
-        return stDev / average;
+        return stDev / Math.abs(average);
     }
 
     public double max() {

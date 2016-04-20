@@ -25,6 +25,7 @@ import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.DirectionCostFunction;
 import agents.fitnessFunction.costFunction.EntropyCostFunction;
 import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
+import agents.fitnessFunction.costFunction.MaxCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
@@ -90,6 +91,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         costFuncs.put("rand", new QuadraticCostFunction());
         costFuncs.put("relStd", new RelStdDevCostFunction());
         costFuncs.put("entropy", new EntropyCostFunction());
+        costFuncs.put("max", new MaxCostFunction());
     }
     
     public static void main(String[] args) {
