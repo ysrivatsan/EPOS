@@ -102,6 +102,11 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         if(args.length > 0) {
             configFile = args[0];
         }
+        File peersLogDir = new File(configFile);
+        String peersLog = "peersLog/" + peersLogDir.getName().substring(0, peersLogDir.getName().indexOf('.'));
+        peersLogDir = new File(peersLog);
+        peersLogDir.mkdirs();
+        Util.clearDirectory(peersLogDir);
 
         IEPOSEvaluator evaluator = new MatlabEvaluator();
         
@@ -300,7 +305,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                         c.accept(launcher.agentFactory);
                     }
                     launcher.runDuration = 4+launcher.numIterations;
-                    launcher.peersLog = "peersLog/Experiment " + System.currentTimeMillis();
+                    launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
