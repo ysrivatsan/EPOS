@@ -250,7 +250,9 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         }
         inner.add(new Dim<>((o) -> {
             agentFactoryProperties.put("fitnessFunction", (a) -> a.fitnessFunction = o);
-        }, () -> ffConfigs.get(currentConfig).iterator()));
+        }, () -> {
+            return ffConfigs.get(currentConfig).iterator();
+                }));
         
         for(Dim d : init) {
             d.func.accept(d.iterable.iterator().next());
