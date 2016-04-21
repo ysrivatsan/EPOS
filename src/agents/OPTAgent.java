@@ -21,7 +21,6 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
-import dsutil.generic.state.ArithmeticState;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +33,7 @@ import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
 import protopeer.network.NetworkAddress;
+import agents.dataset.AgentDataset;
 
 /**
  *
@@ -51,13 +51,13 @@ public class OPTAgent extends Agent {
     public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, initialPhase, outFolder, plansFormat, planSize, costSignal, fitnessFunction, measures);
+        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new OPTAgent(dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, measures);
         }
     }
 
-    public OPTAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, DateTime initialPhase, File outFolder, String plansFormat, int planSize, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, measures);
+    public OPTAgent(AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
+        super(dataSource, treeStamp, outFolder, initialPhase, measures);
         this.fitnessFunction = fitnessFunction;
     }
 

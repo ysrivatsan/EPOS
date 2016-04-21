@@ -15,20 +15,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.plan;
+package agents.dataset;
 
-import agents.Agent;
+import agents.plan.Plan;
+import java.util.List;
+import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class GlobalPlan extends Plan {
-
-    public GlobalPlan() {
-    }
-
-    public GlobalPlan(Agent agent) {
-        super(Plan.Type.GLOBAL_PLAN, agent);
-    }
+public interface AgentDataset {
+    public List<Plan> getPlans(DateTime phase);
+    public List<DateTime> getPhases();
+    public String getId();
+    public String getConfig();
+    public int getPlanSize();
 }

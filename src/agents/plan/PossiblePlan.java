@@ -30,8 +30,4 @@ public class PossiblePlan extends Plan {
     public PossiblePlan(Agent agent) {
         super(Plan.Type.POSSIBLE_PLAN, agent);
     }
-
-    public PossiblePlan(Agent agent, String planStr) {
-        super(Plan.Type.POSSIBLE_PLAN, agent, planStr);
-    }
 }

@@ -30,8 +30,4 @@ public class AggregatePlan extends Plan {
     public AggregatePlan(Agent agent) {
         super(Plan.Type.AGGREGATE_PLAN, agent);
     }
-    
-    public AggregatePlan(Agent agent, String planStr) {
-        super(Plan.Type.AGGREGATE_PLAN, agent, planStr);
-    }
 }

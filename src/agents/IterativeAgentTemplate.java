@@ -31,6 +31,7 @@ import protopeer.network.Message;
 import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
+import agents.dataset.AgentDataset;
 
 /**
  *
@@ -43,8 +44,8 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, measure);
+    public IterativeAgentTemplate(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
+        super(dataSource, treeStamp, outFolder, initialPhase, measure);
         this.numIterations = numIterations;
         this.iteration = numIterations;
     }

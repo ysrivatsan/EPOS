@@ -19,8 +19,9 @@ package experiments;
 
 import agents.network.TreeArchitecture;
 import agents.*;
+import agents.dataset.FileDataset;
 import agents.fitnessFunction.SampleFitnessFunction;
-import agents.plan.FilePlanGenerator;
+import agents.dataset.FilePlanGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -57,7 +58,8 @@ public class SampleExperiment extends ExperimentLauncher {
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
         
         IEPOSExperiment experiment = new IEPOSExperiment(
-                "input-data/samples", new File("peersLog/Experiment 01"), "equalAgents",
+                new FileDataset("input-data/samples", "equalAgents"),
+                new File("peersLog/Experiment 01"),
                 architecture,
                 "3BR" + num, DateTime.parse("0001-01-01"),
                 // with factor 0, results are the same (excl. root), compared to factor 80

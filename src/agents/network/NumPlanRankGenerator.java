@@ -18,12 +18,8 @@
 package agents.network;
 
 import agents.Agent;
-import agents.plan.Plan;
-import agents.plan.PlanReader;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.List;
 import java.util.function.BiFunction;
+import org.joda.time.DateTime;
 
 /**
  *
@@ -33,13 +29,9 @@ public class NumPlanRankGenerator implements BiFunction<Integer, Agent, Double>{
 
     @Override
     public Double apply(Integer idx, Agent agent) {
-        File[] files = agent.inFolder.listFiles((File dir, String name) -> {
-            return name.endsWith(".plans");
-        });
         int count = 0;
-        for(File f : files) {
-            List<Plan> plans = PlanReader.readPlans(agent, f.getPath());
-            count += plans.size();
+        for(DateTime phase : agent.dataSource.getPhases()) {
+            count += agent.dataSource.getPlans(phase).size();
         }
         return (double) count;
     }

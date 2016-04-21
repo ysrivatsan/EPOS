@@ -17,11 +17,11 @@
  */
 package agents;
 
+import agents.dataset.FileAgentDataset;
 import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
 import agents.fitnessFunction.FitnessFunction;
-import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.io.File;
@@ -37,14 +37,14 @@ import org.joda.time.DateTime;
 import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
+import agents.dataset.AgentDataset;
 
 /**
  *
  * @author Evangelos
  */
 public class EPOSAgent extends Agent {
-
-    private final int planSize;
+    
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
 
@@ -61,15 +61,14 @@ public class EPOSAgent extends Agent {
     public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new EPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, fitnessFunction, planSize, initialPhase, previousPhase, costSignal, historySize, outFolder);
+        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new EPOSAgent(dataSource, treeStamp, fitnessFunction, initialPhase, previousPhase, costSignal, historySize, outFolder);
         }
     }
 
-    public EPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, FitnessFunction fitnessFunction, int planSize, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, new ArrayList<>());
+    public EPOSAgent(AgentDataset dataSource, String treeStamp, FitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
+        super(dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>());
         this.fitnessFunction = fitnessFunction;
-        this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
     }
@@ -211,7 +210,7 @@ public class EPOSAgent extends Agent {
 
                     this.robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
 
-                    System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+                    System.out.println(current.globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
                     this.broadcast();
                 } else {
                     this.informParent();
@@ -241,7 +240,7 @@ public class EPOSAgent extends Agent {
         if (epochNumber == 2) {
             if (this.isRoot()) {
                 log.log(epochNumber, current.globalPlan, 1.0);
-                log.log(epochNumber, EPOSMeasures.PLAN_SIZE, planSize);
+                log.log(epochNumber, EPOSMeasures.PLAN_SIZE, current.globalPlan.getNumberOfStates());
                 log.log(epochNumber, EPOSMeasures.ROBUSTNESS, robustness);
             }
             log.log(epochNumber, current.selectedPlan, 1.0);

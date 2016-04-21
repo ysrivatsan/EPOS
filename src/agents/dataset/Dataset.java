@@ -15,33 +15,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.plan;
+package agents.dataset;
 
-import agents.Agent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
 
 /**
  *
  * @author Peter
  */
-public class PlanReader {
-    public static List<Plan> readPlans(Agent agent, String filename) {
-        List<Plan> plans = new ArrayList<>();
-        File file = new File(filename);
-        try (Scanner scanner = new Scanner(file)) {
-            scanner.useLocale(Locale.US);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                plans.add(new PossiblePlan(agent, line));
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return plans;
-    }
+public interface Dataset {
+    public List<AgentDataset> getAgentDataSources();
+    public int getPlanSize();
 }

@@ -17,6 +17,7 @@
  */
 package agents;
 
+import agents.dataset.FileAgentDataset;
 import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
@@ -27,12 +28,12 @@ import agents.plan.PossiblePlan;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import messages.IEPOSDown;
 import messages.IEPOSUp;
 import org.joda.time.DateTime;
 import protopeer.measurement.MeasurementLog;
+import agents.dataset.AgentDataset;
 
 /**
  *
@@ -41,7 +42,6 @@ import protopeer.measurement.MeasurementLog;
 public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private boolean outputMovie;
 
-    private final int planSize;
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
 
@@ -50,10 +50,10 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private int layer;
     private double avgNumChildren;
 
-    private IterativeFitnessFunction fitnessFunctionPrototype;
+    private final IterativeFitnessFunction fitnessFunctionPrototype;
     private IterativeFitnessFunction fitnessFunction;
     private IterativeFitnessFunction fitnessFunctionRoot;
-    private List<Double> measurements = new ArrayList<>();
+    private final List<Double> measurements = new ArrayList<>();
     
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
@@ -68,8 +68,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         public boolean outputMovie;
         
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, measures);
+        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IEPOSAgent(dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, measures);
         }
     
         @Override
@@ -78,10 +78,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations, measures);
+    public IEPOSAgent(AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
+        super(dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
         this.fitnessFunctionPrototype = fitnessFunction;
-        this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch==null?null:localSearch.clone();
@@ -202,16 +201,16 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
         if(outputMovie) {
             if(iteration == 0) {
-                System.out.println("C(1:"+planSize+","+(iteration+1)+")="+costSignal+";");
+                System.out.println("C(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+costSignal+";");
             }
-            System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+            System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.globalPlan+";");
             
             Plan c = costSignal.clone();
             if(prevAggregate.globalPlan != null) {
                 c.multiply(1+iteration);
                 c.add(prevAggregate.globalPlan);
             }
-            System.out.println("T(1:"+planSize+","+(iteration+1)+")="+c+";");
+            System.out.println("T(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+c+";");
         } else {
             if(iteration%10 == 9) {
                 System.out.print("%");

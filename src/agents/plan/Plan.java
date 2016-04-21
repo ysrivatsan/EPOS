@@ -49,12 +49,7 @@ public class Plan implements Serializable, Cloneable {
         this.setType(type);
         agent.initPlan(this);
     }
-
-    public Plan(Plan.Type type, Agent agent, String planStr) {
-        this.setType(type);
-        agent.initPlan(this, planStr);
-    }
-
+    
     public void init(int length) {
         values = new double[length];
     }

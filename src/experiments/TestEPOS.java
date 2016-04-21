@@ -18,6 +18,7 @@
 package experiments;
 
 import agents.EPOSAgent;
+import agents.dataset.FileAgentDataset;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.MaxEntropyFitnessFunction;
@@ -94,8 +95,9 @@ public class TestEPOS extends SimulatedExperiment {
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), Math.random(), v[(int) (Math.random() * v.length)]));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, 24, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
-
+                    FileAgentDataset dataSource = new FileAgentDataset(plansLocation, planConfigurations, agentMeterIDs[peerIndex].getName(), plansFormat, planSize);
+                    newPeer.addPeerlet(new EPOSAgent(dataSource, treeStamp, fitnessFunction, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
+                    
                     return newPeer;
                 }
             };

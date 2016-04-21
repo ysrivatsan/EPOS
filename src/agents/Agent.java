@@ -19,21 +19,13 @@ package agents;
 
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
-import agents.plan.PlanReader;
-import agents.plan.PossiblePlan;
 import dsutil.protopeer.services.topology.trees.TreeApplicationInterface;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.StringTokenizer;
 import org.joda.time.DateTime;
 import protopeer.BasePeerlet;
 import protopeer.Finger;
-import protopeer.Peer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import protopeer.measurement.MeasurementLoggerListener;
@@ -41,6 +33,7 @@ import protopeer.network.Message;
 import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
+import agents.dataset.AgentDataset;
 
 /**
  *
@@ -51,20 +44,14 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<Finger> children = new ArrayList<>();
     private TopologicalState topologicalState = TopologicalState.DISCONNECTED;
     
-    private final String plansLocation;
-    private final String planConfigurations;
+    public final AgentDataset dataSource;
     private final String treeStamp;
-    private final String agentMeterID;
-    public final File inFolder;
     private final File outFolder;
     
     DateTime currentPhase;
     DateTime previousPhase = null;
-    final List<DateTime> phases = new ArrayList<>();
+    final List<DateTime> phases;
     private int phaseIndex = 0;
-    
-    private final String plansFormat;
-    private final int planSize;
     
     final List<Plan> possiblePlans = new ArrayList<>();
     
@@ -75,23 +62,13 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
-        this.plansLocation = plansLocation;
-        this.planConfigurations = planConfigurations;
+    public Agent(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
+        this.dataSource = dataSource;
         this.treeStamp = treeStamp;
-        this.agentMeterID = agentMeterID;
-        this.plansFormat = plansFormat;
-        this.planSize = planSize;
-        this.inFolder = new File(plansLocation + "/" + planConfigurations + "/" + agentMeterID);
         this.outFolder = outFolder;
         this.currentPhase = initialPhase;
         this.measures = measures;
-    }
-    
-    @Override
-    public void init(Peer peer) {
-        super.init(peer);
-        this.loadCoordinationPhases();
+        this.phases = dataSource.getPhases();
     }
 
     @Override
@@ -141,7 +118,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     void readPlans() {
         possiblePlans.clear();
-        possiblePlans.addAll(PlanReader.readPlans(this, inFolder.getPath() + "/" + currentPhase.toString("yyyy-MM-dd") + plansFormat));
+        possiblePlans.addAll(dataSource.getPlans(currentPhase));
     }
 
     @Override
@@ -219,48 +196,13 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     }
     
     abstract void measure(MeasurementLog log, int epochNumber);
-    
-    private void loadCoordinationPhases() {
-        File agentDirectory = new File(this.plansLocation + "/" + this.planConfigurations + "/" + this.agentMeterID);
-        File[] dates = agentDirectory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                if (pathname.isHidden() || pathname.getName().charAt(0)=='.') {
-                    return false;
-                }
-                return pathname.isFile();
-            }
-        });
-        for (File date : dates) {
-            StringTokenizer dateTokenizer = new StringTokenizer(date.getName(), ".");
-            this.phases.add(DateTime.parse(dateTokenizer.nextToken()));
-        }
-    }
 
     public void initPlan(Plan plan) {
-        plan.init(planSize);
+        plan.init(dataSource.getPlanSize());
         plan.setCoordinationPhase(currentPhase);
         plan.setDiscomfort(0.0);
-        plan.setAgentMeterID(agentMeterID);
-        plan.setConfiguration(planConfigurations + "-" + treeStamp);
-    }
-
-    public void initPlan(Plan plan, String planStr) {
-        plan.init(planSize);
-        plan.setCoordinationPhase(currentPhase);
-
-        Scanner scanner = new Scanner(planStr);
-        scanner.useLocale(Locale.US);
-        scanner.useDelimiter(":");
-        double score = scanner.nextDouble();
-        plan.setDiscomfort(1.0 - score);
-        
-        scanner.useDelimiter(",");
-        scanner.skip(":");
-        
-        for (int i=0; scanner.hasNextDouble(); i++) {
-            plan.setValue(i, scanner.nextDouble());
-        }
+        plan.setAgentMeterID(dataSource.getId());
+        plan.setConfiguration(dataSource.getConfig() + "-" + treeStamp);
     }
     
     public void broadcast(Message msg) {

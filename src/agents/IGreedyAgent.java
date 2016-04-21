@@ -30,19 +30,16 @@ import java.util.TreeMap;
 import messages.IGreedyDown;
 import messages.IGreedyUp;
 import org.joda.time.DateTime;
-import protopeer.Experiment;
 import protopeer.measurement.MeasurementLog;
+import agents.dataset.AgentDataset;
 
 /**
  *
  * @author Evangelos
  */
 public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown> {
-
     private boolean outputMovie;
-    private int measurementEpoch;
 
-    private final int planSize;
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
 
@@ -57,8 +54,8 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
-    private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans previous = new AgentPlans();
+    private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans historic;
 
     private List<Integer> selectedCombination = new ArrayList<>();
@@ -68,15 +65,19 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         public boolean outputMovie;
 
         @Override
-        public Agent create(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, (IterativeFitnessFunction) fitnessFunction, planSize, outFolder, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, new ArrayList<>(measures));
+        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new IGreedyAgent(dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, measures);
+        }
+    
+        @Override
+        public String toString() {
+            return "IGreedy";
         }
     }
 
-    public IGreedyAgent(String plansLocation, String planConfigurations, String treeStamp, String agentMeterID, String plansFormat, IterativeFitnessFunction fitnessFunction, int planSize, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
-        super(plansLocation, planConfigurations, treeStamp, agentMeterID, plansFormat, planSize, outFolder, initialPhase, numIterations, measures);
+    public IGreedyAgent(AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
+        super(dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
         this.fitnessFunctionPrototype = fitnessFunction;
-        this.planSize = planSize;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch==null?null:localSearch.clone();
@@ -159,16 +160,16 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         // Log + output
         if(outputMovie) {
             if(iteration == 0) {
-                System.out.println("C(1:"+planSize+","+(iteration+1)+")="+costSignal+";");
+                System.out.println("C(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+costSignal+";");
             }
-            System.out.println("D(1:"+planSize+","+(iteration+1)+")="+current.globalPlan+";");
+            System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.globalPlan+";");
             
             Plan c = costSignal.clone();
             if(prevAggregate.globalPlan != null) {
                 c.multiply(1+iteration);
                 c.add(prevAggregate.globalPlan);
             }
-            System.out.println("T(1:"+planSize+","+(iteration+1)+")="+c+";");
+            System.out.println("T(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+c+";");
         } else {
             if(iteration%10 == 9) {
                 System.out.print("%");

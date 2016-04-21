@@ -30,8 +30,4 @@ public class CombinationalPlan extends Plan {
     public CombinationalPlan(Agent agent) {
         super(Plan.Type.COMBINATIONAL_PLAN, agent);
     }
-    
-    public CombinationalPlan(Agent agent, String planStr) {
-        super(Plan.Type.COMBINATIONAL_PLAN, agent, planStr);
-    }
 }

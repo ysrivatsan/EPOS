@@ -20,6 +20,7 @@ package experiments;
 import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
+import agents.dataset.FileDataset;
 import agents.fitnessFunction.*;
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.DirectionCostFunction;
@@ -31,9 +32,9 @@ import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.network.NumPlanRankGenerator;
 import agents.network.StdRankGenerator;
-import agents.plan.FilePlanGenerator;
-import agents.plan.FuncPlanGenerator;
-import agents.plan.PlanGenerator;
+import agents.dataset.FilePlanGenerator;
+import agents.dataset.FuncPlanGenerator;
+import agents.dataset.PlanGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -61,6 +62,7 @@ import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
 import util.Util;
+import agents.dataset.Dataset;
 
 /**
  * @author Peter
@@ -69,13 +71,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private String peersLog;
 
     private AgentFactory agentFactory;
-    private String dataset;
     private int numUser;
-    private int numIterations;
     private String title;
     private String label;
     private TreeArchitecture architecture;
     private PlanGenerator planGenerator;
+    private Dataset dataset;
 
     private static String currentConfig = null;
     private static BicyclesExperiment launcher;
@@ -123,7 +124,9 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         Map<String, Consumer<String>> assignments = new HashMap<>();
         assignments.put("out", (x) -> outFile = x);
         assignments.put("numExperiments", (x) -> launcher.numExperiments = Integer.parseInt(x));
-        assignments.put("numIterations", (x) -> launcher.numIterations = Integer.parseInt(x));
+        assignments.put("numIterations", (x) -> {
+                agentFactoryProperties.put("numIterations", (a) -> a.numIterations = Integer.parseInt(x));
+        });
         assignments.put("numUser", (x) -> launcher.numUser = Integer.parseInt(x));
         assignments.put("architecture.priority", (x) -> launcher.architecture.priority = RankPriority.valueOf(x));
         assignments.put("architecture.rank", (x) -> launcher.architecture.rank = DescriptorType.valueOf(x));
@@ -146,10 +149,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         // e.g. E5.1 for energy dataset 5.1 or B8 for bicycle dataset 8to10
         assignments.put("dataset", (x) -> {
             if(x.startsWith("E")) {
-                launcher.dataset = "input-data/Archive/" + x.charAt(x.length()-3) + "." + x.charAt(x.length()-1);
+                launcher.dataset = new FileDataset("input-data"+File.separator+"Archive", x.charAt(x.length()-3) + "." + x.charAt(x.length()-1));
             } else {
                 int num = Integer.parseInt(x.substring(1));
-                launcher.dataset = "input-data/bicycle/user_plans_unique_" + num + "to" + (num + 2) + "_force_trips";
+                launcher.dataset = new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips");
             }
         });
         
@@ -306,7 +309,7 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                     for(Consumer<AgentFactory> c : agentFactoryProperties.values()) {
                         c.accept(launcher.agentFactory);
                     }
-                    launcher.runDuration = 4+launcher.numIterations;
+                    launcher.runDuration = 4+launcher.agentFactory.numIterations;
                     launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
@@ -346,16 +349,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     public IEPOSExperiment createExperiment(int num) {
         System.out.println("%Experiment " + getName(num) + ":");
 
-        String location = dataset.substring(0, dataset.lastIndexOf('/'));
-        String config = dataset.substring(dataset.lastIndexOf('/') + 1);
-        
-        agentFactory.numIterations = numIterations;
-
         File outFolder = new File(peersLog);
         IEPOSExperiment experiment = new IEPOSExperiment(
-                location, outFolder, config,
+                dataset,
+                outFolder,
                 architecture,
-                "3BR" + num, DateTime.parse("0001-01-01"), 
+                "", DateTime.parse("0001-01-01"), 
                 DateTime.parse("0001-01-01"), 5, numUser,
                 agentFactory,
                 planGenerator);

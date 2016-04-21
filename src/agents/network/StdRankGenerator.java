@@ -19,11 +19,8 @@ package agents.network;
 
 import agents.Agent;
 import agents.plan.Plan;
-import agents.plan.PlanReader;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.List;
 import java.util.function.BiFunction;
+import org.joda.time.DateTime;
 
 /**
  *
@@ -33,15 +30,11 @@ public class StdRankGenerator implements BiFunction<Integer, Agent, Double>{
 
     @Override
     public Double apply(Integer idx, Agent agent) {
-        File[] files = agent.inFolder.listFiles((File dir, String name) -> {
-            return name.endsWith(".plans");
-        });
         double rank = 0;
         int count = 0;
-        for(File f : files) {
-            List<Plan> plans = PlanReader.readPlans(agent, f.getPath());
-            for(Plan p : plans) {
-                rank += p.stdDeviation();
+        for(DateTime phase : agent.dataSource.getPhases()) {
+            for(Plan plan : agent.dataSource.getPlans(phase)) {
+                rank += plan.stdDeviation();
             }
             count += 1;
         }

@@ -5,6 +5,7 @@
 package experiments;
 
 import agents.EPOSAgent;
+import agents.dataset.FileAgentDataset;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.MatchEstimate2FitnessFunction;
@@ -89,7 +90,8 @@ public class EPOS_Bicycles extends SimulatedExperiment {
                     }
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 2));
                     newPeer.addPeerlet(new TreeProvider());
-                    newPeer.addPeerlet(new EPOSAgent(plansLocation, planConfigurations, treeStamp, agentMeterIDs[peerIndex].getName(), plansFormat, fitnessFunction, planSize, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
+                    FileAgentDataset dataSource = new FileAgentDataset(plansLocation, planConfigurations, agentMeterIDs[peerIndex].getName(), plansFormat, planSize);
+                    newPeer.addPeerlet(new EPOSAgent(dataSource, treeStamp, fitnessFunction, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
                     return newPeer;
                 }
             };
