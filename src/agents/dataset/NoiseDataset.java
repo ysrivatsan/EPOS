@@ -17,7 +17,6 @@
  */
 package agents.dataset;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -60,5 +59,4 @@ public class NoiseDataset implements Dataset {
     public void init(int num) {
         this.seed = num;
     }
-    
 }

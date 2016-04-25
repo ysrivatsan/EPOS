@@ -19,13 +19,14 @@ package agents.dataset;
 
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.joda.time.DateTime;
-import sun.security.provider.NativePRNG;
 
 /**
  *
@@ -38,7 +39,7 @@ public class NoiseAgentDataset implements AgentDataset {
     private final int planSize;
     private final double mean;
     private final double std;
-    private final Random r;
+    private final long seed;
 
     public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, Random r) {
         this.id = id;
@@ -46,14 +47,16 @@ public class NoiseAgentDataset implements AgentDataset {
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
-        this.r = r;
+        this.seed = r.nextLong();
     }
 
     @Override
     public List<Plan> getPlans(DateTime phase) {
+        Random r = new Random(seed);
+        
         List<Plan> plans = new ArrayList<>();
         for (int i = 0; i < numPlans; i++) {
-            plans.add(generatePlan());
+            plans.add(generatePlan(r));
         }
         return plans;
     }
@@ -78,13 +81,24 @@ public class NoiseAgentDataset implements AgentDataset {
         return planSize;
     }
 
-    private Plan generatePlan() {
+    private Plan generatePlan(Random r) {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
+        //double a = 1;
+        //MultivariateNormalDistribution dist = new MultivariateNormalDistribution(means, covariances);
         for (int j = 0; j < planSize; j++) {
             plan.setValue(j, (r.nextGaussian() * std + mean));
+            //plan.setValue(j, (r.nextGaussian() * std*a/Math.sqrt(1-2*a+2*a*a) + mean));
         }
-
+        
+        /*List<Double> vals = new ArrayList<>();
+        for(int j = 0; j < planSize; j++) {
+            vals.add(plan.getValue(j));
+        }
+        Collections.sort(vals);
+        for(int j = 0; j < planSize; j++) {
+            plan.setValue(j, vals.get(j) + (r.nextGaussian() * std*(1-a)/Math.sqrt(1-2*a+2*a*a) + mean));
+        }*/
         return plan;
     }
 }

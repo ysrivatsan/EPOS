@@ -54,7 +54,7 @@ public class FileDataset implements Dataset {
     public List<AgentDataset> getAgentDataSources(int maxAgents) {
         List<AgentDataset> agents = new ArrayList<>();
         for (int i = 0; i < agentDataDirs.length && i < maxAgents; i++) {
-            agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, planSize));
+            agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize()));
         }
         return agents;
     }

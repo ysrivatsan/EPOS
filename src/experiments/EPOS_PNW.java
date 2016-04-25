@@ -72,6 +72,7 @@ public class EPOS_PNW extends SimulatedExperiment{
     
     public static void main(String[] args) {
         for(int i=0;i<treeInstances;i++){
+            final int idx = i;
             treeStamp="3BR"+i;
             System.out.println("Experiment "+expSeqNum+"\n");
             Experiment.initEnvironment();
@@ -92,7 +93,7 @@ public class EPOS_PNW extends SimulatedExperiment{
                     newPeer.addPeerlet(new TreeClient(Experiment.getSingleton().getAddressToBindTo(0), new SimplePeerIdentifierGenerator(), peerIndex, 4)); //v[(int)(Math.random()*v.length)]
                     newPeer.addPeerlet(new TreeProvider());
                     FileAgentDataset dataSource = new FileAgentDataset(plansLocation, planConfigurations, agentMeterIDs[peerIndex].getName(), plansFormat, planSize);
-                    newPeer.addPeerlet(new EPOSAgent(dataSource, treeStamp, fitnessFunction, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
+                    newPeer.addPeerlet(new EPOSAgent(idx, dataSource, treeStamp, fitnessFunction, aggregationPhase, historicAggregationPhase, patternEnergyPlan, historySize, null));
                     return newPeer;
                 }
             };

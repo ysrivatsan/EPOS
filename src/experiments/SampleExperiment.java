@@ -58,6 +58,7 @@ public class SampleExperiment extends ExperimentLauncher {
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
         
         IEPOSExperiment experiment = new IEPOSExperiment(
+                num,
                 new FileDataset("input-data/samples", "equalAgents"),
                 new File("peersLog/Experiment 01"),
                 architecture,
