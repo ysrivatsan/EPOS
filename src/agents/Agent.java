@@ -43,6 +43,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     Finger parent = null;
     final List<Finger> children = new ArrayList<>();
     private TopologicalState topologicalState = TopologicalState.DISCONNECTED;
+    private final int id;
     
     public final AgentDataset dataSource;
     private final String treeStamp;
@@ -62,7 +63,8 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
+    public Agent(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
+        this.id = id;
         this.dataSource = dataSource;
         this.treeStamp = treeStamp;
         this.outFolder = outFolder;
@@ -175,7 +177,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     private MeasurementFileDumper getMeasurementDumper() {
         if(measurementDumper == null) {
-            measurementDumper = new MeasurementFileDumper(outFolder.getPath() + "/" + getPeer().getIndexNumber());
+            measurementDumper = new MeasurementFileDumper(outFolder.getPath() + "/" + id + "_" + getPeer().getIndexNumber());
         }
         return measurementDumper;
     }

@@ -61,13 +61,13 @@ public class EPOSAgent extends Agent {
     public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new EPOSAgent(dataSource, treeStamp, fitnessFunction, initialPhase, previousPhase, costSignal, historySize, outFolder);
+        public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new EPOSAgent(id, dataSource, treeStamp, fitnessFunction, initialPhase, previousPhase, costSignal, historySize, outFolder);
         }
     }
 
-    public EPOSAgent(AgentDataset dataSource, String treeStamp, FitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
-        super(dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>());
+    public EPOSAgent(int id, AgentDataset dataSource, String treeStamp, FitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>());
         this.fitnessFunction = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;

@@ -17,7 +17,6 @@
  */
 package agents.dataset;
 
-import agents.plan.Plan;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -32,16 +31,17 @@ import java.util.logging.Logger;
  * @author Peter
  */
 public class FileDataset implements Dataset {
-    private String location;
-    private String config;
-    private String format = ".plans";
-    private File[] agentDataDirs;
+
+    private final String location;
+    private final String config;
+    private final String format = ".plans";
+    private final File[] agentDataDirs;
     private int planSize = -1;
-    
+
     public FileDataset(String location, String config) {
         this.location = location;
         this.config = config;
-        
+
         File dir = new File(location + "/" + config);
         this.agentDataDirs = dir.listFiles((File pathname) -> pathname.isDirectory());
         if (agentDataDirs == null) {
@@ -51,17 +51,17 @@ public class FileDataset implements Dataset {
     }
 
     @Override
-    public List<AgentDataset> getAgentDataSources() {
+    public List<AgentDataset> getAgentDataSources(int maxAgents) {
         List<AgentDataset> agents = new ArrayList<>();
-        for(File agentDataDir : agentDataDirs) {
-            agents.add(new FileAgentDataset(location, config, agentDataDir.getName(), format, planSize));
+        for (int i = 0; i < agentDataDirs.length && i < maxAgents; i++) {
+            agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, planSize));
         }
         return agents;
     }
 
     @Override
     public int getPlanSize() {
-        if(planSize < 0) {
+        if (planSize < 0) {
             File file = agentDataDirs[0];
             File[] planFiles = file.listFiles((File dir, String name) -> name.endsWith(format));
             file = planFiles[0];
@@ -74,5 +74,9 @@ public class FileDataset implements Dataset {
             }
         }
         return planSize;
+    }
+
+    @Override
+    public void init(int num) {
     }
 }

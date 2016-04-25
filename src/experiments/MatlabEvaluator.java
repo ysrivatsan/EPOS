@@ -45,6 +45,7 @@ public class MatlabEvaluator extends IEPOSEvaluator {
         printMatrix("XMax" + id, iterationAggregates, a -> a.getMax(), out);
         printMatrix("XMin" + id, iterationAggregates, a -> a.getMin(), out);
         printMatrix("XStd" + id, iterationAggregates, a -> a.getStdDev(), out);
+        printMatrix("XNum" + id, iterationAggregates, a -> (double)a.getNumValues(), out);
 
         out.println("figure(" + id + ");");
         out.println("plot(XAvg" + id + "');");

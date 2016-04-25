@@ -44,8 +44,8 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
-        super(dataSource, treeStamp, outFolder, initialPhase, measure);
+    public IterativeAgentTemplate(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, measure);
         this.numIterations = numIterations;
         this.iteration = numIterations;
     }

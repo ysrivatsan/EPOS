@@ -24,6 +24,10 @@ import java.util.List;
  * @author Peter
  */
 public interface Dataset {
-    public List<AgentDataset> getAgentDataSources();
+
+    public List<AgentDataset> getAgentDataSources(int maxAgents);
+
     public int getPlanSize();
+
+    public void init(int num);
 }

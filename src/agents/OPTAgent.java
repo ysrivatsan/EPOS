@@ -34,6 +34,8 @@ import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
 import protopeer.network.NetworkAddress;
 import agents.dataset.AgentDataset;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
@@ -41,7 +43,10 @@ import agents.dataset.AgentDataset;
  */
 public class OPTAgent extends Agent {
 
+    private Plan costSignal;
     private FitnessFunction fitnessFunction;
+    private double robustness;
+    private int iteration;
 
     private int activeChild = -1;
     
@@ -51,13 +56,14 @@ public class OPTAgent extends Agent {
     public static class Factory extends AgentFactory {
 
         @Override
-        public Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, measures);
+        public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
+            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, measures);
         }
     }
 
-    public OPTAgent(AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
-        super(dataSource, treeStamp, outFolder, initialPhase, measures);
+    public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, measures);
+        this.costSignal = costSignal;
         this.fitnessFunction = fitnessFunction;
     }
 
@@ -116,7 +122,7 @@ public class OPTAgent extends Agent {
                 getPeer().sendMessage(parent.getNetworkAddress(), msg);
             } else {
                 List<Plan> combinationalPlans = new ArrayList<>(msg.aggregatedPossiblePlans.keySet());
-                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, null, null));
+                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, costSignal, null));
                 Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
                 int selectedPlanIdx = selection.get(getPeer().getNetworkAddress());
                 this.selectedPlan = possiblePlans.get(selectedPlanIdx);
@@ -128,7 +134,8 @@ public class OPTAgent extends Agent {
                     getPeer().sendMessage(c.getNetworkAddress(), m);
                 }
 
-                System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ fitnessFunction.getRobustness(globalPlan, null, null) + ": " + globalPlan);
+                robustness = fitnessFunction.getRobustness(globalPlan, costSignal, null);
+                //System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ robustness + ": " + globalPlan);
             }
         } else if (message instanceof OPTOptimal) {
             OPTOptimal msg = (OPTOptimal) message;
@@ -144,23 +151,16 @@ public class OPTAgent extends Agent {
 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
-        if (selectedPlan != null && !measured) {
-            measured = true;
-            if (this.isRoot()) {
-                log.log(epochNumber, globalPlan, 1.0);
-                log.log(epochNumber, EPOSMeasures.PLAN_SIZE, globalPlan.getNumberOfStates());
-            }
-            log.log(epochNumber, selectedPlan, 1.0);
-            log.log(epochNumber, EPOSMeasures.DISCOMFORT, selectedPlan.getDiscomfort());
-            //log.log(epochNumber, Measurements.SELECTED_PLAN_VALUE, selectedPlan.getArithmeticState(0).getValue());
-            writeGraphData(epochNumber);
+        if(isRoot()) {
+            log.log(epochNumber, iteration, robustness);
+            iteration++;
         }
     }
 
     private void writeGraphData(int epochNumber) {
         System.out.println(getPeer().getNetworkAddress().toString() + ","
                 + ((parent != null) ? parent.getNetworkAddress().toString() : "-") + ","
-                + findSelectedPlan());
+                + findSelectedPlan() + "," + Arrays.toString(possiblePlans.toArray()));
     }
 
     private int findSelectedPlan() {

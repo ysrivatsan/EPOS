@@ -38,7 +38,7 @@ public abstract class AgentFactory implements Cloneable {
     public LocalSearch localSearch;
     public List<CostFunction> measures = new ArrayList<>();
     
-    public abstract Agent create(AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
+    public abstract Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
     
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {

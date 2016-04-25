@@ -54,6 +54,7 @@ public class IEPOSExperiment extends SimulatedExperiment {
     private final TreeArchitecture architecture;
 
     // EPOS Agent
+    private final int id;
     private final File outFolder;
     private final String treeStamp; //1. average k-ary tree, 2. Balanced or random k-ary tree, 3. random positioning or nodes 
     private final DateTime aggregationPhase;
@@ -64,7 +65,8 @@ public class IEPOSExperiment extends SimulatedExperiment {
 
     private final AgentFactory factory;
 
-    public IEPOSExperiment(Dataset dataSet, File outFolder, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory, PlanGenerator planGenerator) {
+    public IEPOSExperiment(int id, Dataset dataSet, File outFolder, TreeArchitecture architecture, String treeStamp, DateTime aggregationPhase, DateTime historicAggregationPhase, int historySize, int maxAgents, AgentFactory factory, PlanGenerator planGenerator) {
+        this.id = id;
         this.dataSet = dataSet;
         this.outFolder = outFolder;
         this.architecture = architecture;
@@ -82,13 +84,13 @@ public class IEPOSExperiment extends SimulatedExperiment {
         Experiment.initEnvironment();
         init();
 
-        List<AgentDataset> agentData = dataSet.getAgentDataSources();
-        int n = Math.min(maxAgents, agentData.size());
+        List<AgentDataset> agentData = dataSet.getAgentDataSources(maxAgents);
+        int n = agentData.size();
         
         PeerFactory peerFactory = new PeerFactory() {
             @Override
             public Peer createPeer(int peerIndex, Experiment experiment) {
-                Agent newAgent = factory.create(agentData.get(peerIndex), treeStamp, outFolder, aggregationPhase, historicAggregationPhase, costSignal, historySize);
+                Agent newAgent = factory.create(id, agentData.get(peerIndex), treeStamp, outFolder, aggregationPhase, historicAggregationPhase, costSignal, historySize);
                 Peer newPeer = new Peer(peerIndex);
                 architecture.addPeerlets(newPeer, newAgent, peerIndex, n);
                 return newPeer;

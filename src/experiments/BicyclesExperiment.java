@@ -63,6 +63,7 @@ import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
 import util.Util;
 import agents.dataset.Dataset;
+import agents.dataset.NoiseDataset;
 
 /**
  * @author Peter
@@ -150,9 +151,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
         assignments.put("dataset", (x) -> {
             if(x.startsWith("E")) {
                 launcher.dataset = new FileDataset("input-data"+File.separator+"Archive", x.charAt(x.length()-3) + "." + x.charAt(x.length()-1));
-            } else {
+            } else if(x.startsWith("B")) {
                 int num = Integer.parseInt(x.substring(1));
                 launcher.dataset = new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips");
+            } else if(x.startsWith("N")) {
+                String[] params = x.trim().split("_");
+                launcher.dataset = new NoiseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Double.parseDouble(params[4]));
             }
         });
         
@@ -348,9 +352,12 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     @Override
     public IEPOSExperiment createExperiment(int num) {
         System.out.println("%Experiment " + getName(num) + ":");
-
+        
+        dataset.init(num);
+        
         File outFolder = new File(peersLog);
         IEPOSExperiment experiment = new IEPOSExperiment(
+                num,
                 dataset,
                 outFolder,
                 architecture,
