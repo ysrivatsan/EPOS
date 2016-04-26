@@ -66,7 +66,12 @@ import experiments.parameters.EnumParam;
 import experiments.parameters.Initializer;
 import experiments.parameters.InitializerMap;
 import experiments.parameters.LocalSearchParam;
-import experiments.parameters.MeasureParam;
+import experiments.parameters.CostFunctionParam;
+import experiments.parameters.FactorParam;
+import experiments.parameters.FitnessFunctionParam;
+import experiments.parameters.LazyMap;
+import experiments.parameters.Param;
+import experiments.parameters.PlanCombinatorParam;
 import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
@@ -90,20 +95,8 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
     private static ConfigurableExperiment launcher;
     private static String outFile = null;
 
-    private static Map<String, Consumer<ConfigurableExperiment>> lazyInit = new HashMap<>();
+    private static LazyMap lazyInit = new LazyMap();
 
-    private static final Map<String, CostFunction> costFuncs = new HashMap<>();
-
-    static {
-        costFuncs.put("std", new StdDevCostFunction());
-        costFuncs.put("dot", new DirectionCostFunction());
-        costFuncs.put("match", new MatchEstimateCostFunction());
-        costFuncs.put("rand", new QuadraticCostFunction(1));
-        costFuncs.put("relStd", new RelStdDevCostFunction());
-        costFuncs.put("entropy", new EntropyCostFunction());
-        costFuncs.put("max", new MaxCostFunction());
-    }
-    
     private static String getConfigFile(String[] args) {
         if (args.length > 0) {
             return args[0];
@@ -118,9 +111,9 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         peersLogDir = new File(peersLog);
         peersLogDir.mkdirs();
         Util.clearDirectory(peersLogDir);
-        
+
         new File("output-data").mkdir();
-        
+
         return peersLog;
     }
 
@@ -136,7 +129,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
 
     public static void main(String[] args) {
         long t0 = System.currentTimeMillis();
-        
+
         String configFile = getConfigFile(args);
         String peersLog = initPeersLog(configFile);
         Properties properties = loadConfig(configFile);
@@ -160,12 +153,12 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
         initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
-        initializer.put("measure", x -> launcher.agentFactory.measure = x, new MeasureParam(), 1);
+        initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
-        lazyInit.put(lazyKey("runDuration", 2), e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations);
-        lazyInit.put(lazyKey("peersLog", 3), e -> launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis());
+        lazyInit.put("runDuration", e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations, 2);
+        lazyInit.put("peersLog", e -> launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis(), 3);
 
         List<Init> init = new ArrayList<>();
         List<Init> outer = new ArrayList<>();
@@ -185,7 +178,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
             } else if (var.startsWith("list")) {
                 ffConfigs.put(propertyName, Arrays.asList(
                         Arrays.stream(((String) property.getValue()).split("\\),"))
-                        .map(s -> FFfromString(s))
+                        .map(s -> new FitnessFunctionParam().get(s))
                         .toArray(num -> new IterativeFitnessFunction[num])));
                 continue;
             } else {
@@ -194,22 +187,14 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
 
             if (initializer.containsKey(propertyName)) {
                 Initializer i = initializer.get(propertyName);
-                target.add(new Init<>(s -> {
-                    if (!i.param.isValid(s)) {
-                        throw new IllegalArgumentException(s + " is not valid for " + propertyName + "; valid: " + i.param.validDescription());
-                    } else if (i.lazyPriority != null) {
-                        lazyInit.put(lazyKey(propertyName, i.lazyPriority), e -> i.setter.accept(i.param.get(s)));
-                    } else {
-                        i.setter.accept(i.param.get(s));
-                    }
-                }, Util.trimSplit((String) property.getValue(), ",")));
+                target.add(new Init<>(s -> i.init(propertyName, s, lazyInit), Util.trimSplit((String) property.getValue(), ",")));
             } else {
                 throw new IllegalArgumentException("Property " + var + " not supported");
             }
         }
 
         inner.add(new Init<>((o) -> {
-            lazyInit.put("fitnessFunction", (e) -> e.agentFactory.fitnessFunction = o);
+            lazyInit.put("fitnessFunction", e -> launcher.agentFactory.fitnessFunction = o, 0);
         }, () -> {
             return ffConfigs.get(currentConfig).iterator();
         }));
@@ -264,13 +249,11 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     }
 
                     // do lazyPriority initializations
-                    for (Consumer<ConfigurableExperiment> c : lazyInit.values()) {
-                        c.accept(launcher);
+                    for (Consumer<?> c : lazyInit.values()) {
+                        c.accept(null);
                     }
 
                     // perform experiment
-                    //launcher.runDuration = 4 + launcher.agentFactory.numIterations;
-                    //launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
@@ -289,10 +272,6 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         }
     }
 
-    private static String lazyKey(String key, int lazyPriority) {
-        return lazyPriority + key;
-    }
-
     @Override
     public void run() {
         File peersLog = new File(this.peersLog);
@@ -303,7 +282,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         MeasurementLog log = new MeasurementLog();
         log.log(1, "title=" + title, 0);
         log.log(1, "label=" + label, 0);
-        if(launcher.agentFactory.measure != null) {
+        if (launcher.agentFactory.measure != null) {
             log.log(1, "measure=" + launcher.agentFactory.measure.getMetric(), 0);
         } else {
             log.log(1, "measure=" + launcher.agentFactory.fitnessFunction.getMetric(), 0);
@@ -348,71 +327,5 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
             Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
-    }
-
-    private static IterativeFitnessFunction FFfromString(String s) {
-        String[] parts = s.split("[\\(,\\)]");
-        IterativeFitnessFunction ff = null;
-
-        for (int i = 0; i < parts.length; i++) {
-            parts[i] = parts[i].trim();
-        }
-
-        try {
-            Map<String, Constructor> ffs = new HashMap<>();
-            ffs.put("MinCostGmA", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
-            ffs.put("MinCostG", IterMinCostG.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
-            ffs.put("MinCostHGmA", IterMinCostHGmA.class.getConstructor(CostFunction.class, Factor.class, Factor.class, PlanCombinator.class, PlanCombinator.class));
-            ffs.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
-            ffs.put("LocalSearch", IterLocalSearch.class.getConstructor());
-            ffs.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));
-            ffs.put("UCB1", IterUCB1Bandit.class.getConstructor());
-
-            if (!ffs.containsKey(parts[0])) {
-                System.err.println(parts[0] + " is not a valid fitness function; valid: " + ffs.keySet());
-            }
-
-            Constructor ffConst = ffs.get(parts[0]);
-            if (ffConst.getParameterCount() > parts.length - 1) {
-                System.err.println("Too few parameters for fitness function " + parts[0] + " (" + ffConst.getParameterCount() + " expected)");
-            }
-
-            Map<Class, Map<String, ?>> params = new HashMap<>();
-            params.put(CostFunction.class, costFuncs);
-
-            Map<String, Factor> factors = new HashMap<>();
-            factors.put("1", new Factor1());
-            factors.put("1/l", new Factor1OverLayer());
-            factors.put("1/n", new Factor1OverN());
-            factors.put("1/sqrtn", new Factor1OverSqrtN());
-            factors.put("d/n", new FactorDepthOverN());
-            factors.put("m/n", new FactorMOverN());
-            factors.put("m/n-m", new FactorMOverNmM());
-            factors.put("std", new FactorNormalizeStd());
-            params.put(Factor.class, factors);
-
-            Map<String, PlanCombinator> combinators = new HashMap<>();
-            combinators.put("sum", new SumCombinator());
-            combinators.put("avg", new AvgCombinator());
-            combinators.put("prev", new MostRecentCombinator());
-            combinators.put("wsum", new WeightedSumCombinator2());
-            params.put(PlanCombinator.class, combinators);
-
-            Object[] args = new Object[ffConst.getParameterCount()];
-            Class[] types = ffConst.getParameterTypes();
-            for (int i = 0; i < args.length; i++) {
-                Map<String, ? extends Object> options = params.get(types[i]);
-                if (!options.containsKey(parts[i + 1])) {
-                    System.err.println(parts[i + 1] + " is not a valid " + types[i].getSimpleName() + "; valid: " + options.keySet());
-                }
-                args[i] = options.get(parts[i + 1]);
-            }
-
-            ff = (IterativeFitnessFunction) ffConst.newInstance(args);
-        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return ff;
     }
 }

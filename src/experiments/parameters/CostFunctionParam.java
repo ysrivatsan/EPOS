@@ -30,9 +30,9 @@ import agents.fitnessFunction.costFunction.StdDevCostFunction;
  *
  * @author Peter
  */
-public class MeasureParam extends MapParam<CostFunction> {
+public class CostFunctionParam extends MapParam<CostFunction> {
 
-    public MeasureParam() {
+    public CostFunctionParam() {
         /*map.put("std", Arrays.asList(new StdDevCostFunction()));
         map.put("dot", Arrays.asList(new DirectionCostFunction()));
         map.put("match", Arrays.asList(new MatchEstimateCostFunction()));

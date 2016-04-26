@@ -17,20 +17,22 @@
  */
 package experiments.parameters;
 
-import java.util.HashMap;
-import java.util.function.Consumer;
+import agents.fitnessFunction.iterative.AvgCombinator;
+import agents.fitnessFunction.iterative.MostRecentCombinator;
+import agents.fitnessFunction.iterative.PlanCombinator;
+import agents.fitnessFunction.iterative.SumCombinator;
+import agents.fitnessFunction.iterative.WeightedSumCombinator2;
 
 /**
  *
  * @author Peter
  */
-public class InitializerMap extends HashMap<String, Initializer<?>> {
+public class PlanCombinatorParam extends MapParam<PlanCombinator> {
 
-    public <T> void put(String key, Consumer<T> setter, Param<T> param) {
-        put(key, setter, param, null);
-    }
-
-    public <T> void put(String key, Consumer<T> setter, Param<T> param, Integer lazyPriority) {
-        put(key, new Initializer<>(setter, param, lazyPriority));
+    public PlanCombinatorParam() {
+        map.put("sum", new SumCombinator());
+        map.put("avg", new AvgCombinator());
+        map.put("prev", new MostRecentCombinator());
+        map.put("wsum", new WeightedSumCombinator2());
     }
 }

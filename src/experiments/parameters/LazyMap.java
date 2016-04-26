@@ -17,20 +17,20 @@
  */
 package experiments.parameters;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 
 /**
  *
  * @author Peter
  */
-public class InitializerMap extends HashMap<String, Initializer<?>> {
-
-    public <T> void put(String key, Consumer<T> setter, Param<T> param) {
-        put(key, setter, param, null);
+public class LazyMap extends TreeMap<String, Consumer<?>> {
+    
+    public <T> void put(String key, Consumer<T> setter, int lazyPriority) {
+        put(lazyKey(key, lazyPriority), setter);
     }
 
-    public <T> void put(String key, Consumer<T> setter, Param<T> param, Integer lazyPriority) {
-        put(key, new Initializer<>(setter, param, lazyPriority));
+    private String lazyKey(String key, int lazyPriority) {
+        return lazyPriority + key;
     }
 }

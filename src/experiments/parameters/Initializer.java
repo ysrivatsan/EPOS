@@ -17,6 +17,7 @@
  */
 package experiments.parameters;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -33,5 +34,15 @@ public class Initializer<T> {
         this.param = param;
         this.setter = setter;
         this.lazyPriority = lazyPriority;
+    }
+
+    public void init(String name, String value, LazyMap lazyMap) {
+        if (!param.isValid(value)) {
+            throw new IllegalArgumentException(value + " is not valid for " + name + "; valid: " + param.validDescription());
+        } else if (lazyPriority != null && lazyMap != null) {
+            lazyMap.put(name, e -> setter.accept(param.get(value)), lazyPriority);
+        } else {
+            setter.accept(param.get(value));
+        }
     }
 }
