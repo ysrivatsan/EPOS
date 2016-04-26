@@ -78,7 +78,7 @@ public abstract class IEPOSEvaluator {
                 }
                 labels.add(label);
             } catch (IOException | ClassNotFoundException ex) {
-                Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         

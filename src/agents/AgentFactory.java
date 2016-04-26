@@ -17,33 +17,42 @@
  */
 package agents;
 
-import agents.dataset.FileAgentDataset;
 import agents.plan.Plan;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
  * @author Peter
  */
 public abstract class AgentFactory implements Cloneable {
+
     public int numIterations;
     public FitnessFunction fitnessFunction;
     public LocalSearch localSearch;
-    public List<CostFunction> measures = new ArrayList<>();
-    
+    public CostFunction measure = null;
+    public boolean outputMovie;
+
     public abstract Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
-    
+
+    public List<CostFunction> getMeasures() {
+        if (measure != null) {
+            return Arrays.asList(measure);
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {
         AgentFactory f = (AgentFactory) super.clone();
-        f.measures = new ArrayList<>(measures);
         return f;
     }
 

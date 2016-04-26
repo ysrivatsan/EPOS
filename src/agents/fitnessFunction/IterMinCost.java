@@ -23,7 +23,6 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
-import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import java.util.List;
 
 /**

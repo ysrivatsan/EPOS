@@ -43,7 +43,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     Finger parent = null;
     final List<Finger> children = new ArrayList<>();
     private TopologicalState topologicalState = TopologicalState.DISCONNECTED;
-    private final int id;
+    public final int experimentId;
     
     public final AgentDataset dataSource;
     private final String treeStamp;
@@ -59,18 +59,22 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private MeasurementFileDumper measurementDumper;
     List<CostFunction> measures;
     
+    private final String config;
+    
     private static enum TopologicalState {
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
-        this.id = id;
+    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
+        this.experimentId = experimentId;
         this.dataSource = dataSource;
         this.treeStamp = treeStamp;
         this.outFolder = outFolder;
         this.currentPhase = initialPhase;
         this.measures = measures;
         this.phases = dataSource.getPhases();
+        
+        this.config = dataSource.getConfig() + "-" + treeStamp;
     }
 
     @Override
@@ -177,7 +181,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     private MeasurementFileDumper getMeasurementDumper() {
         if(measurementDumper == null) {
-            measurementDumper = new MeasurementFileDumper(outFolder.getPath() + "/" + id + "_" + getPeer().getIndexNumber());
+            measurementDumper = new MeasurementFileDumper(outFolder.getPath() + "/" + experimentId + "_" + getPeer().getIndexNumber());
         }
         return measurementDumper;
     }
@@ -204,7 +208,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         plan.setCoordinationPhase(currentPhase);
         plan.setDiscomfort(0.0);
         plan.setAgentMeterID(dataSource.getId());
-        plan.setConfiguration(dataSource.getConfig() + "-" + treeStamp);
+        plan.setConfiguration(config);
     }
     
     public void broadcast(Message msg) {

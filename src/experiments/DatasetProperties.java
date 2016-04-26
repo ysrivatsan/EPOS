@@ -22,7 +22,13 @@ import agents.dataset.Dataset;
 import agents.dataset.FileDataset;
 import agents.plan.Plan;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.joda.time.DateTime;
 
 /**
@@ -33,15 +39,16 @@ public class DatasetProperties {
 
     public static void main(String[] args) {
         //Dataset ds = new FileDataset("input-data" + File.separator + "bicycle", "user_plans_unique_8to10_force_trips");
-        Dataset ds = new FileDataset("input-data" + File.separator + "Archive", "5.3");
+        Dataset ds = new FileDataset("input-data" + File.separator + "Archive", "5.1");
         double meanSum = 0;
         double stdSum = 0;
         int num = 0;
-        
+
         double numPlanSum2 = 0;
         int num2 = 0;
 
         List<AgentDataset> agents = ds.getAgentDataSources(99999);
+        List<Plan> allPlans = new ArrayList<>();
         for (AgentDataset ads : agents) {
             for (DateTime phase : ads.getPhases()) {
                 List<Plan> plans = ads.getPlans(phase);
@@ -49,11 +56,11 @@ public class DatasetProperties {
                     stdSum += p.stdDeviation();
                     meanSum += p.avg();
                     num++;
-                    
-                    // TODO compute covariance matrix
                 }
                 numPlanSum2 += plans.size();
                 num2++;
+
+                allPlans.addAll(plans);
             }
         }
 
@@ -63,5 +70,14 @@ public class DatasetProperties {
         System.out.println("plan size: " + ds.getPlanSize());
         System.out.println("mean: " + meanSum / num);
         System.out.println("std: " + stdSum / num);
+
+        /*try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data" + File.separator + "avg_cov.obj"))) {
+            double[] avg = Plan.meanVector(allPlans);
+            double[][] cov = Plan.covarianceMatrix(allPlans);
+            oos.writeObject(avg);
+            oos.writeObject(cov);
+        } catch (IOException ex) {
+            Logger.getLogger(DatasetProperties.class.getName()).log(Level.SEVERE, null, ex);
+        }*/
     }
 }

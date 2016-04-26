@@ -57,7 +57,7 @@ public class OPTAgent extends Agent {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, measures);
+            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, getMeasures());
         }
     }
 

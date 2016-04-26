@@ -20,6 +20,7 @@ package agents.plan;
 import agents.Agent;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import org.joda.time.DateTime;
 
 /**
@@ -46,10 +47,10 @@ public class Plan implements Serializable, Cloneable {
     }
 
     public Plan(Plan.Type type, Agent agent) {
-        this.setType(type);
+        this.type = type;
         agent.initPlan(this);
     }
-    
+
     public void init(int length) {
         values = new double[length];
     }
@@ -141,7 +142,7 @@ public class Plan implements Serializable, Cloneable {
     public double entropy() {
         double sum = sum();
         double entropy = 0.0;
-        if(sum == 0) {
+        if (sum == 0) {
             return 0;
         }
         for (double state : values) {
@@ -176,7 +177,7 @@ public class Plan implements Serializable, Cloneable {
         }
         double variance = sumSquare / (values.length - 1);
         double stDev = Math.sqrt(variance);
-        if(stDev == 0) {
+        if (stDev == 0) {
             return 0;
         }
         return stDev / Math.abs(average);
@@ -356,6 +357,42 @@ public class Plan implements Serializable, Cloneable {
         for (int i = 0; i < values.length; i++) {
             values[i] = 2 * average - values[i];
         }
+    }
+    
+    public static double[] meanVector(List<Plan> plans) {
+        int n = plans.size();
+        
+        Plan avg = plans.get(0).clone();
+        avg.set(0);
+        for (Plan p : plans) {
+            avg.add(p);
+        }
+        avg.multiply(1.0 / n);
+        
+        return avg.values;
+    }
+
+    public static double[][] covarianceMatrix(List<Plan> plans) {
+        int n = plans.size();
+        int d = plans.get(0).getNumberOfStates();
+        double[][] cov = new double[d][d];
+        double[] avg = meanVector(plans);
+
+        for (Plan p : plans) {
+            for (int i = 0; i < d; i++) {
+                for (int j = 0; j < d; j++) {
+                    cov[i][j] += (p.values[i] - avg[i]) * (p.values[j] - avg[j]);
+                }
+            }
+        }
+
+        for (int i = 0; i < d; i++) {
+            for (int j = 0; j < d; j++) {
+                cov[i][j] /= (n - 1);
+            }
+        }
+
+        return cov;
     }
 
     @Override

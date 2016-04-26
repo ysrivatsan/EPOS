@@ -20,7 +20,6 @@ package experiments;
 import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
-import agents.dataset.FileDataset;
 import agents.fitnessFunction.*;
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.DirectionCostFunction;
@@ -30,10 +29,6 @@ import agents.fitnessFunction.costFunction.MaxCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
-import agents.network.NumPlanRankGenerator;
-import agents.network.StdRankGenerator;
-import agents.dataset.FilePlanGenerator;
-import agents.dataset.FuncPlanGenerator;
 import agents.dataset.PlanGenerator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
@@ -53,7 +48,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,12 +57,25 @@ import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
 import util.Util;
 import agents.dataset.Dataset;
-import agents.dataset.NoiseDataset;
+import experiments.parameters.AgentFactoryParam;
+import experiments.parameters.BooleanParam;
+import experiments.parameters.CostSignalParam;
+import experiments.parameters.DatasetParam;
+import experiments.parameters.Init;
+import experiments.parameters.EnumParam;
+import experiments.parameters.Initializer;
+import experiments.parameters.InitializerMap;
+import experiments.parameters.LocalSearchParam;
+import experiments.parameters.MeasureParam;
+import experiments.parameters.PosIntParam;
+import experiments.parameters.RankGeneratorParam;
+import experiments.parameters.StringParam;
 
 /**
  * @author Peter
  */
-public class BicyclesExperiment extends ExperimentLauncher implements Cloneable, Runnable {
+public class ConfigurableExperiment extends ExperimentLauncher implements Cloneable, Runnable {
+
     private String peersLog;
 
     private AgentFactory agentFactory;
@@ -80,194 +87,140 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
     private Dataset dataset;
 
     private static String currentConfig = null;
-    private static BicyclesExperiment launcher;
+    private static ConfigurableExperiment launcher;
     private static String outFile = null;
-    
-    private static Map<String,Consumer<AgentFactory>> agentFactoryProperties = new HashMap<>();
-    
-    private static final Map<String,CostFunction> costFuncs = new HashMap<>();
+
+    private static Map<String, Consumer<ConfigurableExperiment>> lazyInit = new HashMap<>();
+
+    private static final Map<String, CostFunction> costFuncs = new HashMap<>();
+
     static {
         costFuncs.put("std", new StdDevCostFunction());
         costFuncs.put("dot", new DirectionCostFunction());
         costFuncs.put("match", new MatchEstimateCostFunction());
-        costFuncs.put("rand", new QuadraticCostFunction());
+        costFuncs.put("rand", new QuadraticCostFunction(1));
         costFuncs.put("relStd", new RelStdDevCostFunction());
         costFuncs.put("entropy", new EntropyCostFunction());
         costFuncs.put("max", new MaxCostFunction());
     }
     
-    public static void main(String[] args) {
-        long t0 = System.currentTimeMillis();
-        new File("output-data").mkdir();
-        String configFile = "experiments/default.cfg";
-        
-        if(args.length > 0) {
-            configFile = args[0];
+    private static String getConfigFile(String[] args) {
+        if (args.length > 0) {
+            return args[0];
+        } else {
+            return "experiments/default.cfg";
         }
+    }
+
+    private static String initPeersLog(String configFile) {
         File peersLogDir = new File(configFile);
         String peersLog = "peersLog/" + peersLogDir.getName().substring(0, peersLogDir.getName().indexOf('.'));
         peersLogDir = new File(peersLog);
         peersLogDir.mkdirs();
         Util.clearDirectory(peersLogDir);
-
-        IEPOSEvaluator evaluator = new MatlabEvaluator();
         
-        Properties p = new Properties();
-        try(Reader configReader = new FileReader(configFile)) {
-            p.load(configReader);
+        new File("output-data").mkdir();
+        
+        return peersLog;
+    }
+
+    private static Properties loadConfig(String configFile) {
+        Properties config = new Properties();
+        try (Reader configReader = new FileReader(configFile)) {
+            config.load(configReader);
         } catch (IOException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return config;
+    }
+
+    public static void main(String[] args) {
+        long t0 = System.currentTimeMillis();
         
-        launcher = new BicyclesExperiment();
+        String configFile = getConfigFile(args);
+        String peersLog = initPeersLog(configFile);
+        Properties properties = loadConfig(configFile);
+        IEPOSEvaluator evaluator = new MatlabEvaluator();
+
+        launcher = new ConfigurableExperiment();
         launcher.architecture = new TreeArchitecture();
-        
-        Map<String, Consumer<String>> assignments = new HashMap<>();
-        assignments.put("out", (x) -> outFile = x);
-        assignments.put("numExperiments", (x) -> launcher.numExperiments = Integer.parseInt(x));
-        assignments.put("numIterations", (x) -> {
-                agentFactoryProperties.put("numIterations", (a) -> a.numIterations = Integer.parseInt(x));
-        });
-        assignments.put("numUser", (x) -> launcher.numUser = Integer.parseInt(x));
-        assignments.put("architecture.priority", (x) -> launcher.architecture.priority = RankPriority.valueOf(x));
-        assignments.put("architecture.rank", (x) -> launcher.architecture.rank = DescriptorType.valueOf(x));
-        assignments.put("architecture.type", (x) -> launcher.architecture.type = TreeType.valueOf(x));
-        assignments.put("architecture.balance", (x) -> launcher.architecture.balance = BalanceType.valueOf(x));
-        
-        Map<String, BiFunction<Integer,Agent,Double>> rankGenerators = new HashMap<>();
-        rankGenerators.put("RandomRank", (idx, agent) -> Math.random());
-        rankGenerators.put("IndexRank", (idx, agent) -> (double)idx);
-        rankGenerators.put("StdRank", new StdRankGenerator());
-        rankGenerators.put("NumPlanRank", new NumPlanRankGenerator());
-        assignments.put("architecture.rankGenerator", (x) -> {
-            launcher.architecture.rankGenerator = rankGenerators.get(x);
-            if(!rankGenerators.containsKey(x)) {
-                System.err.println(x + " not a valid rank generator; valid: " + rankGenerators.keySet().toString());
-            }
-        });
-        assignments.put("architecture.maxChildren", (x) -> launcher.architecture.maxChildren = Integer.parseInt(x));
-        
-        // e.g. E5.1 for energy dataset 5.1 or B8 for bicycle dataset 8to10
-        assignments.put("dataset", (x) -> {
-            if(x.startsWith("E")) {
-                launcher.dataset = new FileDataset("input-data"+File.separator+"Archive", x.charAt(x.length()-3) + "." + x.charAt(x.length()-1));
-            } else if(x.startsWith("B")) {
-                int num = Integer.parseInt(x.substring(1));
-                launcher.dataset = new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips");
-            } else if(x.startsWith("N")) {
-                String[] params = x.trim().split("_");
-                launcher.dataset = new NoiseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Double.parseDouble(params[4]));
-            }
-        });
-        
-        Map<String, PlanGenerator> planGenerators = new HashMap<>();
-        planGenerators.put("zero", new FuncPlanGenerator((x) -> 0.0));
-        planGenerators.put("one", new FuncPlanGenerator((x) -> 1.0));
-        planGenerators.put("sin", new FuncPlanGenerator((x) -> 10*Math.sin(x*2*Math.PI)));
-        assignments.put("costSignal", (x) -> {
-            if(planGenerators.containsKey(x)) {
-                launcher.planGenerator = planGenerators.get(x);
-            } else {
-                launcher.planGenerator = new FilePlanGenerator(x);
-            }
-        });
-        
-        Map<String, AgentFactory> agentFactories = new HashMap<>();
-        agentFactories.put("IEPOS", new IEPOSAgent.Factory());
-        agentFactories.put("IGreedy", new IGreedyAgent.Factory());
-        agentFactories.put("Opt", new OPTAgent.Factory());
-        assignments.put("agentFactory", (String x) -> {
-            launcher.agentFactory = agentFactories.get(x);
-            if(!agentFactories.containsKey(x)) {
-                System.err.println(x + " not a valid agentFactory; valid: " + agentFactories.keySet().toString());
-            }
-        });
-        assignments.put("outputMovie", (String x) -> {    
-            agentFactoryProperties.put("outputMovie", (a) -> {
-                try {
-                    a.getClass().getDeclaredField("outputMovie").setBoolean(launcher.agentFactory, Boolean.parseBoolean(x));
-                } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-                    System.err.println(x + " not a valid boolean; valid: [true, false]");
-                }
-            });
-        });
-        assignments.put("fitnessFunction", (x) -> currentConfig = x);
-        assignments.put("measure", (x) -> {
-            agentFactoryProperties.put("measures", (a) -> {
-                a.measures.clear();
-                if(!x.isEmpty()) {
-                    a.measures.add(costFuncs.get(x));
-                }
-            });
-        });
-        
-        Map<String, LocalSearch> localSearches = new HashMap<>();
-        localSearches.put("", null);
-        localSearches.put("LS", new LocalSearch());
-        assignments.put("localSearch", (x) -> {
-            agentFactoryProperties.put("localSearch", (a) -> a.localSearch = localSearches.get(x));
-            //launcher.agentFactory.localSearch = localSearches.get(x);
-            if(!localSearches.containsKey(x)) {
-                System.err.println(x + " not a valid local search strategy; valid: " + localSearches.keySet().toString());
-            }
-        });
-        
-        class Dim<T> {
 
-            Consumer<T> func;
-            Iterable<? extends T> iterable;
+        InitializerMap initializer = new InitializerMap();
+        initializer.put("out", x -> outFile = x, new StringParam());
+        initializer.put("numExperiments", x -> launcher.numExperiments = x, new PosIntParam());
+        initializer.put("numUser", x -> launcher.numUser = x, new PosIntParam());
+        initializer.put("dataset", x -> launcher.dataset = x, new DatasetParam());
+        initializer.put("costSignal", x -> launcher.planGenerator = x, new CostSignalParam());
+        initializer.put("architecture.priority", x -> launcher.architecture.priority = x, new EnumParam<>(RankPriority.class));
+        initializer.put("architecture.rank", x -> launcher.architecture.rank = x, new EnumParam<>(DescriptorType.class));
+        initializer.put("architecture.type", x -> launcher.architecture.type = x, new EnumParam<>(TreeType.class));
+        initializer.put("architecture.balance", x -> launcher.architecture.balance = x, new EnumParam<>(BalanceType.class));
+        initializer.put("architecture.rankGenerator", x -> launcher.architecture.rankGenerator = x, new RankGeneratorParam());
+        initializer.put("architecture.maxChildren", x -> launcher.architecture.maxChildren = x, new PosIntParam());
+        initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
+        initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
+        initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
+        initializer.put("measure", x -> launcher.agentFactory.measure = x, new MeasureParam(), 1);
+        initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
+        initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
-            public Dim(Consumer<T> func, Iterable<? extends T> iterable) {
-                this.func = func;
-                this.iterable = iterable;
-            }
-        }
+        lazyInit.put(lazyKey("runDuration", 2), e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations);
+        lazyInit.put(lazyKey("peersLog", 3), e -> launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis());
 
-        List<Dim> init = new ArrayList<>();
-        List<Dim> outer = new ArrayList<>();
-        List<Dim> inner = new ArrayList<>();
+        List<Init> init = new ArrayList<>();
+        List<Init> outer = new ArrayList<>();
+        List<Init> inner = new ArrayList<>();
         Map<String, List<IterativeFitnessFunction>> ffConfigs = new HashMap<>();
-        
-        for(Map.Entry assignment : p.entrySet()) {
-            String var = (String) assignment.getKey();
-            String propertyName = var.substring(var.indexOf('-')+1);
-            List<Dim> target;
-            if(var.startsWith("init")){
+
+        for (Map.Entry property : properties.entrySet()) {
+            String var = (String) property.getKey();
+            String propertyName = var.substring(var.indexOf('-') + 1);
+            List<Init> target;
+            if (var.startsWith("init")) {
                 target = init;
-            } else if(var.startsWith("plot")) {
+            } else if (var.startsWith("plot")) {
                 target = outer;
-            } else if(var.startsWith("comp")) {
+            } else if (var.startsWith("comp")) {
                 target = inner;
-            } else if(var.startsWith("list")) {
+            } else if (var.startsWith("list")) {
                 ffConfigs.put(propertyName, Arrays.asList(
-                        Arrays.stream(((String)assignment.getValue()).split("\\),"))
-                                .map(s -> FFfromString(s))
-                                .toArray(num -> new IterativeFitnessFunction[num])));
+                        Arrays.stream(((String) property.getValue()).split("\\),"))
+                        .map(s -> FFfromString(s))
+                        .toArray(num -> new IterativeFitnessFunction[num])));
                 continue;
             } else {
-                System.err.println("Invalid prefix for " + var);
-                continue;
+                throw new IllegalArgumentException("Invalid prefix for " + var);
             }
-            
-            if(assignments.containsKey(propertyName)) {
-                target.add(new Dim<>(assignments.get(propertyName), Util.trimSplit((String)assignment.getValue(),",")));
+
+            if (initializer.containsKey(propertyName)) {
+                Initializer i = initializer.get(propertyName);
+                target.add(new Init<>(s -> {
+                    if (!i.param.isValid(s)) {
+                        throw new IllegalArgumentException(s + " is not valid for " + propertyName + "; valid: " + i.param.validDescription());
+                    } else if (i.lazyPriority != null) {
+                        lazyInit.put(lazyKey(propertyName, i.lazyPriority), e -> i.setter.accept(i.param.get(s)));
+                    } else {
+                        i.setter.accept(i.param.get(s));
+                    }
+                }, Util.trimSplit((String) property.getValue(), ",")));
             } else {
-                System.err.println("Property " + var + " not supported");
+                throw new IllegalArgumentException("Property " + var + " not supported");
             }
         }
-        inner.add(new Dim<>((o) -> {
-            agentFactoryProperties.put("fitnessFunction", (a) -> a.fitnessFunction = o);
+
+        inner.add(new Init<>((o) -> {
+            lazyInit.put("fitnessFunction", (e) -> e.agentFactory.fitnessFunction = o);
         }, () -> {
             return ffConfigs.get(currentConfig).iterator();
-                }));
-        
-        for(Dim d : init) {
-            d.func.accept(d.iterable.iterator().next());
+        }));
+
+        for (Init d : init) {
+            d.setter.accept(d.values.iterator().next());
         }
-        
+
         try (PrintStream out = outFile == null ? System.out : new PrintStream(outFile)) {
             int plotNumber = 0;
-            
+
             // outer loops
             List<Iterator<? extends Object>> outerState = Util.repeat(outer.size(), (Iterator<? extends Object>) null);
             List<String> outerName = Util.repeat(outer.size(), (String) null);
@@ -275,10 +228,10 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 boolean boi = true, eoi = false; // begin/end of iteration
                 for (int i = 0; i < outer.size() && (boi || eoi); i++) {
                     if ((boi = outerState.get(i) == null) || (eoi = !outerState.get(i).hasNext())) {
-                        outerState.set(i, outer.get(i).iterable.iterator());
+                        outerState.set(i, outer.get(i).values.iterator());
                     }
                     Object obj = outerState.get(i).next();
-                    outer.get(i).func.accept(obj);
+                    outer.get(i).setter.accept(obj);
                     outerState.set(i, outerState.get(i));
                     outerName.set(i, obj == null ? null : obj.toString());
                 }
@@ -290,18 +243,19 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                 List<String> experiments = new ArrayList<>();
                 String title = Util.merge(outerName);
                 plotNumber++;
-                
+
                 // inner loops
                 List<Iterator<? extends Object>> innerState = Util.repeat(inner.size(), (Iterator<? extends Object>) null);
                 List<String> innerName = Util.repeat(inner.size(), (String) null);
                 while (true) {
-                    boi = true; eoi = false; // begin/end of iteration
+                    boi = true;
+                    eoi = false; // begin/end of iteration
                     for (int i = 0; i < inner.size() && (boi || eoi); i++) {
                         if ((boi = innerState.get(i) == null) || (eoi = !innerState.get(i).hasNext())) {
-                            innerState.set(i, inner.get(i).iterable.iterator());
+                            innerState.set(i, inner.get(i).values.iterator());
                         }
                         Object obj = innerState.get(i).next();
-                        inner.get(i).func.accept(obj);
+                        inner.get(i).setter.accept(obj);
                         innerState.set(i, innerState.get(i));
                         innerName.set(i, obj == null ? null : obj.toString());
                     }
@@ -309,93 +263,103 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
                         break;
                     }
 
-                    // perform experiment
-                    for(Consumer<AgentFactory> c : agentFactoryProperties.values()) {
-                        c.accept(launcher.agentFactory);
+                    // do lazyPriority initializations
+                    for (Consumer<ConfigurableExperiment> c : lazyInit.values()) {
+                        c.accept(launcher);
                     }
-                    launcher.runDuration = 4+launcher.agentFactory.numIterations;
-                    launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis();
+
+                    // perform experiment
+                    //launcher.runDuration = 4 + launcher.agentFactory.numIterations;
+                    //launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis();
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
-                    
+
                     experiments.add(launcher.peersLog);
                 }
 
                 // plot result
                 evaluator.evaluateLogs(plotNumber, experiments, out);
             }
-            
+
             long t1 = System.currentTimeMillis();
             System.out.println("%" + (t1 - t0) / 1000 + "s");
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    private static String lazyKey(String key, int lazyPriority) {
+        return lazyPriority + key;
+    }
+
     @Override
     public void run() {
         File peersLog = new File(this.peersLog);
         Util.clearDirectory(peersLog);
         peersLog.mkdir();
-        
+
         MeasurementFileDumper logger = new MeasurementFileDumper(this.peersLog + "/info");
         MeasurementLog log = new MeasurementLog();
         log.log(1, "title=" + title, 0);
         log.log(1, "label=" + label, 0);
-        log.log(1, "measure=" + launcher.agentFactory.fitnessFunction.getRobustnessMeasure(), 0);
+        if(launcher.agentFactory.measure != null) {
+            log.log(1, "measure=" + launcher.agentFactory.measure.getMetric(), 0);
+        } else {
+            log.log(1, "measure=" + launcher.agentFactory.fitnessFunction.getMetric(), 0);
+        }
         logger.measurementEpochEnded(log, 2);
-        
+
         super.run();
     }
 
     @Override
     public IEPOSExperiment createExperiment(int num) {
         System.out.println("%Experiment " + getName(num) + ":");
-        
+
         dataset.init(num);
-        
+
         File outFolder = new File(peersLog);
         IEPOSExperiment experiment = new IEPOSExperiment(
                 num,
                 dataset,
                 outFolder,
                 architecture,
-                "", DateTime.parse("0001-01-01"), 
+                "", DateTime.parse("0001-01-01"),
                 DateTime.parse("0001-01-01"), 5, numUser,
                 agentFactory,
                 planGenerator);
-        
+
         return experiment;
     }
 
     private String getName(int num) {
         return title + " - " + label + " - " + num;
     }
-    
+
     @Override
-    public BicyclesExperiment clone() {
+    public ConfigurableExperiment clone() {
         try {
-            BicyclesExperiment clone = (BicyclesExperiment) super.clone();
+            ConfigurableExperiment clone = (ConfigurableExperiment) super.clone();
             clone.agentFactory = agentFactory.clone();
             clone.architecture = architecture.clone();
             return clone;
         } catch (CloneNotSupportedException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
-    
+
     private static IterativeFitnessFunction FFfromString(String s) {
         String[] parts = s.split("[\\(,\\)]");
         IterativeFitnessFunction ff = null;
-        
-        for(int i=0; i<parts.length; i++) {
+
+        for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].trim();
         }
-        
+
         try {
-            Map<String,Constructor> ffs = new HashMap<>();
+            Map<String, Constructor> ffs = new HashMap<>();
             ffs.put("MinCostGmA", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
             ffs.put("MinCostG", IterMinCostG.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
             ffs.put("MinCostHGmA", IterMinCostHGmA.class.getConstructor(CostFunction.class, Factor.class, Factor.class, PlanCombinator.class, PlanCombinator.class));
@@ -404,19 +368,19 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             ffs.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             ffs.put("UCB1", IterUCB1Bandit.class.getConstructor());
 
-            if(!ffs.containsKey(parts[0])) {
+            if (!ffs.containsKey(parts[0])) {
                 System.err.println(parts[0] + " is not a valid fitness function; valid: " + ffs.keySet());
             }
-            
+
             Constructor ffConst = ffs.get(parts[0]);
-            if(ffConst.getParameterCount() > parts.length-1) {
+            if (ffConst.getParameterCount() > parts.length - 1) {
                 System.err.println("Too few parameters for fitness function " + parts[0] + " (" + ffConst.getParameterCount() + " expected)");
             }
 
-            Map<Class,Map<String,?>> params = new HashMap<>();
+            Map<Class, Map<String, ?>> params = new HashMap<>();
             params.put(CostFunction.class, costFuncs);
-            
-            Map<String,Factor> factors = new HashMap<>();
+
+            Map<String, Factor> factors = new HashMap<>();
             factors.put("1", new Factor1());
             factors.put("1/l", new Factor1OverLayer());
             factors.put("1/n", new Factor1OverN());
@@ -426,29 +390,29 @@ public class BicyclesExperiment extends ExperimentLauncher implements Cloneable,
             factors.put("m/n-m", new FactorMOverNmM());
             factors.put("std", new FactorNormalizeStd());
             params.put(Factor.class, factors);
-            
-            Map<String,PlanCombinator> combinators = new HashMap<>();
+
+            Map<String, PlanCombinator> combinators = new HashMap<>();
             combinators.put("sum", new SumCombinator());
             combinators.put("avg", new AvgCombinator());
             combinators.put("prev", new MostRecentCombinator());
             combinators.put("wsum", new WeightedSumCombinator2());
             params.put(PlanCombinator.class, combinators);
-            
+
             Object[] args = new Object[ffConst.getParameterCount()];
             Class[] types = ffConst.getParameterTypes();
-            for(int i=0; i<args.length; i++) {
-                Map<String,? extends Object> options = params.get(types[i]);
-                if(!options.containsKey(parts[i+1])) {
-                    System.err.println(parts[i+1] + " is not a valid "+types[i].getSimpleName()+"; valid: " + options.keySet());
+            for (int i = 0; i < args.length; i++) {
+                Map<String, ? extends Object> options = params.get(types[i]);
+                if (!options.containsKey(parts[i + 1])) {
+                    System.err.println(parts[i + 1] + " is not a valid " + types[i].getSimpleName() + "; valid: " + options.keySet());
                 }
-                args[i] = options.get(parts[i+1]);
+                args[i] = options.get(parts[i + 1]);
             }
-            
+
             ff = (IterativeFitnessFunction) ffConst.newInstance(args);
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            Logger.getLogger(BicyclesExperiment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return ff;
     }
 }

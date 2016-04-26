@@ -25,6 +25,19 @@ import java.util.Random;
  * @author Peter
  */
 public class QuadraticCostFunction implements CostFunction {
+    private Random rand;
+    
+    public QuadraticCostFunction() {
+        this(new Random());
+    }
+    
+    public QuadraticCostFunction(long seed) {
+        this(new Random(seed));
+    }
+    
+    private QuadraticCostFunction(Random rand) {
+        this.rand = rand;
+    }
     
     private double[][] A;
     private double[] B;
@@ -37,7 +50,6 @@ public class QuadraticCostFunction implements CostFunction {
         
         int n = plan.getNumberOfStates();
         if(A == null) {
-            Random rand = new Random();
             A = new double[n][n];
             B = new double[n];
             
