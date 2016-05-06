@@ -39,6 +39,11 @@ public abstract class FitnessFunction implements CostFunction {
         return getRobustnessMeasure();
     }
 
+    @Override
+    public Plan calcGradient(Plan plan) {
+        return null;
+    }
+
     public abstract double getRobustness(Plan plan, Plan costSignal, AgentPlans historic);
     
     public String getRobustnessMeasure() {

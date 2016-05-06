@@ -23,8 +23,38 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public interface CostFunction {
-    public double calcCost(Plan plan, Plan costSignal);
-    public Plan calcGradient(Plan plan);
-    public String getMetric();
+public class VarCostFunction implements CostFunction {
+
+    @Override
+    public double calcCost(Plan plan, Plan costSignal) {
+        Plan p = plan.clone();
+        //p.add(costSignal);
+        p.subtract(p.avg());
+
+        //return p.variance();
+        return plan.variance() + costSignal.dot(p);
+
+        /*
+        double d = plan.dot(costSignal);
+        return plan.variance() + 1.0/(plan.getNumberOfStates()-1)*d;
+         */
+    }
+
+    @Override
+    public Plan calcGradient(Plan plan) {
+        Plan p = plan.clone();
+        p.subtract(p.avg());
+        p.multiply(2.0/(plan.getNumberOfStates()-1));
+        return p;
+    }
+
+    @Override
+    public String toString() {
+        return "VarCost";
+    }
+
+    @Override
+    public String getMetric() {
+        return "variance";
+    }
 }

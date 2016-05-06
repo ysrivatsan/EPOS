@@ -17,6 +17,7 @@
  */
 package agents.fitnessFunction.costFunction;
 
+import agents.fitnessFunction.IterMinCostGmA;
 import agents.plan.Plan;
 import java.util.Random;
 
@@ -41,15 +42,9 @@ public class QuadraticCostFunction implements CostFunction {
     
     private double[][] A;
     private double[] B;
-
-    @Override
-    public double calcCost(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
-        p.add(costSignal);
-        plan = p;
-        
-        int n = plan.getNumberOfStates();
-        if(A == null) {
+    
+    private void prepAB(int n) {
+        if(A == null || A.length != n) {
             A = new double[n][n];
             B = new double[n];
             
@@ -63,7 +58,7 @@ public class QuadraticCostFunction implements CostFunction {
                 B[i] = rand.nextDouble();
             }
             
-            double[][] AA = new double[n][n];
+            /*double[][] AA = new double[n][n];
             for(int i=0; i<n; i++) {
                 for(int j=0; j<n; j++) {
                     for(int k=0; k<n; k++) {
@@ -71,7 +66,8 @@ public class QuadraticCostFunction implements CostFunction {
                     }
                 }
             }
-            //A = AA; // convexify
+            A = AA; // convexify
+            */
             
             /*
             System.out.println("A = [");
@@ -83,14 +79,45 @@ public class QuadraticCostFunction implements CostFunction {
             }
             System.out.println("]");*/
         }
+    }
+
+    @Override
+    public double calcCost(Plan plan, Plan costSignal) {
+        int n = plan.getNumberOfStates();
+        prepAB(n);
+        
+        Plan p = costSignal.clone();
+        
+        //p.add(plan);
+        //plan = p;
+        
         double v = 0;
         for(int i=0; i<n; i++) {
             for(int j=0; j<n; j++) {
                 v += A[i][j]*plan.getValue(i)*plan.getValue(j);
             }
+            //v += B[i]*(1+IterMinCostGmA.FACTOR)*plan.getValue(i);
             v += B[i]*plan.getValue(i);
         }
-        return v;
+        //return v;
+        return v + costSignal.dot(plan);
+    }
+
+    @Override
+    public Plan calcGradient(Plan plan) {
+        //return plan;
+        int n = plan.getNumberOfStates();
+        prepAB(n);
+        
+        Plan grad = plan.clone();
+        for(int i=0; i<n; i++) {
+            double x = B[i];
+            for(int j=0; j<n; j++) {
+                x += (A[i][j]+A[j][i])*plan.getValue(j);
+            }
+            grad.setValue(i, x);
+        }
+        return grad;/**/
     }
 
     @Override

@@ -48,6 +48,11 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
+    public Plan calcGradient(Plan plan) {
+        return costFunc.calcGradient(plan);
+    }
+
+    @Override
     public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
         double minCost = Double.POSITIVE_INFINITY;
         int selected = -1;

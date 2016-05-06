@@ -17,7 +17,6 @@
  */
 package agents.fitnessFunction.costFunction;
 
-import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 
 /**
@@ -29,8 +28,31 @@ public class StdDevCostFunction implements CostFunction {
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
         Plan p = plan.clone();
-        p.add(costSignal);
-        return Math.sqrt(p.variance());
+        //p.add(costSignal);
+        p.subtract(p.avg());
+
+        //return Math.sqrt(plan.variance());
+        //return p.variance();
+        return Math.sqrt(plan.variance()) + costSignal.dot(p);
+
+        /*
+        double d = plan.dot(costSignal);
+        return plan.variance() + 1.0/(plan.getNumberOfStates()-1)*d;
+         */
+    }
+
+    @Override
+    public Plan calcGradient(Plan plan) {
+        Plan p = plan.clone();
+        p.subtract(p.avg());
+        double x = Math.sqrt(p.dot(p));
+        if(x == 0.0) {
+            p.set(0);
+        } else {
+            p.multiply(1/x * 1.0/Math.sqrt(plan.getNumberOfStates()-1));
+        }
+        //p.multiply(2);
+        return p;
     }
 
     @Override

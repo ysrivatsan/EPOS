@@ -34,25 +34,37 @@ import java.util.List;
  */
 public class IterMinCostGmA extends IterMinCost {
     private final Factor factor;
+    private Plan totalGmAGradient;
     
     public IterMinCostGmA(CostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
+    }
+
+    @Override
+    public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
+        super.updatePrevious(previous, current, iteration);
+        
+        Plan p = current.globalPlan.clone();
+        p.subtract(current.aggregatePlan);
+        totalGmAGradient = combinatorG.combine(totalGmAGradient, calcGradient(p), iteration);
     }
     
     @Override
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan modifiedCostSignal = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            modifiedCostSignal.add(previous.globalPlan);
-            modifiedCostSignal.subtract(previous.aggregatePlan);
-            modifiedCostSignal.multiply(factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren));
+            modifiedCostSignal.set(totalGmAGradient);
+            double f = factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
+            modifiedCostSignal.multiply(f);
             
             Plan c = costSignal.clone();
             if(numNodesSubtree < numNodes) {
-                c.multiply(numNodesSubtree/(double)numNodes + iteration*numNodesSubtree/(double)(numNodes-numNodesSubtree));
+                c.multiply(numNodesSubtree/(double)numNodes + iteration*f*(numNodes-numNodesSubtree)/(double)numNodes);
             }
             modifiedCostSignal.add(c);
+        } else {
+            modifiedCostSignal.set(costSignal);
         }
         
         return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);

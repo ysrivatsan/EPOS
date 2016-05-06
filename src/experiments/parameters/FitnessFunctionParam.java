@@ -17,13 +17,6 @@
  */
 package experiments.parameters;
 
-import agents.fitnessFunction.IterLocalSearch;
-import agents.fitnessFunction.IterMaxMatchGmA;
-import agents.fitnessFunction.IterMinCostG;
-import agents.fitnessFunction.IterMinCostGmA;
-import agents.fitnessFunction.IterMinCostHGmA;
-import agents.fitnessFunction.IterProbGmA;
-import agents.fitnessFunction.IterUCB1Bandit;
 import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.iterative.Factor;

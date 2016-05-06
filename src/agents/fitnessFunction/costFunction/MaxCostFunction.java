@@ -33,6 +33,11 @@ public class MaxCostFunction implements CostFunction {
     }
 
     @Override
+    public Plan calcGradient(Plan plan) {
+        return plan;
+    }
+
+    @Override
     public String toString() {
         return "MaxCost";
     }

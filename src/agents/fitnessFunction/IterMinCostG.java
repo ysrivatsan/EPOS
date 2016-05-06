@@ -20,12 +20,11 @@ package agents.fitnessFunction;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.fitnessFunction.iterative.Factor;
 import agents.Agent;
-import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
-import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
+import agents.plan.AggregatePlan;
 import java.util.List;
 
 /**
@@ -34,6 +33,7 @@ import java.util.List;
  */
 public class IterMinCostG extends IterMinCost {
     private final Factor factor;
+    private Plan totalGGradient;
     
     public IterMinCostG(CostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
@@ -41,12 +41,29 @@ public class IterMinCostG extends IterMinCost {
     }
 
     @Override
+    public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
+        super.updatePrevious(previous, current, iteration);
+        
+        totalGGradient = combinatorG.combine(totalGGradient, calcGradient(current.globalPlan), iteration);
+    }
+
+    @Override
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        Plan modifiedCostSignal = costSignal.clone();
+        Plan modifiedCostSignal = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
-            modifiedCostSignal.add(previous.globalPlan);
-            modifiedCostSignal.multiply(factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren));
+            modifiedCostSignal.set(totalGGradient);
+            double f = factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
+            modifiedCostSignal.multiply(f);
+            
+            Plan c = costSignal.clone();
+            if(numNodesSubtree < numNodes) {
+                c.multiply(numNodesSubtree/(double)numNodes + iteration*f);
+            }
+            modifiedCostSignal.add(c);
+        } else {
+            modifiedCostSignal.set(costSignal);
         }
+        
         return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);
     }
 

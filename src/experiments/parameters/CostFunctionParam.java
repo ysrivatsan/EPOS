@@ -25,6 +25,7 @@ import agents.fitnessFunction.costFunction.MaxCostFunction;
 import agents.fitnessFunction.costFunction.QuadraticCostFunction;
 import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
+import agents.fitnessFunction.costFunction.VarCostFunction;
 
 /**
  *
@@ -42,6 +43,7 @@ public class CostFunctionParam extends MapParam<CostFunction> {
         map.put("max", Arrays.asList(new MaxCostFunction()));
         map.put("", new ArrayList<>());*/
         map.put("std", new StdDevCostFunction());
+        map.put("var", new VarCostFunction());
         map.put("dot", new DirectionCostFunction());
         map.put("match", new MatchEstimateCostFunction());
         map.put("rand", new QuadraticCostFunction(1));

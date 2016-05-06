@@ -21,7 +21,6 @@ import agents.fitnessFunction.IterLocalSearch;
 import agents.fitnessFunction.IterMaxMatchGmA;
 import agents.fitnessFunction.IterMinCostG;
 import agents.fitnessFunction.IterMinCostGmA;
-import agents.fitnessFunction.IterMinCostHGmA;
 import agents.fitnessFunction.IterProbGmA;
 import agents.fitnessFunction.IterUCB1Bandit;
 import agents.fitnessFunction.costFunction.CostFunction;
@@ -41,7 +40,6 @@ public class FFConstructorParam extends MapParam<Constructor> {
         try {
             map.put("MinCostGmA", IterMinCostGmA.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
             map.put("MinCostG", IterMinCostG.class.getConstructor(CostFunction.class, Factor.class, PlanCombinator.class));
-            map.put("MinCostHGmA", IterMinCostHGmA.class.getConstructor(CostFunction.class, Factor.class, Factor.class, PlanCombinator.class, PlanCombinator.class));
             map.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             map.put("LocalSearch", IterLocalSearch.class.getConstructor());
             map.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));
