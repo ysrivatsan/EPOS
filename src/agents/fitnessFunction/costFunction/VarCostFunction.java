@@ -27,17 +27,12 @@ public class VarCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
-        //p.add(costSignal);
+        /*Plan p = plan.clone();
+        p.add(costSignal);
         p.subtract(p.avg());
-
-        //return p.variance();
-        return plan.variance() + costSignal.dot(p);
-
-        /*
-        double d = plan.dot(costSignal);
-        return plan.variance() + 1.0/(plan.getNumberOfStates()-1)*d;
-         */
+        return p.variance();/**/
+        
+        return plan.variance() + costSignal.dot(plan);
     }
 
     @Override

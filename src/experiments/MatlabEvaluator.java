@@ -68,7 +68,14 @@ public class MatlabEvaluator extends IEPOSEvaluator {
         for (List<Aggregate> log : iterationAggregates) {
             out.print(function.apply(log.get(0)));
             for (int i = 1; i < log.size(); i++) {
-                out.print(", " + function.apply(log.get(i)));
+                double val = function.apply(log.get(i));
+                if(val == Double.POSITIVE_INFINITY) {
+                    out.print(", inf");
+                } else if(val == Double.NEGATIVE_INFINITY) {
+                    out.print(", -inf");
+                } else {
+                    out.print(", " + val);
+                }
             }
             out.println(";");
         }

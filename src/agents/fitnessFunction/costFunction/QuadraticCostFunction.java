@@ -86,10 +86,9 @@ public class QuadraticCostFunction implements CostFunction {
         int n = plan.getNumberOfStates();
         prepAB(n);
         
-        Plan p = costSignal.clone();
-        
-        //p.add(plan);
-        //plan = p;
+        /*Plan p = costSignal.clone();
+        p.add(plan);
+        plan = p;/**/
         
         double v = 0;
         for(int i=0; i<n; i++) {
@@ -99,6 +98,7 @@ public class QuadraticCostFunction implements CostFunction {
             //v += B[i]*(1+IterMinCostGmA.FACTOR)*plan.getValue(i);
             v += B[i]*plan.getValue(i);
         }
+        
         //return v;
         return v + costSignal.dot(plan);
     }

@@ -27,14 +27,53 @@ public class EntropyCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
+        /*Plan p = plan.clone();
         p.add(costSignal);
-        return -p.entropy();
+        return -p.entropy();/**/
+        
+        double sum = plan.sum();
+        double entropy = 0.0;
+        if (sum == 0) {
+            return 0;
+        }
+        for(int i = 0; i < plan.getNumberOfStates(); i++) {
+            double state = plan.getValue(i);
+            double p = state / sum;
+            if (p <= 0.0) {
+                entropy += 0.0;
+            } else {
+                entropy += p * Math.log(p);
+            }
+        }
+        return entropy + costSignal.dot(plan);/**/
     }
 
     @Override
     public Plan calcGradient(Plan plan) {
-        return plan;
+        /*return plan;/**/
+        
+        double sum = plan.sum();
+        
+        Plan grad = plan.clone();
+        if (sum == 0) {
+            grad.set(1);
+            return grad;
+        }
+        grad.multiply(-1/(sum*sum));
+        grad.add(1/sum);
+        
+        for(int i = 0; i < plan.getNumberOfStates(); i++) {
+            double xi = plan.getValue(i);
+            double p = xi / sum;
+            if (p <= 0.0) {
+                grad.setValue(i, grad.getValue(i) * Double.NEGATIVE_INFINITY);
+            } else {
+                grad.setValue(i, grad.getValue(i) * (Math.log(p)+1));
+            }
+        }
+        
+        grad.multiply(plan.norm()/grad.norm());
+        return grad;/**/
     }
 
     @Override

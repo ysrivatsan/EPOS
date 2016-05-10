@@ -27,18 +27,12 @@ public class StdDevCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
-        //p.add(costSignal);
+        /*Plan p = plan.clone();
+        p.add(costSignal);
         p.subtract(p.avg());
-
-        //return Math.sqrt(plan.variance());
-        //return p.variance();
-        return Math.sqrt(plan.variance()) + costSignal.dot(p);
-
-        /*
-        double d = plan.dot(costSignal);
-        return plan.variance() + 1.0/(plan.getNumberOfStates()-1)*d;
-         */
+        return Math.sqrt(p.variance());/**/
+        
+        return Math.sqrt(plan.variance()) + costSignal.dot(plan);
     }
 
     @Override
@@ -51,7 +45,6 @@ public class StdDevCostFunction implements CostFunction {
         } else {
             p.multiply(1/x * 1.0/Math.sqrt(plan.getNumberOfStates()-1));
         }
-        //p.multiply(2);
         return p;
     }
 

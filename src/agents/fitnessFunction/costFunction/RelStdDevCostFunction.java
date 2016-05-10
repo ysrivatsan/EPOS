@@ -27,14 +27,40 @@ public class RelStdDevCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
+        return plan.relativeStdDeviation() + costSignal.dot(plan);/**/
+        /*Plan p = plan.clone();
         p.add(costSignal);
-        return p.relativeStdDeviation();
+        return p.relativeStdDeviation();/**/
     }
 
     @Override
     public Plan calcGradient(Plan plan) {
-        return plan;
+        /*return plan; /**/
+        int n = plan.getNumberOfStates();
+        double mean = plan.avg();
+        
+        Plan c = plan.clone();
+        c.subtract(c.avg());
+        
+        if(mean == 0) {
+            c.set(1);
+            return c;
+        }
+        
+        double cc = Math.sqrt(c.dot(c));
+        
+        if(cc == 0) {
+            c.set(0);
+            return c;
+        }
+        
+        Plan grad = c;
+        grad.multiply(1/(cc*mean));
+        grad.subtract(cc/(mean*mean*n));
+        grad.multiply(1.0/(n-1.0));
+        
+        grad.multiply(plan.norm()/grad.norm());
+        return grad;/**/
     }
 
     @Override
