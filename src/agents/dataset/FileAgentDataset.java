@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import org.joda.time.DateTime;
@@ -63,6 +64,16 @@ public class FileAgentDataset implements AgentDataset {
             e.printStackTrace();
         }
         return plans;
+        
+        /*int numPlans = 2;
+        List<Plan> selected = new ArrayList<>();
+        Random r = new Random();
+        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
+            int idx = r.nextInt(plans.size());
+            selected.add(plans.get(idx));
+            plans.remove(idx);
+        }
+        return selected;/**/
     }
 
     @Override

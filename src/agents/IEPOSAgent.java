@@ -248,6 +248,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         avgNumChildren = parent.sumChildren/Math.max(0.1,(double)parent.hops);
 
         fitnessFunction.updatePrevious(prevAggregate, current, iteration);
+        if(isRoot()) {
+            fitnessFunctionRoot.updatePrevious(null, current, iteration);
+        }
         previous = current;
         
         List<IEPOSDown> msgs = new ArrayList<>();

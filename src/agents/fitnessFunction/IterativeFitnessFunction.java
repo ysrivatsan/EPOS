@@ -41,6 +41,9 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
     }
     
     public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
+        if(previous == null) {
+            return;
+        }
         previous.globalPlan = combinatorG.combine(previous.globalPlan, current.globalPlan, iteration);
         previous.aggregatePlan = combinatorA.combine(previous.aggregatePlan, current.aggregatePlan, iteration);
         previous.selectedPlan = combinatorS.combine(previous.selectedPlan, current.selectedPlan, iteration);

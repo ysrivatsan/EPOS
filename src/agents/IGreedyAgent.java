@@ -33,6 +33,12 @@ import org.joda.time.DateTime;
 import protopeer.measurement.MeasurementLog;
 import agents.dataset.AgentDataset;
 import cern.colt.Arrays;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jdk.nashorn.internal.codegen.CompilerConstants;
 
 /**
  *
@@ -40,6 +46,9 @@ import cern.colt.Arrays;
  */
 public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown> {
     private boolean outputMovie;
+    private boolean outputDetail = false;
+    private PrintStream out;
+    private PrintStream rootOut;
 
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
@@ -102,6 +111,18 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
         numNodes = -1;
         fitnessFunction = fitnessFunctionPrototype.clone();
+        
+        if(outputDetail) {
+            try {
+                new File("output-data/detail").mkdir();
+                out = new PrintStream("output-data/detail/" + getPeer().getIndexNumber() + ".txt");
+                if(isRoot()) {
+                    rootOut = new PrintStream("output-data/detail/root.txt");
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(IGreedyAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
@@ -139,11 +160,43 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        current.selectedPlan = possiblePlans.get(selectedPlan);
+        double rate = 0.1;
+        
+        Random r = new Random(getPeer().getIndexNumber());
+        int numPlans = (int) Math.floor(iteration * rate + 2 + r.nextDouble()*2-1);
+        List<Plan> plans = new ArrayList<>(possiblePlans);
+        List<Plan> selected = new ArrayList<>();
+        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
+            int idx = r.nextInt(plans.size());
+            selected.add(plans.get(idx));
+            plans.remove(idx);
+        }
+        
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        current.selectedPlan = selected.get(selectedPlan);/**/
+        
+        /*int numPlans = (int) Math.floor(iteration * rate + 2);
+        List<Plan> plans = new ArrayList<>(possiblePlans);
+        List<Plan> selected = new ArrayList<>();
+        Random r = new Random(getPeer().getIndexNumber());
+        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
+            int idx = r.nextInt(plans.size());
+            selected.add(plans.get(idx));
+            plans.remove(idx);
+        }
+        
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        current.selectedPlan = selected.get(selectedPlan);/**/
+        
+        /*int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        current.selectedPlan = possiblePlans.get(selectedPlan);/**/
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
         current.aggregatePlan.add(current.selectedPlan);
+        
+        if(outputDetail) {
+            out.println(iteration + ": " + current.selectedPlan);
+        }
 
         IGreedyUp msg = new IGreedyUp();
         msg.aggregatePlan = current.aggregatePlan;
@@ -170,6 +223,9 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
                 c.add(prevAggregate.globalPlan);
             }
             System.out.println("T(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+c+";");
+            if(outputDetail) {
+                rootOut.println(iteration + ": " + Math.sqrt(measures.get(0).calcCost(current.globalPlan, costSignal)) + "," + current.globalPlan + "," + c);
+            }
         } else {
             if(iteration%10 == 9) {
                 System.out.print("%");
