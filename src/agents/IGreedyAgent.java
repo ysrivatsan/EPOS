@@ -160,8 +160,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
-        double rate = 0.1;
-        
+        /*double rate = 0.1;
         Random r = new Random(getPeer().getIndexNumber());
         int numPlans = (int) Math.floor(iteration * rate + 2 + r.nextDouble()*2-1);
         List<Plan> plans = new ArrayList<>(possiblePlans);
@@ -175,20 +174,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = selected.get(selectedPlan);/**/
         
-        /*int numPlans = (int) Math.floor(iteration * rate + 2);
-        List<Plan> plans = new ArrayList<>(possiblePlans);
-        List<Plan> selected = new ArrayList<>();
-        Random r = new Random(getPeer().getIndexNumber());
-        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
-            int idx = r.nextInt(plans.size());
-            selected.add(plans.get(idx));
-            plans.remove(idx);
-        }
-        
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        current.selectedPlan = selected.get(selectedPlan);/**/
-        
-        /*int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = possiblePlans.get(selectedPlan);/**/
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);

@@ -19,22 +19,10 @@ package agents.dataset;
 
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
-import experiments.DatasetProperties;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.joda.time.DateTime;
 
 /**
