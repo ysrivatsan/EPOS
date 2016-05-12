@@ -37,6 +37,7 @@ public abstract class AgentFactory implements Cloneable {
     public int numIterations;
     public FitnessFunction fitnessFunction;
     public LocalSearch localSearch;
+    public Double rampUpRate;
     public CostFunction measure = null;
     public boolean outputMovie;
 

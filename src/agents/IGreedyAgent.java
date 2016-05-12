@@ -67,6 +67,8 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private AgentPlans previous = new AgentPlans();
     private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans historic;
+    
+    private Double rampUpRate;
 
     private List<Integer> selectedCombination = new ArrayList<>();
     private LocalSearch localSearch;
@@ -75,7 +77,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures());
+            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), rampUpRate);
         }
     
         @Override
@@ -84,7 +86,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
     }
 
-    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
+    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, Double rampUpRate) {
         super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
@@ -94,6 +96,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         if(measures.isEmpty()) {
             measures.add(fitnessFunctionPrototype);
         }
+        this.rampUpRate = rampUpRate;
     }
 
     @Override
@@ -160,22 +163,23 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
-        /*double rate = 0.1;
-        Random r = new Random(getPeer().getIndexNumber());
-        int numPlans = (int) Math.floor(iteration * rate + 2 + r.nextDouble()*2-1);
-        List<Plan> plans = new ArrayList<>(possiblePlans);
-        List<Plan> selected = new ArrayList<>();
-        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
-            int idx = r.nextInt(plans.size());
-            selected.add(plans.get(idx));
-            plans.remove(idx);
+        if(rampUpRate != null) {
+            Random r = new Random(getPeer().getIndexNumber());
+            int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
+            List<Plan> plans = new ArrayList<>(possiblePlans);
+            List<Plan> selected = new ArrayList<>();
+            for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
+                int idx = r.nextInt(plans.size());
+                selected.add(plans.get(idx));
+                plans.remove(idx);
+            }
+
+            int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            current.selectedPlan = selected.get(selectedPlan);
+        } else {
+            int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            current.selectedPlan = possiblePlans.get(selectedPlan);
         }
-        
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        current.selectedPlan = selected.get(selectedPlan);/**/
-        
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        current.selectedPlan = possiblePlans.get(selectedPlan);/**/
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
         current.aggregatePlan.add(current.selectedPlan);

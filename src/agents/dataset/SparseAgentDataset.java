@@ -83,33 +83,17 @@ public class SparseAgentDataset implements AgentDataset {
     private Plan generatePlan(Random r) {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
-
-        /*plan.setValue(r.nextInt(planSize), std * Math.sqrt(planSize));/**/
         
-        for(int i = 0; i < 8; i++) {
+        for(int i = 0; i < 1; i++) {
             int idx1 = r.nextInt(planSize);
             int idx2 = idx1;
             while(idx1 == idx2) {
                 idx2 = r.nextInt(planSize);
             }
-            plan.setValue(idx1, plan.getValue(idx1) + 1);
-            plan.setValue(idx2, plan.getValue(idx2) + -1);
-            //int idx = r.nextInt(planSize);
-            //plan.setValue(idx, plan.getValue(idx) + r.nextInt(2)*2 - 1);
-        }/**/
-        
-        /*int idx = r.nextInt(planSize);
-        plan.setValue(idx, 1);/**/
-        
-        /*
-        int idx1 = r.nextInt(planSize);
-        int idx2 = idx1;
-        while(idx1 == idx2) {
-            idx2 = r.nextInt(planSize);
+            double val = std * Math.sqrt((planSize-1)/2);
+            plan.setValue(idx1, plan.getValue(idx1) + val);
+            plan.setValue(idx2, plan.getValue(idx2) + -val);
         }
-        double val = std * Math.sqrt((planSize-1)/2);
-        plan.setValue(idx1, val);
-        plan.setValue(idx2, -val);/**/
         
         return plan;
     }

@@ -72,6 +72,7 @@ import experiments.parameters.FitnessFunctionParam;
 import experiments.parameters.LazyMap;
 import experiments.parameters.Param;
 import experiments.parameters.PlanCombinatorParam;
+import experiments.parameters.OptPosDoubleParam;
 import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
@@ -155,6 +156,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
+        initializer.put("rampUpRate", x -> launcher.agentFactory.rampUpRate = x, new OptPosDoubleParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
         lazyInit.put("runDuration", e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations, 2);
