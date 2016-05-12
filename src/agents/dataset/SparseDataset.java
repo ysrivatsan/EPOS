@@ -29,12 +29,14 @@ public class SparseDataset implements Dataset {
     private final int numPlans;
     private final int planSize;
     private final double std;
+    private final double propNonZero;
     private int seed;
 
-    public SparseDataset(int numPlans, int planSize, double std) {
+    public SparseDataset(int numPlans, int planSize, double std, double propNonZero) {
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.std = std;
+        this.propNonZero = propNonZero;
     }
 
     @Override
@@ -43,7 +45,7 @@ public class SparseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(new SparseAgentDataset(i, numPlans, planSize, std, rand));
+            res.add(new SparseAgentDataset(i, numPlans, planSize, std, propNonZero, rand));
         }
         return res;
     }

@@ -24,6 +24,7 @@ import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
 import java.util.List;
+import java.util.Random;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
@@ -61,6 +62,15 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
+            
+            //WTF
+            Plan plan = combinationalPlan.clone();
+            Random r = new Random(i);
+            for(int j = 0; j < plan.getNumberOfStates(); j++) {
+                plan.setValue(j, plan.getValue(j) + r.nextGaussian()/100.0);
+            }
+            combinationalPlan = plan;/**/
+            
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 

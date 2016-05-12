@@ -36,17 +36,19 @@ public class SparseAgentDataset implements AgentDataset {
     private final int planSize;
     private final double std;
     private final long seed;
+    private final double propNonZero;
 
     private final String config;
 
-    public SparseAgentDataset(int id, int numPlans, int planSize, double std, Random r) {
+    public SparseAgentDataset(int id, int numPlans, int planSize, double std, double propNonZero, Random r) {
         this.id = id;
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.std = std;
         this.seed = r.nextLong();
+        this.propNonZero = propNonZero;
 
-        this.config = "std" + std;
+        this.config = "std" + std + ",non-zero" + propNonZero;
     }
 
     @Override
@@ -84,7 +86,8 @@ public class SparseAgentDataset implements AgentDataset {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
         
-        for(int i = 0; i < 1; i++) {
+        int numNonZero = Math.max(1,(int) Math.round(planSize * propNonZero / 2.0));
+        for(int i = 0; i < numNonZero; i++) {
             int idx1 = r.nextInt(planSize);
             int idx2 = idx1;
             while(idx1 == idx2) {
@@ -94,7 +97,24 @@ public class SparseAgentDataset implements AgentDataset {
             plan.setValue(idx1, plan.getValue(idx1) + val);
             plan.setValue(idx2, plan.getValue(idx2) + -val);
         }
+        /*for(int i = 0; i < planSize; i++) {
+            plan.setValue(i, plan.getValue(i) + r.nextGaussian()/100.0);
+        }*/
+        return plan;/**/
         
-        return plan;
+        /*for(int i = 0; i < planSize; i++) {
+            if(r.nextDouble() <= Math.max(propNonZero, 1.0/planSize)) {
+                plan.setValue(i, r.nextGaussian() * std);
+            }
+        }
+        
+        //plan.multiply(std / Math.sqrt(plan.variance()));
+        
+        return plan;/**/
+        
+        /*for (int j = 0; j < planSize; j++) {
+            plan.setValue(j, (r.nextGaussian() * std));
+        }
+        return plan;/**/
     }
 }

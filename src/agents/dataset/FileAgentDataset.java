@@ -25,7 +25,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import org.joda.time.DateTime;
@@ -35,12 +34,13 @@ import org.joda.time.DateTime;
  * @author Peter
  */
 public class FileAgentDataset implements AgentDataset {
+
     private String config;
     private String id;
     private String format;
     private String planDir;
     private int planSize;
-    
+
     public FileAgentDataset(String planLocation, String config, String id, String format, int planSize) {
         this.config = config;
         this.id = id;
@@ -52,7 +52,7 @@ public class FileAgentDataset implements AgentDataset {
     @Override
     public List<Plan> getPlans(DateTime phase) {
         List<Plan> plans = new ArrayList<>();
-        
+
         File planFile = new File(planDir + File.separator + phase.toString("yyyy-MM-dd") + format);
         try (Scanner scanner = new Scanner(planFile)) {
             scanner.useLocale(Locale.US);
@@ -64,26 +64,16 @@ public class FileAgentDataset implements AgentDataset {
             e.printStackTrace();
         }
         return plans;
-        
-        /*int numPlans = 2;
-        List<Plan> selected = new ArrayList<>();
-        Random r = new Random();
-        for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
-            int idx = r.nextInt(plans.size());
-            selected.add(plans.get(idx));
-            plans.remove(idx);
-        }
-        return selected;/**/
     }
 
     @Override
     public List<DateTime> getPhases() {
         List<DateTime> phases = new ArrayList<>();
-        
+
         File[] dates = new File(planDir).listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                if (pathname.isHidden() || pathname.getName().charAt(0)=='.') {
+                if (pathname.isHidden() || pathname.getName().charAt(0) == '.') {
                     return false;
                 }
                 return pathname.isFile();
@@ -93,7 +83,7 @@ public class FileAgentDataset implements AgentDataset {
             StringTokenizer dateTokenizer = new StringTokenizer(date.getName(), ".");
             phases.add(DateTime.parse(dateTokenizer.nextToken()));
         }
-        
+
         return phases;
     }
 
@@ -106,7 +96,7 @@ public class FileAgentDataset implements AgentDataset {
     public String getConfig() {
         return config;
     }
-    
+
     private Plan parsePlan(String planStr, DateTime phase) {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
@@ -117,11 +107,11 @@ public class FileAgentDataset implements AgentDataset {
         scanner.useDelimiter(":");
         double score = scanner.nextDouble();
         plan.setDiscomfort(1.0 - score);
-        
+
         scanner.useDelimiter(",");
         scanner.skip(":");
-        
-        for (int i=0; scanner.hasNextDouble(); i++) {
+
+        for (int i = 0; scanner.hasNextDouble(); i++) {
             plan.setValue(i, scanner.nextDouble());
         }
         return plan;
