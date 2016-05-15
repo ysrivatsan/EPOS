@@ -109,6 +109,10 @@ public class NoiseAgentDataset implements AgentDataset {
             plan.setValue(j, (r.nextGaussian() * std + mean));
             //plan.setValue(j, sample[j]);
         }
+        
+        plan.add(mean - plan.avg());
+        plan.multiply(std / Math.sqrt(plan.variance()));
+        
         return plan;
     }
 }

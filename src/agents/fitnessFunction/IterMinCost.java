@@ -23,6 +23,8 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -59,22 +61,15 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         int selected = -1;
         int numOpt = 0;
 
+        //Random r = new Random(agent.getPeer().getIndexNumber());
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             
-            //WTF
-            Plan plan = combinationalPlan.clone();
-            Random r = new Random(i);
-            for(int j = 0; j < plan.getNumberOfStates(); j++) {
-                plan.setValue(j, plan.getValue(j) + r.nextGaussian()/100.0);
-            }
-            combinationalPlan = plan;/**/
-            
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = getRobustness(testAggregatePlan, pattern, null);
+            double cost = getRobustness(testAggregatePlan, pattern, null);// * (1+0.05*r.nextDouble());
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
@@ -86,7 +81,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
                 }
             }
         }
-
+        
         return selected;
     }
 
