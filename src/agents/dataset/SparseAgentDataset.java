@@ -36,19 +36,19 @@ public class SparseAgentDataset implements AgentDataset {
     private final int planSize;
     private final double std;
     private final long seed;
-    private final double propNonZero;
+    private final int generationSteps;
 
     private final String config;
 
-    public SparseAgentDataset(int id, int numPlans, int planSize, double std, double propNonZero, Random r) {
+    public SparseAgentDataset(int id, int numPlans, int planSize, double std, int generationSteps, Random r) {
         this.id = id;
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.std = std;
         this.seed = r.nextLong();
-        this.propNonZero = propNonZero;
+        this.generationSteps = Math.max(1, generationSteps);
 
-        this.config = "std" + std + ",non-zero" + propNonZero;
+        this.config = "std" + std + ",non-zero" + generationSteps;
     }
 
     @Override
@@ -86,9 +86,7 @@ public class SparseAgentDataset implements AgentDataset {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
         
-        //int numNonZero = Math.max(1,(int) Math.round(planSize * propNonZero / 2.0));
-        //for(int i = 0; i < numNonZero; i++) {
-        for(int i = 0; i < (int)propNonZero; i++) {
+        for(int i = 0; i < generationSteps; i++) {
             int idx1 = r.nextInt(planSize);
             int idx2 = idx1;
             while(idx1 == idx2) {

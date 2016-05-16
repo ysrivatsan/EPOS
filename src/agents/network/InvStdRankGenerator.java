@@ -26,7 +26,7 @@ import org.joda.time.DateTime;
  *
  * @author Peter
  */
-public class StdRankGenerator implements BiFunction<Integer, Agent, Double>{
+public class InvStdRankGenerator implements BiFunction<Integer, Agent, Double>{
 
     @Override
     public Double apply(Integer idx, Agent agent) {
@@ -34,9 +34,9 @@ public class StdRankGenerator implements BiFunction<Integer, Agent, Double>{
         int count = 0;
         for(DateTime phase : agent.dataSource.getPhases()) {
             for(Plan plan : agent.dataSource.getPlans(phase)) {
-                rank += plan.stdDeviation();
-                count += 1;
+                rank += 1/Math.max(0.000001,plan.stdDeviation());
             }
+            count += 1;
         }
         rank /= count;
         return rank;

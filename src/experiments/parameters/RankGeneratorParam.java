@@ -18,8 +18,10 @@
 package experiments.parameters;
 
 import agents.Agent;
+import agents.network.InvStdRankGenerator;
 import agents.network.NumPlanRankGenerator;
 import agents.network.StdRankGenerator;
+import agents.network.VaryityRankGenerator;
 import java.util.function.BiFunction;
 
 /**
@@ -33,5 +35,7 @@ public class RankGeneratorParam extends MapParam<BiFunction<Integer, Agent, Doub
         map.put("IndexRank", (idx, agent) -> (double) idx);
         map.put("StdRank", new StdRankGenerator());
         map.put("NumPlanRank", new NumPlanRankGenerator());
+        map.put("VaryityRank", new VaryityRankGenerator());
+        map.put("InvStdRank", new InvStdRankGenerator());
     }
 }

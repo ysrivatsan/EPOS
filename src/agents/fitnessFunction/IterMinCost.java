@@ -23,18 +23,22 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
+import agents.plan.GlobalPlan;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 /**
- * minimize variance (submodular/convex compared to std deviation)
- * weight B according to optimum without aggregate and equal Bi
+ * minimize variance (submodular/convex compared to std deviation) weight B
+ * according to optimum without aggregate and equal Bi
+ *
  * @author Peter
  */
 public abstract class IterMinCost extends IterativeFitnessFunction {
+
     CostFunction costFunc;
+    public Double rampUpBias;
 
     public IterMinCost(CostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
         super(combinatorG, combinatorA, combinatorS, combinatorSC);
@@ -45,7 +49,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
         return costFunc.calcCost(plan, costSignal);
     }
-    
+
     public String getRobustnessMeasure() {
         return costFunc.getMetric();
     }
@@ -61,27 +65,34 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         int selected = -1;
         int numOpt = 0;
 
-        //Random r = new Random(agent.getPeer().getIndexNumber());
+        Random random = null;
+        if(rampUpBias != null) {
+            random = new Random(agent.getPeer().getIndexNumber());
+        }
+
         for (int i = 0; i < combinationalPlans.size(); i++) {
             Plan combinationalPlan = combinationalPlans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
-            
+
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = getRobustness(testAggregatePlan, pattern, null);// * (1+0.05*r.nextDouble());
+            double cost = getRobustness(testAggregatePlan, pattern, null);
+            if (rampUpBias != null) {
+                cost *= (1 + rampUpBias * random.nextDouble());
+            }
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
                 numOpt = 1;
-            } else if(cost == minCost) {
+            } else if (cost == minCost) {
                 numOpt++;
-                if(Math.random()<=1.0/numOpt) {
+                if (Math.random() <= 1.0 / numOpt) {
                     selected = i;
                 }
             }
         }
-        
+
         return selected;
     }
 

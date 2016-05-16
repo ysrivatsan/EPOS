@@ -54,7 +54,6 @@ public class NoiseAgentDataset implements AgentDataset {
     @Override
     public List<Plan> getPlans(DateTime phase) {
         Random r = new Random(seed);
-        //dist.reseedRandomGenerator(seed);
 
         List<Plan> plans = new ArrayList<>();
         for (int i = 0; i < numPlans; i++) {
@@ -83,35 +82,13 @@ public class NoiseAgentDataset implements AgentDataset {
         return planSize;
     }
 
-    /*private static MultivariateNormalDistribution dist;
-
-    static {
-        double[] avg;
-        double[][] cov;
-        
-        try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream("output-data" + File.separator + "avg_cov.obj"))) {
-            avg = (double[])ois.readObject();
-            cov = (double[][])ois.readObject();
-            dist = new MultivariateNormalDistribution(avg, cov);
-        } catch (IOException ex) {
-            Logger.getLogger(DatasetProperties.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(NoiseAgentDataset.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }*/
-
     private Plan generatePlan(Random r) {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
-        //double a = 1;
-        //double[] sample = dist.sample();
+        
         for (int j = 0; j < planSize; j++) {
             plan.setValue(j, (r.nextGaussian() * std + mean));
-            //plan.setValue(j, sample[j]);
         }
-        
-        plan.add(mean - plan.avg());
-        plan.multiply(std / Math.sqrt(plan.variance()));
         
         return plan;
     }

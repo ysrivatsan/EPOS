@@ -157,6 +157,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
         initializer.put("rampUpRate", x -> launcher.agentFactory.rampUpRate = x, new OptPosDoubleParam(), 1);
+        initializer.put("rampUpBias", x -> ((IterMinCost)launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptPosDoubleParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
         lazyInit.put("runDuration", e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations, 2);

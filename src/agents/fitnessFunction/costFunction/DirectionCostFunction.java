@@ -32,7 +32,11 @@ public class DirectionCostFunction implements CostFunction {
 
     @Override
     public Plan calcGradient(Plan plan) {
-        return plan;
+        //return plan;
+        
+        Plan c = plan.clone();
+        c.multiply(plan.sum()<=0?1:-1);
+        return c;
     }
 
     @Override
