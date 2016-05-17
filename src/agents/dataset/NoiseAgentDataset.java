@@ -21,8 +21,13 @@ import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import org.joda.time.DateTime;
 
 /**
@@ -37,16 +42,18 @@ public class NoiseAgentDataset implements AgentDataset {
     private final double mean;
     private final double std;
     private final long seed;
+    private final int nonZero;
     
     private final String config;
 
-    public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, Random r) {
+    public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, int nonZero, Random r) {
         this.id = id;
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
         this.seed = r.nextLong();
+        this.nonZero = nonZero;
         
         this.config = "mean" + mean + "_std" + std;
     }
@@ -86,8 +93,26 @@ public class NoiseAgentDataset implements AgentDataset {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
         
-        for (int j = 0; j < planSize; j++) {
-            plan.setValue(j, (r.nextGaussian() * std + mean));
+        //double nonZero = 1;
+        double setZero = planSize-nonZero;
+        Queue<Double> indices = new PriorityQueue<>();
+        
+        for (int i = 0; i < planSize; i++) {
+            indices.add(r.nextInt(planSize*1000) + 0.5*i/(double)planSize);
+            plan.setValue(i, (r.nextGaussian() * std + mean));
+        }
+        
+        if(mean == 0) {
+            double std = Math.sqrt(plan.variance());
+
+            for(int i = 0; i < setZero; i++) {
+                double idx = indices.poll();
+                idx = idx - Math.floor(idx);
+                int j = (int) Math.round(2*idx*planSize);
+                plan.setValue(j, 0);
+            }
+
+            plan.multiply(std / Math.sqrt(plan.variance()));
         }
         
         return plan;

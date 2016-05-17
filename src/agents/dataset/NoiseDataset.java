@@ -31,12 +31,14 @@ public class NoiseDataset implements Dataset {
     private final double mean;
     private final double std;
     private int seed;
+    private final int nonZero;
 
-    public NoiseDataset(int numPlans, int planSize, double mean, double std) {
+    public NoiseDataset(int numPlans, int planSize, double mean, double std, int nonZero) {
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
+        this.nonZero = nonZero;
     }
 
     @Override
@@ -45,7 +47,7 @@ public class NoiseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(new NoiseAgentDataset(i, numPlans, planSize, mean, std, rand));
+            res.add(new NoiseAgentDataset(i, numPlans, planSize, mean, std, nonZero, rand));
         }
         return res;
     }

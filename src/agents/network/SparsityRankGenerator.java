@@ -15,27 +15,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments.parameters;
+package agents.network;
 
 import agents.Agent;
-import agents.network.InvStdRankGenerator;
-import agents.network.NumPlanRankGenerator;
-import agents.network.SparsityRankGenerator;
-import agents.network.StdRankGenerator;
+import agents.plan.Plan;
 import java.util.function.BiFunction;
+import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class RankGeneratorParam extends MapParam<BiFunction<Integer, Agent, Double>> {
+public class SparsityRankGenerator implements BiFunction<Integer, Agent, Double>{
 
-    public RankGeneratorParam() {
-        map.put("RandomRank", (idx, agent) -> Math.random());
-        map.put("IndexRank", (idx, agent) -> (double) idx);
-        map.put("StdRank", new StdRankGenerator());
-        map.put("NumPlanRank", new NumPlanRankGenerator());
-        map.put("InvStdRank", new InvStdRankGenerator());
-        map.put("SparsityRank", new SparsityRankGenerator());
+    @Override
+    public Double apply(Integer idx, Agent agent) {
+        double rank = 0;
+        int count = 0;
+        for(DateTime phase : agent.dataSource.getPhases()) {
+            for(Plan plan : agent.dataSource.getPlans(phase)) {
+                for(int i = 0; i < plan.getNumberOfStates(); i++) {
+                    if(plan.getValue(i) == 0) {
+                        rank++;
+                    }
+                }
+                count += 1;
+            }
+        }
+        rank /= count;
+        return rank;
     }
 }

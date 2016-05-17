@@ -39,11 +39,14 @@ public class DatasetParam implements Param<Dataset> {
                 return 0 <= num && num <= 22 && (num & 1) == 0;
             } else if (x.startsWith("N")) {
                 String[] params = x.trim().split("_");
-                if (params.length == 5) {
+                if (params.length == 5 || params.length == 6) {
                     Integer.parseUnsignedInt(params[1]);
                     Integer.parseUnsignedInt(params[2]);
                     Double.parseDouble(params[3]);
                     double std = Double.parseDouble(params[4]);
+                    if(params.length == 6) {
+                        Integer.parseUnsignedInt(params[5]);
+                    }
                     return std >= 0;
                 }
             } else if(x.startsWith("S")) {
@@ -68,7 +71,7 @@ public class DatasetParam implements Param<Dataset> {
 
     @Override
     public String validDescription() {
-        return "E<3, 5 or 7>.<1, 3 or 5>, B<even int from 0 to 22>, Noise_<numPlans>_<planSize>_<mean>_<std>, Sparse_<numPlans>_<planSize>_<std>_<generationSteps>";
+        return "E<3, 5 or 7>.<1, 3 or 5>, B<even int from 0 to 22>, Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>]";
     }
 
     @Override
@@ -80,7 +83,12 @@ public class DatasetParam implements Param<Dataset> {
             return new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips");
         } else if (x.startsWith("N")) {
             String[] params = x.trim().split("_");
-            return new NoiseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Double.parseDouble(params[4]));
+            int planSize = Integer.parseInt(params[2]);
+            if(params.length == 5) {
+                return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), planSize);
+            } else {
+                return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), Integer.parseInt(params[5]));
+            }
         } else if (x.startsWith("S")) {
             String[] params = x.trim().split("_");
             if(params.length == 4) {

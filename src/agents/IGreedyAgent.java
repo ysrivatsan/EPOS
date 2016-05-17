@@ -163,7 +163,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
-        if(rampUpRate != null) {
+        if(rampUpRate != null && !isRoot()) {
             Random r = new Random(getPeer().getIndexNumber());
             int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
             List<Plan> plans = new ArrayList<>(possiblePlans);

@@ -78,7 +78,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             testAggregatePlan.add(combinationalPlan);
 
             double cost = getRobustness(testAggregatePlan, pattern, null);
-            if (rampUpBias != null) {
+            if (rampUpBias != null && !agent.isRoot()) {
                 cost *= (1 + rampUpBias * random.nextDouble());
             }
             if (cost < minCost) {
