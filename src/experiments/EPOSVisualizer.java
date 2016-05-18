@@ -63,6 +63,7 @@ public class EPOSVisualizer {
         Map<NetworkAddress, FingerDescriptor> vertices = new HashMap<>();
         
         vis.buildGraph(edges, vertices);
+        vis.drawGraph();
     }
 
     public void init() {

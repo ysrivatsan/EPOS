@@ -32,13 +32,14 @@ import messages.IGreedyUp;
 import org.joda.time.DateTime;
 import protopeer.measurement.MeasurementLog;
 import agents.dataset.AgentDataset;
-import cern.colt.Arrays;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jdk.nashorn.internal.codegen.CompilerConstants;
+import protopeer.Experiment;
 
 /**
  *
@@ -60,7 +61,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     private IterativeFitnessFunction fitnessFunctionPrototype;
     private IterativeFitnessFunction fitnessFunction;
-    private List<Double> measurements = new ArrayList<>();
 
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
@@ -130,7 +130,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     void initIteration() {
-        measurements.clear();
         current = new AgentPlans();
         current.globalPlan = new GlobalPlan(this);
         current.aggregatePlan = new AggregatePlan(this);
@@ -175,9 +174,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             }
 
             int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
+            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
             current.selectedPlan = selected.get(selectedPlan);
         } else {
             int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
+            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
             current.selectedPlan = possiblePlans.get(selectedPlan);
         }
         current.selectedCombinationalPlan = current.selectedPlan;
@@ -245,7 +248,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         for(CostFunction func : measures) {
-            measurements.add(func.calcCost(current.globalPlan, costSignal));
+            measurements.put(func.getMetric(), func.calcCost(current.globalPlan, costSignal));
         }
         fitnessFunction.updatePrevious(prevAggregate, current, iteration);
         previous = current;
@@ -264,8 +267,8 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     @Override
     void measure(MeasurementLog log, int epochNumber) {
         if(isRoot()) {
-            for(int i=0; i<measures.size(); i++) {
-                log.log(epochNumber, iteration, measurements.get(i));
+            for(CostFunction func : measures) {
+                log.log(epochNumber, iteration, (Double) measurements.get(func.getMetric()));
             }
         }
     }

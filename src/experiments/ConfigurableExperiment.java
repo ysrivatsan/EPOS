@@ -17,6 +17,8 @@
  */
 package experiments;
 
+import experiments.output.MatlabEvaluator;
+import experiments.output.IEPOSEvaluator;
 import agents.network.TreeArchitecture;
 import agents.fitnessFunction.iterative.*;
 import agents.*;
@@ -76,6 +78,8 @@ import experiments.parameters.OptPosDoubleParam;
 import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
+import experiments.output.IEPOSVisualizer;
+import protopeer.Experiment;
 
 /**
  * @author Peter
@@ -95,6 +99,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
     private static String currentConfig = null;
     private static ConfigurableExperiment launcher;
     private static String outFile = null;
+    private static boolean showGraph = false;
 
     private static LazyMap lazyInit = new LazyMap();
 
@@ -152,6 +157,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("architecture.rankGenerator", x -> launcher.architecture.rankGenerator = x, new RankGeneratorParam());
         initializer.put("architecture.maxChildren", x -> launcher.architecture.maxChildren = x, new PosIntParam());
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
+        initializer.put("showGraph", x -> showGraph = x, new BooleanParam());
         initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
@@ -260,6 +266,11 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
+                    
+                    if(showGraph) {
+                        IEPOSVisualizer visualizer = IEPOSVisualizer.create(Experiment.getSingleton().getRootMeasurementLog());
+                        visualizer.showGraph();
+                    }
 
                     experiments.add(launcher.peersLog);
                 }

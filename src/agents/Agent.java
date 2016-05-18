@@ -34,6 +34,8 @@ import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -57,7 +59,8 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<Plan> possiblePlans = new ArrayList<>();
     
     private MeasurementFileDumper measurementDumper;
-    List<CostFunction> measures;
+    final List<CostFunction> measures;
+    final Map<String, Object> measurements = new HashMap<>();
     
     private final String config;
     
@@ -108,6 +111,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                         previousPhase = phases.get(phaseIndex - 1);
                     }
                     phaseIndex++;
+                    measurements.clear();
                     
                     runPhase();
                     runActiveState();
@@ -199,6 +203,14 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                 }
             }
         });
+    }
+    
+    public Map<String, Object> getMeasurements() {
+        return measurements;
+    }
+    
+    public List<Finger> getChildren() {
+        return children;
     }
     
     abstract void measure(MeasurementLog log, int epochNumber);
