@@ -5,9 +5,6 @@
 package experiments.output;
 
 import agents.Agent;
-import agents.IGreedyAgent;
-import agents.dataset.SparseAgentDataset;
-import edu.uci.ics.jung.algorithms.layout.BalloonLayout;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
 import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
@@ -29,23 +26,23 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import org.apache.commons.collections15.Transformer;
 import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.algorithms.layout.TreeLayout;
 import edu.uci.ics.jung.graph.DelegateForest;
-import edu.uci.ics.jung.graph.Tree;
 import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
 import edu.uci.ics.jung.visualization.VisualizationModel;
+import java.awt.Menu;
+import java.awt.MenuBar;
+import java.awt.MenuItem;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 import protopeer.Finger;
 import protopeer.Peer;
 import protopeer.measurement.MeasurementLog;
@@ -62,60 +59,60 @@ public class IEPOSVisualizer {
     private int numIterations;
     private int curIteration;
     private Map<Agent, float[]> values;
-    
+
     private IEPOSVisualizer() {
     }
-    
+
     public static IEPOSVisualizer create(MeasurementLog log) {
         IEPOSVisualizer visualizer = new IEPOSVisualizer();
-        
+
         Forest<Node, Integer> graph = new DelegateForest<>();
         visualizer.graph = graph;
-        
+
         int maxIter = log.getMaxEpochNumber();
         visualizer.numIterations = maxIter;
-        
+
         Set<Object> peers = log.getTagsOfType(Peer.class);
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
         Map<Agent, float[]> values = new HashMap<>();
-        
-        for(Object o : peers) {
+
+        for (Object o : peers) {
             Peer peer = (Peer) o;
             Agent agent = (Agent) peer.getPeerletOfType(Agent.class);
-            
+
             Node node = new Node();
             node.agent = agent;
-            
+
             idx2Node.put(peer.getNetworkAddress(), node);
             graph.addVertex(node);
 
             float[] agentValues = new float[maxIter];
-            for(int i = 0; i <= maxIter; i++) {
-                
+            for (int i = 0; i <= maxIter; i++) {
+
                 double selected = log.getAggregateByEpochNumber(i, peer, "selected").getAverage();
                 double numPlans = log.getAggregateByEpochNumber(i, peer, "numPlans").getAverage();
-                if(Double.isNaN(selected)) {
+                if (Double.isNaN(selected)) {
                     visualizer.numIterations = i;
                     break;
                 }
                 agentValues[i] = (float) (1.0 - selected / numPlans);
             }
-            
+
             values.put(agent, agentValues);
         }
-        
+
         int edge = 0;
-        for(Node node : graph.getVertices()) {
-            for(Finger f : node.agent.getChildren()) {
+        for (Node node : graph.getVertices()) {
+            for (Finger f : node.agent.getChildren()) {
                 Node child = idx2Node.get(f.getNetworkAddress());
                 graph.addEdge(edge++, node, child);
             }
         }
-        
+
         visualizer.values = values;
         return visualizer;
     }
-    
+
     private VisualizationViewer<Node, Integer> visualize(VisualizationModel<Node, Integer> model) {
         VisualizationViewer<Node, Integer> viewer = new VisualizationViewer<>(model);
         viewer.setPreferredSize(size);
@@ -126,13 +123,13 @@ public class IEPOSVisualizer {
         viewer.setGraphMouse(getGraphMouse());
         return viewer;
     }
-    
+
     private VisualizationViewer<Node, Integer> visualize(Forest<Node, Integer> graph) {
         return visualize(new DefaultVisualizationModel(getLayout(graph)));
     }
-    
+
     private void initIteration(int iteration) {
-        for(Node n : graph.getVertices()) {
+        for (Node n : graph.getVertices()) {
             n.val = values.get(n.agent)[iteration];
         }
     }
@@ -166,12 +163,13 @@ public class IEPOSVisualizer {
     public void showGraph() {
         JFrame frame = new JFrame("IEPOS");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         curIteration = 0;
         initIteration(curIteration);
+        frame.setTitle("IEPOS - iteration " + (curIteration+1));
         VisualizationModel<Node, Integer> model = new DefaultVisualizationModel(getLayout(graph));
         VisualizationViewer<Node, Integer> viewer = visualize(model);
-        
+
         KeyListener keyListener = new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -184,20 +182,21 @@ public class IEPOSVisualizer {
             @Override
             public void keyReleased(KeyEvent e) {
                 boolean refresh = false;
-                
-                if(e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    if(curIteration < numIterations-1) {
+
+                if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    if (curIteration < numIterations - 1) {
                         curIteration++;
                         refresh = true;
                     }
-                } else if(e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    if(curIteration > 0) {
+                } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    if (curIteration > 0) {
                         curIteration--;
                         refresh = true;
                     }
                 }
-                
-                if(refresh) {
+                frame.setTitle("IEPOS - iteration " + (curIteration+1));
+
+                if (refresh) {
                     initIteration(curIteration);
                     model.setGraphLayout(model.getGraphLayout());
                     //model.setGraphLayout(getLayout((Forest<Node, Integer>) tree));
@@ -206,32 +205,50 @@ public class IEPOSVisualizer {
                 }
             }
         };
-        
+
         viewer.addKeyListener(keyListener);
         frame.getContentPane().add(viewer);
         frame.pack();
         frame.setVisible(true);
+
+        frame.setMenuBar(new MenuBar());
+        Menu menu = new Menu("File");
+        MenuItem saveas = new MenuItem("Save As...");
+        saveas.addActionListener((ActionEvent e) -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.addChoosableFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().endsWith(".png");
+                }
+
+                @Override
+                public String getDescription() {
+                    return ".png files";
+                }
+            });
+            int returnVal = fileChooser.showSaveDialog(frame);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+
+                BufferedImage img = new BufferedImage(viewer.getWidth(), viewer.getHeight(), ColorSpace.TYPE_CMYK);
+                viewer.setDoubleBuffered(false);
+                viewer.getRootPane().paintComponents(img.createGraphics());
+                viewer.setDoubleBuffered(true);
+
+                try {
+                    ImageIO.write(img, "png", file);
+                } catch (IOException ex) {
+                    Logger.getLogger(IEPOSVisualizer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        menu.add(saveas);
+        frame.getMenuBar().add(menu);
     }
 
-    public void captureImage(int id) {
-        VisualizationViewer<Node, Integer> viewer = visualize(graph);
-        
-        BufferedImage img = new BufferedImage(viewer.getWidth(), viewer.getHeight(), ColorSpace.TYPE_CMYK);
-
-        viewer.setDoubleBuffered(false);
-        viewer.getRootPane().paintComponents(img.createGraphics());
-
-        try {
-            ImageIO.write(img, "png", new File("output-dir/capture" + id + ".png"));
-        } catch (IOException ex) {
-            Logger.getLogger(IEPOSVisualizer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        viewer.setDoubleBuffered(true);
-    }
-    
-    
     private static class Node {
+
         public Agent agent;
         public float val;
 

@@ -42,14 +42,32 @@ public class MatlabEvaluator extends IEPOSEvaluator {
 
     @Override
     void evaluate(int id, String title, String measure, List<String> labels, List<List<Aggregate>> iterationAggregates, PrintStream out) {
-        printMatrix("XAvg" + id, iterationAggregates, a -> a.getAverage(), out);
-        printMatrix("XMax" + id, iterationAggregates, a -> a.getMax(), out);
-        printMatrix("XMin" + id, iterationAggregates, a -> a.getMin(), out);
-        printMatrix("XStd" + id, iterationAggregates, a -> a.getStdDev(), out);
+        int num = iterationAggregates.size();
+        String xavg = "XAvg" + id;
+        String xmax = "XMax" + id;
+        String xmin = "XMin" + id;
+        String xstd = "XStd" + id;
+        String xcon = "XCon" + id;
+        
+        printMatrix(xavg, iterationAggregates, a -> a.getAverage(), out);
+        printMatrix(xmax, iterationAggregates, a -> a.getMax(), out);
+        printMatrix(xmin, iterationAggregates, a -> a.getMin(), out);
+        printMatrix(xstd, iterationAggregates, a -> a.getStdDev(), out);
         //printMatrix("XNum" + id, iterationAggregates, a -> (double)a.getNumValues(), out);
+        
+        printConvergence(xcon, iterationAggregates, out);
+        
+        StringBuilder indexFix = new StringBuilder();
+        for(int i = num-1; i > 0; i--) {
+            indexFix.append('-');
+            indexFix.append(i);
+            indexFix.append(';');
+        }
+        indexFix.append(0);
 
         out.println("figure(" + id + ");");
         out.println("plot(XAvg" + id + "');");
+        out.println("hold on; plot(" + xcon + "," + xavg + "(" + xcon + "*" + num + "+["+indexFix+"]),'ko'); hold off;");
         out.println("xlabel('iteration');");
         out.println("ylabel('" + measure + "');");
         out.print("legend('" + toMatlabString(labels.get(0)) + "'");
@@ -81,5 +99,19 @@ public class MatlabEvaluator extends IEPOSEvaluator {
             out.println(";");
         }
         out.println("];");
+    }
+    
+    private void printConvergence(String name, List<List<Aggregate>> iterationAggregates, PrintStream out) {
+        Convergence con = new EpsilonConvergence(0.1);
+        out.print(name + " = [");
+        for (List<Aggregate> log : iterationAggregates) {
+            double[] signal = new double[log.size()];
+            for(int i = 0; i < signal.length; i++) {
+                signal[i] = log.get(i).getAverage();
+            }
+            int convergence = con.convergence(signal);
+            out.print(convergence + " ");
+        }
+        out.println("]';");
     }
 }
