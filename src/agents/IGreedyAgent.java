@@ -162,27 +162,23 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
 
         // select best combination
+        List<Plan> subSelectablePlans = possiblePlans;
         if(rampUpRate != null && !isRoot()) {
             Random r = new Random(getPeer().getIndexNumber());
             int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
             List<Plan> plans = new ArrayList<>(possiblePlans);
-            List<Plan> selected = new ArrayList<>();
+            subSelectablePlans = new ArrayList<>();
             for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
                 int idx = r.nextInt(plans.size());
-                selected.add(plans.get(idx));
+                subSelectablePlans.add(plans.get(idx));
                 plans.remove(idx);
             }
-
-            int selectedPlan = fitnessFunction.select(this, childAggregatePlan, selected, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
-            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
-            current.selectedPlan = selected.get(selectedPlan);
-        } else {
-            int selectedPlan = fitnessFunction.select(this, childAggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
-            Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
-            current.selectedPlan = possiblePlans.get(selectedPlan);
         }
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
+        current.selectedPlan = subSelectablePlans.get(selectedPlan);
+        
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
         current.aggregatePlan.add(current.selectedPlan);

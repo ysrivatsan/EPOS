@@ -35,6 +35,8 @@ import org.joda.time.DateTime;
 import protopeer.measurement.MeasurementLog;
 import agents.dataset.AgentDataset;
 import cern.colt.Arrays;
+import java.util.Random;
+import protopeer.Experiment;
 
 /**
  *
@@ -62,6 +64,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans historic;
     
+    private Double rampUpRate;
+    
     private List<Integer> selectedCombination = new ArrayList<>();
     private LocalSearch localSearch;
 
@@ -69,7 +73,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures());
+            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), rampUpRate);
         }
     
         @Override
@@ -78,7 +82,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures) {
+    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, Double rampUpRate) {
         super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
@@ -88,6 +92,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         if(measures.isEmpty()) {
             measures.add(fitnessFunctionPrototype);
         }
+        this.rampUpRate = rampUpRate;
     }
 
     @Override
@@ -170,10 +175,25 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             }
 
             // select best combination
-            int selectedCombination = fitnessFunction.select(this, childAggregatePlan, combinationalPlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-            this.selectedCombination = combinationalSelections.get(selectedCombination);
+            List<Plan> subSelectablePlans = combinationalPlans;
+            List<List<Integer>> subCombinationalSelections = combinationalSelections;
+            if(rampUpRate != null && !isRoot()) {
+                Random r = new Random(getPeer().getIndexNumber());
+                int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
+                List<Plan> plans = new ArrayList<>(combinationalPlans);
+                subSelectablePlans = new ArrayList<>();
+                subCombinationalSelections = new ArrayList<>();
+                for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
+                    int idx = r.nextInt(plans.size());
+                    subSelectablePlans.add(plans.get(idx));
+                    subCombinationalSelections.add(combinationalSelections.get(idx));
+                    plans.remove(idx);
+                }
+            }
+            int selectedCombination = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            this.selectedCombination = subCombinationalSelections.get(selectedCombination);
             
-            current.selectedCombinationalPlan = combinationalPlans.get(selectedCombination);
+            current.selectedCombinationalPlan = subSelectablePlans.get(selectedCombination);
             current.aggregatePlan.set(childAggregatePlan);
             current.aggregatePlan.add(current.selectedCombinationalPlan);
         }
@@ -188,6 +208,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
         int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selected);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         current.selectedPlan = possiblePlans.get(selected);
         current.globalPlan.set(current.aggregatePlan);
         current.globalPlan.add(current.selectedPlan);
@@ -230,6 +252,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public List<IEPOSDown> down(IEPOSDown parent) {
         current.globalPlan.set(parent.globalPlan);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", parent.selected);
+        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         if(parent.discard) {
             current.aggregatePlan = previous.aggregatePlan;
             current.selectedPlan = previous.selectedPlan;
