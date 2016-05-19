@@ -57,12 +57,12 @@ public class OPTAgent extends Agent {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, getMeasures());
+            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, getMeasures(), inMemory);
         }
     }
 
-    public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>());
+    public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures, boolean inMemory) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>(), inMemory);
         this.costSignal = costSignal;
         this.fitnessFunction = fitnessFunction;
     }

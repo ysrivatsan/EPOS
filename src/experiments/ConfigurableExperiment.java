@@ -65,14 +65,13 @@ import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
 import experiments.output.IEPOSVisualizer;
+import java.util.LinkedHashMap;
 import protopeer.Experiment;
 
 /**
  * @author Peter
  */
 public class ConfigurableExperiment extends ExperimentLauncher implements Cloneable, Runnable {
-
-    private String peersLog;
 
     private AgentFactory agentFactory;
     private int numUser;
@@ -144,6 +143,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("architecture.maxChildren", x -> launcher.architecture.maxChildren = x, new PosIntParam());
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
         initializer.put("showGraph", x -> showGraph = x, new BooleanParam());
+        initializer.put("inMemory", x -> launcher.inMemoryLog = x, new BooleanParam());
         initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
@@ -221,7 +221,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                 }
 
                 // init plot
-                List<String> experiments = new ArrayList<>();
+                Map<String,MeasurementLog> experiments = new LinkedHashMap<>();
                 String title = Util.merge(outerName);
                 plotNumber++;
 
@@ -259,7 +259,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                         visualizer.showGraph();
                     }
 
-                    experiments.add(launcher.peersLog);
+                    experiments.put(launcher.peersLog, launcher.getMeasurementLog());
                 }
 
                 // plot result

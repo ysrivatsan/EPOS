@@ -64,6 +64,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<CostFunction> localMeasures;
     final Map<String, Object> measurements = new HashMap<>();
     final Map<String, Object> localMeasurements = new HashMap<>();
+    private boolean inMemory;
     
     private final String config;
     
@@ -71,7 +72,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures) {
+    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures, boolean inMemory) {
         this.experimentId = experimentId;
         this.dataSource = dataSource;
         this.treeStamp = treeStamp;
@@ -80,6 +81,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.measures = measures;
         this.localMeasures = localMeasures;
         this.phases = dataSource.getPhases();
+        this.inMemory = inMemory;
         
         this.config = dataSource.getConfig() + "-" + treeStamp;
     }
@@ -205,14 +207,18 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                     } catch(NoSuchElementException e) {
                         skip = true;
                     }
-                    if(!skip) {
+                    if(!skip && !inMemory) {
                         getMeasurementDumper().measurementEpochEnded(log, epochNumber);
                     }
                     /*if(isRoot()) {
                        getMeasurementDumper().measurementEpochEnded(log, epochNumber);
                     }*/
+                    if(!inMemory) {
+                        log.shrink(epochNumber, epochNumber+1);
+                    }
+                } else {
+                    log.shrink(epochNumber, epochNumber+1);
                 }
-                log.shrink(epochNumber, epochNumber+1);
             }
         });
     }

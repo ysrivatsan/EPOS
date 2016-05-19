@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import protopeer.measurement.Aggregate;
@@ -35,7 +36,7 @@ import protopeer.measurement.MeasurementLog;
  */
 public abstract class IEPOSEvaluator {
     
-    public final void evaluateLogs(int id, List<String> experiments, PrintStream out) {
+    public final void evaluateLogs(int id, Map<String, MeasurementLog> experiments, PrintStream out) {
         String title = "#" + id;
         String measure = "";
         String localMeasure = null;
@@ -43,55 +44,47 @@ public abstract class IEPOSEvaluator {
         List<List<Aggregate>> iterationAggregates = new ArrayList<>();
         
         LogReplayer replayer = new LogReplayer();
-        for(String experiment : experiments) {
-            try {
-                MeasurementLog log = new MeasurementLog();
-                for(File f : new File(experiment).listFiles()) {
-                    MeasurementLog l = replayer.loadLogFromFile(f.getPath());
-                    log.mergeWith(l);
-                }
-        
-                int maxIteration = 0;
-                for (Object tag : log.getTagsOfExactType(Integer.class)) {
-                    maxIteration = Math.max(maxIteration, (Integer) tag);
-                }
-                
-                String localMeasureTag = null;
-                String measureTag = null;
-                String label = experiment;
-                for(Object tag : log.getTagsOfType(String.class)) {
-                    String s = (String) tag;
-                    if(s.startsWith("local")) {
-                        localMeasure = s.substring(6);
-                        localMeasureTag = s;
-                    } else if(s.startsWith("global")) {
-                        measure = s.substring(7);
-                        measureTag = s;
-                    } else {
-                        int split = s.indexOf('=');
-                        switch(s.substring(0, split)) {
-                            case "title":
-                                title = s.substring(split+1);
-                                break;
-                            case "measure":
-                                measure = s.substring(split+1);
-                                break;
-                            case "label":
-                                label = s.substring(split+1);
-                                break;
-                        }
+        for(String experiment : experiments.keySet()) {
+            MeasurementLog log = experiments.get(experiment);
+            
+            int maxIteration = 0;
+            for (Object tag : log.getTagsOfExactType(Integer.class)) {
+                maxIteration = Math.max(maxIteration, (Integer) tag);
+            }
+            
+            String localMeasureTag = null;
+            String measureTag = null;
+            String label = experiment;
+            for(Object tag : log.getTagsOfType(String.class)) {
+                String s = (String) tag;
+                if(s.startsWith("local")) {
+                    localMeasure = s.substring(6);
+                    localMeasureTag = s;
+                } else if(s.startsWith("global")) {
+                    measure = s.substring(7);
+                    measureTag = s;
+                } else {
+                    int split = s.indexOf('=');
+                    switch(s.substring(0, split)) {
+                        case "title":
+                            title = s.substring(split+1);
+                            break;
+                        case "measure":
+                            measure = s.substring(split+1);
+                            break;
+                        case "label":
+                            label = s.substring(split+1);
+                            break;
                     }
                 }
-                labels.add(label);
-                
-                List<Aggregate> list = new ArrayList<>();
-                for(int i = 0; i <= maxIteration; i++) {
-                    list.add(log.getAggregate(i, measureTag));
-                }
-                iterationAggregates.add(list);
-            } catch (IOException | ClassNotFoundException ex) {
-                Logger.getLogger(ConfigurableExperiment.class.getName()).log(Level.SEVERE, null, ex);
             }
+            labels.add(label);
+            
+            List<Aggregate> list = new ArrayList<>();
+            for(int i = 0; i <= maxIteration; i++) {
+                list.add(log.getAggregate(i, measureTag));
+            }
+            iterationAggregates.add(list);
         }
         
         evaluate(id, title, measure, labels, iterationAggregates, out);

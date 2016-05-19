@@ -29,16 +29,6 @@ import protopeer.measurement.Aggregate;
  * @author Peter
  */
 public class MatlabEvaluator extends IEPOSEvaluator {
-    
-    public static void main(String[] args) {
-        int id = Integer.parseInt(args[0]);
-        List<String> experiments = new ArrayList<>();
-        for(int i = 1; i < args.length; i++) {
-            experiments.add(args[i]);
-        }
-        
-        new MatlabEvaluator().evaluateLogs(id, experiments, System.out);
-    }
 
     @Override
     void evaluate(int id, String title, String measure, List<String> labels, List<List<Aggregate>> iterationAggregates, PrintStream out) {

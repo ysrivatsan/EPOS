@@ -42,6 +42,7 @@ public abstract class AgentFactory implements Cloneable {
     public CostFunction measure = null;
     public CostFunction localMeasure = null;
     public boolean outputMovie;
+    public boolean inMemory = false;
 
     public abstract Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
 
