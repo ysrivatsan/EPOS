@@ -62,7 +62,7 @@ public class OPTAgent extends Agent {
     }
 
     public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, measures);
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>());
         this.costSignal = costSignal;
         this.fitnessFunction = fitnessFunction;
     }

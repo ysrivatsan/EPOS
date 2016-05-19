@@ -36,6 +36,7 @@ import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -60,7 +61,9 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     private MeasurementFileDumper measurementDumper;
     final List<CostFunction> measures;
+    final List<CostFunction> localMeasures;
     final Map<String, Object> measurements = new HashMap<>();
+    final Map<String, Object> localMeasurements = new HashMap<>();
     
     private final String config;
     
@@ -68,13 +71,14 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures) {
+    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures) {
         this.experimentId = experimentId;
         this.dataSource = dataSource;
         this.treeStamp = treeStamp;
         this.outFolder = outFolder;
         this.currentPhase = initialPhase;
         this.measures = measures;
+        this.localMeasures = localMeasures;
         this.phases = dataSource.getPhases();
         
         this.config = dataSource.getConfig() + "-" + treeStamp;
@@ -111,7 +115,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                         previousPhase = phases.get(phaseIndex - 1);
                     }
                     phaseIndex++;
-                    measurements.clear();
                     
                     runPhase();
                     runActiveState();
@@ -196,21 +199,40 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
             public void measurementEpochEnded(MeasurementLog log, int epochNumber) {
                 if(epochNumber >= 2) {
                     measure(log, epochNumber);
-                    if(isRoot()) {
-                       getMeasurementDumper().measurementEpochEnded(log, epochNumber);
+                    boolean skip = false;
+                    try {
+                        log.getSubLog(epochNumber, epochNumber+1).getMinEpochNumber();
+                    } catch(NoSuchElementException e) {
+                        skip = true;
                     }
-                    log.shrink(epochNumber, epochNumber + 1);
+                    if(!skip) {
+                        getMeasurementDumper().measurementEpochEnded(log, epochNumber);
+                    }
+                    /*if(isRoot()) {
+                       getMeasurementDumper().measurementEpochEnded(log, epochNumber);
+                    }*/
                 }
+                log.shrink(epochNumber, epochNumber+1);
             }
         });
     }
     
-    public Map<String, Object> getMeasurements() {
-        return measurements;
-    }
-    
     public List<Finger> getChildren() {
         return children;
+    }
+    
+    void measureGlobal(Plan plan, Plan costSignal) {
+        measurements.clear();
+        for(CostFunction func : measures) {
+            measurements.put(func.getMetric(), func.calcCost(plan, costSignal));
+        }
+    }
+    
+    void measureLocal(Plan plan, Plan costSignal) {
+        localMeasurements.clear();
+        for(CostFunction func : localMeasures) {
+            localMeasurements.put(func.getMetric(), func.calcCost(plan, costSignal));
+        }
     }
     
     abstract void measure(MeasurementLog log, int epochNumber);

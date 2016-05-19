@@ -67,7 +67,7 @@ public class EPOSAgent extends Agent {
     }
 
     public EPOSAgent(int id, AgentDataset dataSource, String treeStamp, FitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>());
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>());
         this.fitnessFunction = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;

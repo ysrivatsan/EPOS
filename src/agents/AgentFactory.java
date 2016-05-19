@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.Objects;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
+import agents.fitnessFunction.costFunction.DiscomfortCostFunction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +40,7 @@ public abstract class AgentFactory implements Cloneable {
     public LocalSearch localSearch;
     public Double rampUpRate;
     public CostFunction measure = null;
+    public CostFunction localMeasure = null;
     public boolean outputMovie;
 
     public abstract Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
@@ -46,6 +48,14 @@ public abstract class AgentFactory implements Cloneable {
     public List<CostFunction> getMeasures() {
         if (measure != null) {
             return Arrays.asList(measure);
+        } else {
+            return Arrays.asList(fitnessFunction);
+        }
+    }
+    
+    public List<CostFunction> getLocalMeasures() {
+        if (localMeasure != null) {
+            return Arrays.asList(localMeasure);
         } else {
             return new ArrayList<>();
         }

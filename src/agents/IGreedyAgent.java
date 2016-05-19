@@ -30,12 +30,9 @@ import java.util.TreeMap;
 import messages.IGreedyDown;
 import messages.IGreedyUp;
 import org.joda.time.DateTime;
-import protopeer.measurement.MeasurementLog;
 import agents.dataset.AgentDataset;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,7 +74,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), rampUpRate);
+            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), getLocalMeasures(), rampUpRate);
         }
     
         @Override
@@ -86,16 +83,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
     }
 
-    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, Double rampUpRate) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
+    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch==null?null:localSearch.clone();
         this.outputMovie = outputMovie;
-        if(measures.isEmpty()) {
-            measures.add(fitnessFunctionPrototype);
-        }
         this.rampUpRate = rampUpRate;
     }
 
@@ -178,6 +172,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
         Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         current.selectedPlan = subSelectablePlans.get(selectedPlan);
+        measureLocal(current.selectedPlan, costSignal);
         
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
@@ -243,9 +238,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         layer = parent.hops;
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
-        for(CostFunction func : measures) {
-            measurements.put(func.getMetric(), func.calcCost(current.globalPlan, costSignal));
-        }
+        measureGlobal(current.globalPlan, costSignal);
         fitnessFunction.updatePrevious(prevAggregate, current, iteration);
         previous = current;
 
@@ -258,15 +251,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             msgs.add(msg);
         }
         return msgs;
-    }
-
-    @Override
-    void measure(MeasurementLog log, int epochNumber) {
-        if(isRoot()) {
-            for(CostFunction func : measures) {
-                log.log(epochNumber, iteration, (Double) measurements.get(func.getMetric()));
-            }
-        }
     }
 
     private void writeGraphData(int epochNumber) {

@@ -73,7 +73,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), rampUpRate);
+            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), getLocalMeasures(), rampUpRate);
         }
     
         @Override
@@ -82,16 +82,13 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, Double rampUpRate) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures);
+    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch==null?null:localSearch.clone();
         this.outputMovie = outputMovie;
-        if(measures.isEmpty()) {
-            measures.add(fitnessFunctionPrototype);
-        }
         this.rampUpRate = rampUpRate;
     }
 
@@ -117,7 +114,6 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     
     @Override
     void initIteration() {
-        measurements.clear();
         current = new AgentPlans();
         current.globalPlan = new GlobalPlan(this);
         current.aggregatePlan = new AggregatePlan(this);
@@ -211,6 +207,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selected);
         Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         current.selectedPlan = possiblePlans.get(selected);
+        measureLocal(current.selectedPlan, costSignal);
         current.globalPlan.set(current.aggregatePlan);
         current.globalPlan.add(current.selectedPlan);
 
@@ -261,6 +258,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         } else {
             current.selectedPlan.set(possiblePlans.get(parent.selected));
         }
+        measureLocal(current.selectedPlan, costSignal);
         
         for(CostFunction func : measures) {
             measurements.add(func.calcCost(current.globalPlan, costSignal));
@@ -287,14 +285,5 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             msgs.add(msg);
         }
         return msgs;
-    }
-
-    @Override
-    void measure(MeasurementLog log, int epochNumber) {
-        if(isRoot()) {
-            for(int i=0; i<measures.size(); i++) {
-                log.log(epochNumber, iteration, measurements.get(i));
-            }
-        }
     }
 }

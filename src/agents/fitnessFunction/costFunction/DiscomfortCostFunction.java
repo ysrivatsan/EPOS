@@ -15,35 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments.output;
+package agents.fitnessFunction.costFunction;
+
+import agents.plan.Plan;
 
 /**
  *
  * @author Peter
  */
-public class EpsilonConvergence implements Convergence {
-    private double epsilon;
-    
-    public EpsilonConvergence(double epsilon) {
-        this.epsilon = epsilon;
+public class DiscomfortCostFunction implements CostFunction {
+
+    @Override
+    public double calcCost(Plan plan, Plan costSignal) {
+        return plan.getDiscomfort();
+    }
+
+    @Override
+    public Plan calcGradient(Plan plan) {
+        throw new IllegalArgumentException("gradient for discomfort cost cannot be computed");
+    }
+
+    @Override
+    public String getMetric() {
+        return "discomfort";
     }
     
-    public int convergence(double[] signal) {
-        double x0 = signal[0];
-        
-        double xmin = signal[0];
-        for(int i = 1; i < signal.length; i++) {
-            xmin = Math.min(xmin, signal[i]);
-        }
-        
-        double threshold = xmin + (x0 - xmin)*epsilon;
-        
-        int iter;
-        for(iter = 0; iter < signal.length; iter++) {
-            if(signal[iter] <= threshold) {
-                break;
-            }
-        }
-        return iter+1;
-    }
 }

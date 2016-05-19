@@ -32,6 +32,7 @@ import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
+import protopeer.measurement.MeasurementLog;
 
 /**
  *
@@ -44,8 +45,8 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
-    public IterativeAgentTemplate(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, measure);
+    public IterativeAgentTemplate(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure, List<CostFunction> localMeasure) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, measure, localMeasure);
         this.numIterations = numIterations;
         this.iteration = numIterations;
     }
@@ -137,4 +138,16 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
     abstract DOWN atRoot(UP rootMsg);
 
     abstract List<DOWN> down(DOWN parent);
+    
+    @Override
+    void measure(MeasurementLog log, int epochNumber) {
+        for(CostFunction func : localMeasures) {
+            log.log(epochNumber, iteration, "local-" + func.getMetric(), (Double) localMeasurements.get(func.getMetric()));
+        }
+        if(isRoot()) {
+            for(CostFunction func : measures) {
+                log.log(epochNumber, iteration, "global-" + func.getMetric(), (Double) measurements.get(func.getMetric()));
+            }
+        }
+    }
 }
