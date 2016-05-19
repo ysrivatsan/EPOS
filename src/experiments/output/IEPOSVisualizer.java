@@ -183,25 +183,22 @@ public class IEPOSVisualizer {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                Tree<Node, Integer> tree = null;
+                boolean refresh = false;
                 
                 if(e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     if(curIteration < numIterations-1) {
                         curIteration++;
+                        refresh = true;
                     }
                 } else if(e.getKeyCode() == KeyEvent.VK_LEFT) {
                     if(curIteration > 0) {
                         curIteration--;
+                        refresh = true;
                     }
                 }
                 
-                if(tree != null) {
-                    for(Node n : tree.getVertices()) {
-                        Node x = nodes.get(n.agent);
-                        x.val = n.val;
-                    }
-                    //model.getGraphLayout().getGraph().getVertices().iterator().next().val = 0;
-                    
+                if(refresh) {
+                    initIteration(curIteration);
                     model.setGraphLayout(model.getGraphLayout());
                     //model.setGraphLayout(getLayout((Forest<Node, Integer>) tree));
                     viewer.invalidate();
