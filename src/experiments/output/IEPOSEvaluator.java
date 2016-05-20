@@ -17,17 +17,15 @@
  */
 package experiments.output;
 
-import experiments.ConfigurableExperiment;
-import java.io.File;
-import java.io.IOException;
+import agents.Agent;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import protopeer.measurement.Aggregate;
-import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -51,7 +49,7 @@ public abstract class IEPOSEvaluator {
             for(Object tag : log.getTagsOfType(String.class)) {
                 String s = (String) tag;
                 if(s.startsWith("local")) {
-                    configMeasurement.localMeasure = s.substring(6);
+                    configMeasurement.localMeasure = s.split("-", 2)[1];
                     localTag = s;
                 } else if(s.startsWith("global")) {
                     configMeasurement.globalMeasure = s.substring(7);
@@ -63,7 +61,9 @@ public abstract class IEPOSEvaluator {
                 }
             }
             
-            configMeasurement.localMeasurements = getMeasurements(log, localTag);
+            List<Agent> agents = log.getTagsOfType(Agent.class).stream().map(x -> (Agent) x).collect(Collectors.toList());
+            
+            configMeasurement.localMeasurements = getMeasurements(log, localTag, agents);
             configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
             
             configMeasurements.add(configMeasurement);
@@ -73,6 +73,33 @@ public abstract class IEPOSEvaluator {
     }
     
     abstract void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out);
+    
+    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, List<Agent> agents) {
+        if(tag == null) {
+            return null;
+        }
+        
+        List<Aggregate> list = new ArrayList<>();
+        for(int i = 0; true; i++) {
+            Aggregate aggregate = null;
+            for(Agent agent : agents) {
+                Aggregate value = log.getAggregate(i, tag, agent);
+                if(value.getNumValues() == 0) {
+                    break;
+                }
+                if(aggregate == null) {
+                    aggregate = value;
+                } else {
+                    aggregate.mergeWith(value);
+                }
+            }
+            if(aggregate == null) {
+                break;
+            }
+            list.add(aggregate);
+        }
+        return list;
+    }
     
     private List<Aggregate> getMeasurements(MeasurementLog log, String tag) {
         if(tag == null) {

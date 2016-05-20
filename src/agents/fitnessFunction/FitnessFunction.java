@@ -30,7 +30,7 @@ import java.util.List;
 public abstract class FitnessFunction implements CostFunction {
     
     @Override
-    public final double calcCost(Plan plan, Plan costSignal) {
+    public final double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
         return getRobustness(plan, costSignal, null);
     }
     

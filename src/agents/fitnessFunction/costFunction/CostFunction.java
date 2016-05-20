@@ -24,7 +24,7 @@ import agents.plan.Plan;
  * @author Peter
  */
 public interface CostFunction {
-    public double calcCost(Plan plan, Plan costSignal);
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans);
     public Plan calcGradient(Plan plan);
     public String getMetric();
 }

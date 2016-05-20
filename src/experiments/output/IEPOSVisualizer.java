@@ -60,42 +60,47 @@ public class IEPOSVisualizer {
     private int curIteration;
     private Map<Agent, float[]> values;
 
-    private IEPOSVisualizer() {
-    }
-
     public static IEPOSVisualizer create(MeasurementLog log) {
         IEPOSVisualizer visualizer = new IEPOSVisualizer();
 
         Forest<Node, Integer> graph = new DelegateForest<>();
         visualizer.graph = graph;
+        visualizer.numIterations = log.getMaxEpochNumber();;
 
-        int maxIter = log.getMaxEpochNumber();
-        visualizer.numIterations = maxIter;
-
-        Set<Object> peers = log.getTagsOfType(Peer.class);
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
         Map<Agent, float[]> values = new HashMap<>();
+        
+        String measureTag = null;
+        for(Object tagObj : log.getTagsOfType(String.class)) {
+            String tag = (String) tagObj;
+            if(tag.startsWith("local")) {
+                measureTag = tag;
+                break;
+            }
+        }
+        
+        if(measureTag == null) {
+            throw new IllegalArgumentException("no local measurements available");
+        }
 
-        for (Object o : peers) {
-            Peer peer = (Peer) o;
-            Agent agent = (Agent) peer.getPeerletOfType(Agent.class);
-
+        for (Object agentObj : log.getTagsOfType(Agent.class)) {
+            Agent agent = (Agent) agentObj;
+            Peer peer = agent.getPeer();
+            
             Node node = new Node();
             node.agent = agent;
 
             idx2Node.put(peer.getNetworkAddress(), node);
             graph.addVertex(node);
 
-            float[] agentValues = new float[maxIter];
-            for (int i = 0; i <= maxIter; i++) {
-
-                double selected = log.getAggregateByEpochNumber(i, peer, "selected").getAverage();
-                double numPlans = log.getAggregateByEpochNumber(i, peer, "numPlans").getAverage();
-                if (Double.isNaN(selected)) {
+            float[] agentValues = new float[visualizer.numIterations];
+            for (int i = 0; i < visualizer.numIterations; i++) {
+                double localError = log.getAggregate(i, measureTag, agent).getAverage();
+                if (Double.isNaN(localError)) {
                     visualizer.numIterations = i;
                     break;
                 }
-                agentValues[i] = (float) (1.0 - selected / numPlans);
+                agentValues[i] = 1.0f - (float) localError;
             }
 
             values.put(agent, agentValues);

@@ -142,7 +142,7 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
     @Override
     void measure(MeasurementLog log, int epochNumber) {
         for(CostFunction func : localMeasures) {
-            log.log(epochNumber, iteration, "local-" + func.getMetric(), (Double) localMeasurements.get(func.getMetric()));
+            log.log(epochNumber, iteration, "local-" + func.getMetric(), this, (Double) localMeasurements.get(func.getMetric()));
         }
         if(isRoot()) {
             for(CostFunction func : measures) {

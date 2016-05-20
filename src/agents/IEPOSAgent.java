@@ -17,7 +17,6 @@
  */
 package agents;
 
-import agents.dataset.FileAgentDataset;
 import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
@@ -32,11 +31,8 @@ import java.util.TreeMap;
 import messages.IEPOSDown;
 import messages.IEPOSUp;
 import org.joda.time.DateTime;
-import protopeer.measurement.MeasurementLog;
 import agents.dataset.AgentDataset;
-import cern.colt.Arrays;
 import java.util.Random;
-import protopeer.Experiment;
 
 /**
  *
@@ -204,10 +200,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
         int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selected);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         current.selectedPlan = possiblePlans.get(selected);
-        measureLocal(current.selectedPlan, costSignal);
+        measureLocal(current.selectedPlan, costSignal, selected, possiblePlans.size());
         current.globalPlan.set(current.aggregatePlan);
         current.globalPlan.add(current.selectedPlan);
 
@@ -249,8 +243,6 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public List<IEPOSDown> down(IEPOSDown parent) {
         current.globalPlan.set(parent.globalPlan);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", parent.selected);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         if(parent.discard) {
             current.aggregatePlan = previous.aggregatePlan;
             current.selectedPlan = previous.selectedPlan;
@@ -258,12 +250,11 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         } else {
             current.selectedPlan.set(possiblePlans.get(parent.selected));
         }
-        measureLocal(current.selectedPlan, costSignal);
+        measureLocal(current.selectedPlan, costSignal, parent.selected, possiblePlans.size());
         
-        for(CostFunction func : measures) {
-            measurements.add(func.calcCost(current.globalPlan, costSignal));
+        if(isRoot()) {
+            measureGlobal(costSignal, costSignal);
         }
-        //robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
         
         numNodes = parent.numNodes;
         layer = parent.hops;

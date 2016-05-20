@@ -255,7 +255,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     launcher.run();
                     
                     if(showGraph) {
-                        IEPOSVisualizer visualizer = IEPOSVisualizer.create(Experiment.getSingleton().getRootMeasurementLog());
+                        IEPOSVisualizer visualizer = IEPOSVisualizer.create(launcher.getMeasurementLog());
                         visualizer.showGraph();
                     }
 

@@ -72,7 +72,7 @@ public class MatlabEvaluator extends IEPOSEvaluator {
         out.println("xlabel(" + getXLabel() + ");");
         if(printLocal) {
             out.println("ylabel(hAx(1)," + getYLabel(configMeasurements.stream().map(x -> x.globalMeasure)) + ");");
-            out.println("ylabel(hAx(2)," + getYLabel(configMeasurements.stream().map(x -> x.localMeasure)) + ");");
+            out.println("ylabel(hAx(2),['local ' " + getYLabel(configMeasurements.stream().map(x -> x.localMeasure)) + "]);");
         } else {
             out.println("ylabel(" + getYLabel(configMeasurements.stream().map(x -> x.globalMeasure)) + ");");
         }

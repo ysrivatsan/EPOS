@@ -82,7 +82,7 @@ public class QuadraticCostFunction implements CostFunction {
     }
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal) {
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
         int n = plan.getNumberOfStates();
         prepAB(n);
         

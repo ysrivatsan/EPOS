@@ -23,9 +23,6 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
-import agents.plan.GlobalPlan;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -47,7 +44,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
-        return costFunc.calcCost(plan, costSignal);
+        return costFunc.calcCost(plan, costSignal, 0, 0);
     }
 
     public String getRobustnessMeasure() {
@@ -77,7 +74,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             testAggregatePlan.add(aggregatePlan);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = getRobustness(testAggregatePlan, pattern, null);
+            double cost = costFunc.calcCost(testAggregatePlan, pattern, i, combinationalPlans.size());
             if (rampUpBias != null && !agent.isRoot()) {
                 cost *= (1 + rampUpBias * i/(double)combinationalPlan.getNumberOfStates());
             }

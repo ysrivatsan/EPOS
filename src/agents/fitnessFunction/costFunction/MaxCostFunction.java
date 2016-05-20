@@ -26,7 +26,7 @@ import agents.plan.Plan;
 public class MaxCostFunction implements CostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal) {
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
         Plan p = plan.clone();
         p.add(costSignal);
         return p.max();

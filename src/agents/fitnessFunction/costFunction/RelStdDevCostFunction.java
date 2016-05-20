@@ -26,7 +26,7 @@ import agents.plan.Plan;
 public class RelStdDevCostFunction implements CostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal) {
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
         return plan.relativeStdDeviation() + costSignal.dot(plan);/**/
         /*Plan p = plan.clone();
         p.add(costSignal);

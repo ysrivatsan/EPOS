@@ -36,7 +36,6 @@ import java.io.PrintStream;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import protopeer.Experiment;
 
 /**
  *
@@ -169,10 +168,8 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             }
         }
         int selectedPlan = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "selected", selectedPlan);
-        Experiment.getSingleton().getRootMeasurementLog().log(iteration, getPeer(), "numPlans", possiblePlans.size());
         current.selectedPlan = subSelectablePlans.get(selectedPlan);
-        measureLocal(current.selectedPlan, costSignal);
+        measureLocal(current.selectedPlan, costSignal, selectedPlan, possiblePlans.size());
         
         current.selectedCombinationalPlan = current.selectedPlan;
         current.aggregatePlan.set(childAggregatePlan);
@@ -208,7 +205,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             }
             System.out.println("T(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+c+";");
             if(outputDetail) {
-                rootOut.println(iteration + ": " + Math.sqrt(measures.get(0).calcCost(current.globalPlan, costSignal)) + "," + current.globalPlan + "," + c);
+                rootOut.println(iteration + ": " + Math.sqrt(measures.get(0).calcCost(current.globalPlan, costSignal, 0, 0)) + "," + current.globalPlan + "," + c);
             }
         } else {
             if(iteration%10 == 9) {
