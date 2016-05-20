@@ -29,7 +29,7 @@ public abstract class ExperimentLauncher {
     
     //logging parameters
     String peersLog;
-    boolean inMemoryLog = false;
+    boolean inMemoryLog = true;
     private MeasurementLog log;
     
     public abstract IEPOSExperiment createExperiment(int num);

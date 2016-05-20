@@ -20,6 +20,7 @@ package experiments.parameters;
 import agents.dataset.Dataset;
 import agents.dataset.FileDataset;
 import agents.dataset.NoiseDataset;
+import agents.dataset.OrderedSparseDataset;
 import agents.dataset.SparseDataset;
 import java.io.File;
 
@@ -49,7 +50,7 @@ public class DatasetParam implements Param<Dataset> {
                     }
                     return std >= 0;
                 }
-            } else if(x.startsWith("S")) {
+            } else if(x.startsWith("S") || x.startsWith("O")) {
                 String[] params = x.trim().split("_");
                 if (params.length == 4 || params.length == 5) {
                     Integer.parseUnsignedInt(params[1]);
@@ -95,6 +96,13 @@ public class DatasetParam implements Param<Dataset> {
                 return new SparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), 0);
             } else {
                 return new SparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Integer.parseUnsignedInt(params[4]));
+            }
+        } else if (x.startsWith("O")) {
+            String[] params = x.trim().split("_");
+            if(params.length == 4) {
+                return new OrderedSparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), 0);
+            } else {
+                return new OrderedSparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Integer.parseUnsignedInt(params[4]));
             }
         }
         return null;

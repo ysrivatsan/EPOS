@@ -44,7 +44,7 @@ public class SparseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(new SparseAgentDataset(i, numPlans, planSize, std, generationSteps, rand));
+            res.add(createAgentDataset(i, numPlans, planSize, std, generationSteps, rand));
         }
         return res;
     }
@@ -57,5 +57,9 @@ public class SparseDataset implements Dataset {
     @Override
     public void init(int num) {
         this.seed = num;
+    }
+    
+    AgentDataset createAgentDataset(int idx, int numPlans, int planSize, double std, int generationSteps, Random rand) {
+        return new SparseAgentDataset(idx, numPlans, planSize, std, generationSteps, rand);
     }
 }

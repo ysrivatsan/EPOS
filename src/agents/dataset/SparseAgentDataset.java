@@ -21,6 +21,7 @@ import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.joda.time.DateTime;
@@ -59,6 +60,7 @@ public class SparseAgentDataset implements AgentDataset {
         for (int i = 0; i < numPlans; i++) {
             plans.add(generatePlan(r));
         }
+        
         return plans;
     }
 

@@ -159,13 +159,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         if(rampUpRate != null && !isRoot()) {
             Random r = new Random(getPeer().getIndexNumber());
             int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
-            List<Plan> plans = new ArrayList<>(possiblePlans);
+            subSelectablePlans = possiblePlans.subList(0, Math.min(numPlans,possiblePlans.size()));
+            /*List<Plan> plans = new ArrayList<>(possiblePlans);
             subSelectablePlans = new ArrayList<>();
             for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
                 int idx = r.nextInt(plans.size());
                 subSelectablePlans.add(plans.get(idx));
-                plans.remove(idx);
-            }
+            }*/
         }
         int selectedPlan = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = subSelectablePlans.get(selectedPlan);

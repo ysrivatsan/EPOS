@@ -172,7 +172,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             if(rampUpRate != null && !isRoot()) {
                 Random r = new Random(getPeer().getIndexNumber());
                 int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
-                List<Plan> plans = new ArrayList<>(combinationalPlans);
+                subSelectablePlans = combinationalPlans.subList(0, Math.min(numPlans,possiblePlans.size()));
+                subCombinationalSelections = subCombinationalSelections.subList(0, Math.min(numPlans,combinationalPlans.size()));;
+                /*List<Plan> plans = new ArrayList<>(combinationalPlans);
                 subSelectablePlans = new ArrayList<>();
                 subCombinationalSelections = new ArrayList<>();
                 for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
@@ -180,7 +182,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
                     subSelectablePlans.add(plans.get(idx));
                     subCombinationalSelections.add(combinationalSelections.get(idx));
                     plans.remove(idx);
-                }
+                }*/
             }
             int selectedCombination = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
             this.selectedCombination = subCombinationalSelections.get(selectedCombination);
