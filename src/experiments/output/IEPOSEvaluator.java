@@ -37,58 +37,56 @@ import protopeer.measurement.MeasurementLog;
 public abstract class IEPOSEvaluator {
     
     public final void evaluateLogs(int id, Map<String, MeasurementLog> experiments, PrintStream out) {
+        List<IEPOSMeasurement> configMeasurements = new ArrayList<>();
         String title = "#" + id;
-        String measure = "";
-        String localMeasure = null;
-        List<String> labels = new ArrayList<>();
-        List<List<Aggregate>> iterationAggregates = new ArrayList<>();
         
-        LogReplayer replayer = new LogReplayer();
         for(String experiment : experiments.keySet()) {
+            IEPOSMeasurement configMeasurement = new IEPOSMeasurement();
+            configMeasurement.label = experiment;
+            
             MeasurementLog log = experiments.get(experiment);
             
-            int maxIteration = 0;
-            for (Object tag : log.getTagsOfExactType(Integer.class)) {
-                maxIteration = Math.max(maxIteration, (Integer) tag);
-            }
-            
-            String localMeasureTag = null;
-            String measureTag = null;
-            String label = experiment;
+            String localTag = null;
+            String globalTag = null;
             for(Object tag : log.getTagsOfType(String.class)) {
                 String s = (String) tag;
                 if(s.startsWith("local")) {
-                    localMeasure = s.substring(6);
-                    localMeasureTag = s;
+                    configMeasurement.localMeasure = s.substring(6);
+                    localTag = s;
                 } else if(s.startsWith("global")) {
-                    measure = s.substring(7);
-                    measureTag = s;
-                } else {
-                    int split = s.indexOf('=');
-                    switch(s.substring(0, split)) {
-                        case "title":
-                            title = s.substring(split+1);
-                            break;
-                        case "measure":
-                            measure = s.substring(split+1);
-                            break;
-                        case "label":
-                            label = s.substring(split+1);
-                            break;
-                    }
+                    configMeasurement.globalMeasure = s.substring(7);
+                    globalTag = s;
+                } else if(s.startsWith("title")) {
+                    title = s.substring(6);
+                } else if(s.startsWith("label")) {
+                    configMeasurement.label = s.substring(6);
                 }
             }
-            labels.add(label);
             
-            List<Aggregate> list = new ArrayList<>();
-            for(int i = 0; i <= maxIteration; i++) {
-                list.add(log.getAggregate(i, measureTag));
-            }
-            iterationAggregates.add(list);
+            configMeasurement.localMeasurements = getMeasurements(log, localTag);
+            configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
+            
+            configMeasurements.add(configMeasurement);
         }
         
-        evaluate(id, title, measure, labels, iterationAggregates, out);
+        evaluate(id, title, configMeasurements, out);
     }
     
-    abstract void evaluate(int id, String title, String measure, List<String> labels, List<List<Aggregate>> iterationAggregates, PrintStream out);
+    abstract void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out);
+    
+    private List<Aggregate> getMeasurements(MeasurementLog log, String tag) {
+        if(tag == null) {
+            return null;
+        }
+        
+        List<Aggregate> list = new ArrayList<>();
+        for(int i = 0; true; i++) {
+            Aggregate value = log.getAggregate(i, tag);
+            if(value.getNumValues() == 0) {
+                break;
+            }
+            list.add(value);
+        }
+        return list;
+    }
 }

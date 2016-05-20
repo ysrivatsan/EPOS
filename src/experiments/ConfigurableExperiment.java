@@ -143,7 +143,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("architecture.maxChildren", x -> launcher.architecture.maxChildren = x, new PosIntParam());
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
         initializer.put("showGraph", x -> showGraph = x, new BooleanParam());
-        initializer.put("inMemory", x -> launcher.inMemoryLog = x, new BooleanParam());
+        initializer.put("inMemory", x -> launcher.agentFactory.inMemory = launcher.inMemoryLog = x, new BooleanParam(), 1);
         initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
@@ -275,22 +275,11 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
 
     @Override
     public void run() {
-        File peersLog = new File(this.peersLog);
-        Util.clearDirectory(peersLog);
-        peersLog.mkdir();
-
-        MeasurementFileDumper logger = new MeasurementFileDumper(this.peersLog + "/info");
         MeasurementLog log = new MeasurementLog();
         log.log(1, "title=" + title, 0);
         log.log(1, "label=" + label, 0);
-        if (launcher.agentFactory.measure != null) {
-            log.log(1, "measure=" + launcher.agentFactory.measure.getMetric(), 0);
-        } else {
-            log.log(1, "measure=" + launcher.agentFactory.fitnessFunction.getMetric(), 0);
-        }
-        logger.measurementEpochEnded(log, 2);
-
-        super.run();
+        
+        super.run(log);
     }
 
     @Override

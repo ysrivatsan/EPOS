@@ -10,10 +10,12 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import protopeer.Peer;
+import protopeer.SimulatedExperiment;
 import protopeer.measurement.LogReplayer;
 import protopeer.measurement.MeasurementFileDumper;
 import protopeer.measurement.MeasurementLog;
 import protopeer.util.quantities.Time;
+import util.Util;
 
 /**
  *
@@ -28,31 +30,54 @@ public abstract class ExperimentLauncher {
     //logging parameters
     String peersLog;
     boolean inMemoryLog = false;
-    private MeasurementLog log = new MeasurementLog();
+    private MeasurementLog log;
     
     public abstract IEPOSExperiment createExperiment(int num);
     
     public void run() {
+        run(null);
+    }
+    
+    void run(MeasurementLog infoLog) {
+        initLog();
+        storeInfoLog(infoLog);
+        
         for(int i=0;i<numExperiments;i++){
-            final IEPOSExperiment test = createExperiment(i);
-            test.initEPOS();
-            test.runSimulation(Time.inSeconds(runDuration));
+            final IEPOSExperiment experiment = createExperiment(i);
+            experiment.initEPOS();
+            experiment.runSimulation(Time.inSeconds(runDuration));
             
+            storePeerLogs(experiment);
+        }
+    }
+    
+    private void initLog() {
+        if(inMemoryLog) {
+            log = new MeasurementLog();
+        } else {
+            File logFolder = new File(peersLog);
+            Util.clearDirectory(logFolder);
+            logFolder.mkdir();
+        }
+    }
+    
+    private void storeInfoLog(MeasurementLog infoLog) {
+        if(infoLog != null) {
             if(inMemoryLog) {
-                Vector<Peer> peers = test.getPeers();
-                for(Peer peer : peers) {
-                    log.mergeWith(peer.getMeasurementLogger().getMeasurementLog());
-                }
+                log.mergeWith(infoLog);
+            } else {
+                MeasurementFileDumper logger = new MeasurementFileDumper(peersLog + "/info");
+                logger.measurementEpochEnded(infoLog, infoLog.getMaxEpochNumber()+1);
             }
         }
     }
     
-    void storeInfoLog(MeasurementLog log) {
+    private void storePeerLogs(SimulatedExperiment experiment) {
         if(inMemoryLog) {
-            this.log.mergeWith(log);
-        } else {
-            MeasurementFileDumper logger = new MeasurementFileDumper(peersLog + "/info");
-            logger.measurementEpochEnded(log, log.getMaxEpochNumber());
+            Vector<Peer> peers = experiment.getPeers();
+            for(Peer peer : peers) {
+                log.mergeWith(peer.getMeasurementLogger().getMeasurementLog());
+            }
         }
     }
     
