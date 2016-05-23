@@ -17,7 +17,9 @@
  */
 package agents.dataset;
 
+import agents.plan.Plan;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -32,13 +34,15 @@ public class NoiseDataset implements Dataset {
     private final double std;
     private int seed;
     private final int nonZero;
+    private final Comparator<Plan> order;
 
-    public NoiseDataset(int numPlans, int planSize, double mean, double std, int nonZero) {
+    public NoiseDataset(int numPlans, int planSize, double mean, double std, int nonZero, Comparator<Plan> order) {
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
         this.nonZero = nonZero;
+        this.order = order;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class NoiseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(new NoiseAgentDataset(i, numPlans, planSize, mean, std, nonZero, rand));
+            res.add(new NoiseAgentDataset(i, numPlans, planSize, mean, std, nonZero, rand, order));
         }
         return res;
     }

@@ -21,20 +21,18 @@ import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
 import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class NoiseAgentDataset implements AgentDataset {
+public class NoiseAgentDataset extends OrderedAgentDataset {
 
     private final int id;
     private final int numPlans;
@@ -43,10 +41,11 @@ public class NoiseAgentDataset implements AgentDataset {
     private final double std;
     private final long seed;
     private final int nonZero;
-    
+
     private final String config;
 
-    public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, int nonZero, Random r) {
+    public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, int nonZero, Random r, Comparator<Plan> order) {
+        super(order);
         this.id = id;
         this.numPlans = numPlans;
         this.planSize = planSize;
@@ -54,12 +53,12 @@ public class NoiseAgentDataset implements AgentDataset {
         this.std = std;
         this.seed = r.nextLong();
         this.nonZero = nonZero;
-        
+
         this.config = "mean" + mean + "_std" + std;
     }
 
     @Override
-    public List<Plan> getPlans(DateTime phase) {
+    List<Plan> getUnorderedPlans(DateTime phase) {
         Random r = new Random(seed);
 
         List<Plan> plans = new ArrayList<>();
@@ -92,29 +91,29 @@ public class NoiseAgentDataset implements AgentDataset {
     private Plan generatePlan(Random r) {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
-        
+
         //double nonZero = 1;
-        double setZero = planSize-nonZero;
+        double setZero = planSize - nonZero;
         Queue<Double> indices = new PriorityQueue<>();
-        
+
         for (int i = 0; i < planSize; i++) {
-            indices.add(r.nextInt(planSize*1000) + 0.5*i/(double)planSize);
+            indices.add(r.nextInt(planSize * 1000) + 0.5 * i / (double) planSize);
             plan.setValue(i, (r.nextGaussian() * std + mean));
         }
-        
-        if(mean == 0) {
+
+        if (mean == 0) {
             double std = Math.sqrt(plan.variance());
 
-            for(int i = 0; i < setZero; i++) {
+            for (int i = 0; i < setZero; i++) {
                 double idx = indices.poll();
                 idx = idx - Math.floor(idx);
-                int j = (int) Math.round(2*idx*planSize);
+                int j = (int) Math.round(2 * idx * planSize);
                 plan.setValue(j, 0);
             }
 
             plan.multiply(std / Math.sqrt(plan.variance()));
         }
-        
+
         return plan;
     }
 }

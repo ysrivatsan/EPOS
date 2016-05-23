@@ -17,16 +17,7 @@
  */
 package experiments.parameters;
 
-import agents.fitnessFunction.costFunction.CostFunction;
-import agents.fitnessFunction.costFunction.DirectionCostFunction;
-import agents.fitnessFunction.costFunction.EntropyCostFunction;
-import agents.fitnessFunction.costFunction.IndexCostFunction;
-import agents.fitnessFunction.costFunction.MatchEstimateCostFunction;
-import agents.fitnessFunction.costFunction.MaxCostFunction;
-import agents.fitnessFunction.costFunction.QuadraticCostFunction;
-import agents.fitnessFunction.costFunction.RelStdDevCostFunction;
-import agents.fitnessFunction.costFunction.StdDevCostFunction;
-import agents.fitnessFunction.costFunction.VarCostFunction;
+import agents.fitnessFunction.costFunction.*;
 
 /**
  *
@@ -44,6 +35,8 @@ public class CostFunctionParam extends MapParam<CostFunction> {
         map.put("entropy", new EntropyCostFunction());
         map.put("max", new MaxCostFunction());
         map.put("index", new IndexCostFunction());
+        map.put("mean", new MeanCostFunction());
+        map.put("discomfort", new DiscomfortCostFunction());
         map.put("", null);
     }
 }

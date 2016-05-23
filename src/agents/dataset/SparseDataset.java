@@ -17,7 +17,9 @@
  */
 package agents.dataset;
 
+import agents.plan.Plan;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -31,12 +33,14 @@ public class SparseDataset implements Dataset {
     private final double std;
     private final int generationSteps;
     private int seed;
+    private final Comparator<Plan> order;
 
-    public SparseDataset(int numPlans, int planSize, double std, int generationSteps) {
+    public SparseDataset(int numPlans, int planSize, double std, int generationSteps, Comparator<Plan> order) {
         this.numPlans = numPlans;
         this.planSize = planSize;
         this.std = std;
         this.generationSteps = generationSteps;
+        this.order = order;
     }
 
     @Override
@@ -44,7 +48,7 @@ public class SparseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(createAgentDataset(i, numPlans, planSize, std, generationSteps, rand));
+            res.add(new SparseAgentDataset(i, numPlans, planSize, std, generationSteps, rand, order));
         }
         return res;
     }
@@ -57,9 +61,5 @@ public class SparseDataset implements Dataset {
     @Override
     public void init(int num) {
         this.seed = num;
-    }
-    
-    AgentDataset createAgentDataset(int idx, int numPlans, int planSize, double std, int generationSteps, Random rand) {
-        return new SparseAgentDataset(idx, numPlans, planSize, std, generationSteps, rand);
     }
 }

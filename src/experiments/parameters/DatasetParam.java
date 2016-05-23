@@ -20,48 +20,57 @@ package experiments.parameters;
 import agents.dataset.Dataset;
 import agents.dataset.FileDataset;
 import agents.dataset.NoiseDataset;
-import agents.dataset.OrderedSparseDataset;
 import agents.dataset.SparseDataset;
+import agents.plan.Plan;
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  *
  * @author Peter
  */
 public class DatasetParam implements Param<Dataset> {
+    private OrderParam orderParam = new OrderParam();
 
     @Override
     public boolean isValid(String x) {
         try {
-            if (x.matches("^E[357]\\.[135]$")) {
-                return true;
+            String[] params = x.trim().split("_");
+            x = params[0];
+            
+            if(orderParam.isValid(params[params.length-1])) {
+                params = Arrays.copyOf(params, params.length-1);
+            }
+            
+            if (x.matches("^E[157]\\.[135]$")) {
+                return params.length == 1;
             } else if (x.startsWith("B")) {
-                int num = Integer.parseInt(x.substring(1));
-                return 0 <= num && num <= 22 && (num & 1) == 0;
+                if(params.length == 1) {
+                    int num = Integer.parseInt(params[0].substring(1));
+                    return 0 <= num && num <= 22 && (num & 1) == 0;
+                }
             } else if (x.startsWith("N")) {
-                String[] params = x.trim().split("_");
-                if (params.length == 5 || params.length == 6) {
+                if (params.length >= 5 || params.length <= 6) {
                     Integer.parseUnsignedInt(params[1]);
                     Integer.parseUnsignedInt(params[2]);
                     Double.parseDouble(params[3]);
                     double std = Double.parseDouble(params[4]);
-                    if(params.length == 6) {
+                    if(params.length >= 6) {
                         Integer.parseUnsignedInt(params[5]);
                     }
                     return std >= 0;
                 }
             } else if(x.startsWith("S") || x.startsWith("O")) {
-                String[] params = x.trim().split("_");
-                if (params.length == 4 || params.length == 5) {
+                if (params.length >= 4 || params.length <= 5) {
                     Integer.parseUnsignedInt(params[1]);
                     Integer.parseUnsignedInt(params[2]);
                     double std = Double.parseDouble(params[3]);
                     if(params.length == 5) {
                         int p = Integer.parseUnsignedInt(params[4]);
                         return std >= 0 && p > 0;
-                    } else {
-                        return std >= 0;
                     }
+                    return std >= 0;
                 }
             }
             return false;
@@ -72,38 +81,38 @@ public class DatasetParam implements Param<Dataset> {
 
     @Override
     public String validDescription() {
-        return "E<3, 5 or 7>.<1, 3 or 5>, B<even int from 0 to 22>, Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>]";
+        return "E<1, 5 or 7>.<1, 3 or 5>[_<order func>], B<even int from 0 to 22>[_<order func>], Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>][_<order func>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>][_<order func>]";
     }
 
     @Override
     public Dataset get(String x) {
+        String[] params = x.trim().split("_");
+        x = params[0];
+        
+        Comparator<Plan> order = null;
+        if(orderParam.isValid(params[params.length-1])) {
+            order = orderParam.get(params[params.length-1]);
+            params = Arrays.copyOf(params, params.length-1);
+        }
+        
         if (x.startsWith("E")) {
-            return new FileDataset("input-data" + File.separator + "Archive", x.charAt(x.length() - 3) + "." + x.charAt(x.length() - 1));
+            return new FileDataset("input-data" + File.separator + "Archive", x.charAt(x.length() - 3) + "." + x.charAt(x.length() - 1), order);
         } else if (x.startsWith("B")) {
             int num = Integer.parseInt(x.substring(1));
-            return new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips");
+            return new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips", order);
         } else if (x.startsWith("N")) {
-            String[] params = x.trim().split("_");
             int planSize = Integer.parseInt(params[2]);
-            if(params.length == 5) {
-                return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), planSize);
-            } else {
-                return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), Integer.parseInt(params[5]));
+            int nonZero = planSize;
+            if(params.length >= 6) {
+                planSize = Integer.parseInt(params[5]);
             }
+            return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), nonZero, order);
         } else if (x.startsWith("S")) {
-            String[] params = x.trim().split("_");
-            if(params.length == 4) {
-                return new SparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), 0);
-            } else {
-                return new SparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Integer.parseUnsignedInt(params[4]));
+            int generationSteps = 0;
+            if(params.length >= 5) {
+                generationSteps = Integer.parseUnsignedInt(params[4]);
             }
-        } else if (x.startsWith("O")) {
-            String[] params = x.trim().split("_");
-            if(params.length == 4) {
-                return new OrderedSparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), 0);
-            } else {
-                return new OrderedSparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), Integer.parseUnsignedInt(params[4]));
-            }
+            return new SparseDataset(Integer.parseInt(params[1]), Integer.parseInt(params[2]), Double.parseDouble(params[3]), generationSteps, order);
         }
         return null;
     }

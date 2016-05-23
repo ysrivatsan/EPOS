@@ -21,7 +21,7 @@ import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import org.joda.time.DateTime;
@@ -30,7 +30,7 @@ import org.joda.time.DateTime;
  *
  * @author Peter
  */
-public class SparseAgentDataset implements AgentDataset {
+public class SparseAgentDataset extends OrderedAgentDataset {
 
     private final int id;
     private final int numPlans;
@@ -41,7 +41,8 @@ public class SparseAgentDataset implements AgentDataset {
 
     private final String config;
 
-    public SparseAgentDataset(int id, int numPlans, int planSize, double std, int generationSteps, Random r) {
+    public SparseAgentDataset(int id, int numPlans, int planSize, double std, int generationSteps, Random r, Comparator<Plan> order) {
+        super(order);
         this.id = id;
         this.numPlans = numPlans;
         this.planSize = planSize;
@@ -53,7 +54,7 @@ public class SparseAgentDataset implements AgentDataset {
     }
 
     @Override
-    public List<Plan> getPlans(DateTime phase) {
+    List<Plan> getUnorderedPlans(DateTime phase) {
         Random r = new Random(seed);
 
         List<Plan> plans = new ArrayList<>();

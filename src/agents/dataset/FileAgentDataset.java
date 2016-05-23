@@ -17,12 +17,14 @@
  */
 package agents.dataset;
 
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
 import agents.plan.PossiblePlan;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -33,7 +35,7 @@ import org.joda.time.DateTime;
  *
  * @author Peter
  */
-public class FileAgentDataset implements AgentDataset {
+public class FileAgentDataset extends OrderedAgentDataset {
 
     private String config;
     private String id;
@@ -42,6 +44,11 @@ public class FileAgentDataset implements AgentDataset {
     private int planSize;
 
     public FileAgentDataset(String planLocation, String config, String id, String format, int planSize) {
+        this(planLocation, config, id, format, planSize, null);
+    }
+
+    public FileAgentDataset(String planLocation, String config, String id, String format, int planSize, Comparator<Plan> order) {
+        super(order);
         this.config = config;
         this.id = id;
         this.format = format;
@@ -50,7 +57,7 @@ public class FileAgentDataset implements AgentDataset {
     }
 
     @Override
-    public List<Plan> getPlans(DateTime phase) {
+    List<Plan> getUnorderedPlans(DateTime phase) {
         List<Plan> plans = new ArrayList<>();
 
         File planFile = new File(planDir + File.separator + phase.toString("yyyy-MM-dd") + format);
@@ -63,6 +70,7 @@ public class FileAgentDataset implements AgentDataset {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
         return plans;
     }
 

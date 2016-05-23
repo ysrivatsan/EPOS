@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2016 Evangelos Pournaras
  *
@@ -23,37 +24,21 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class StdDevCostFunction implements CostFunction {
+public class MeanCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        double cost = Math.sqrt(plan.variance());
-        if(costSignal != null) {
-            cost += costSignal.dot(plan);
-        }
-        return cost;
+        return plan.avg();
     }
 
     @Override
     public Plan calcGradient(Plan plan) {
-        Plan p = plan.clone();
-        p.subtract(p.avg());
-        double x = Math.sqrt(p.dot(p));
-        if(x == 0.0) {
-            p.set(0);
-        } else {
-            p.multiply(1/x * 1.0/Math.sqrt(plan.getNumberOfStates()-1));
-        }
-        return p;
-    }
-
-    @Override
-    public String toString() {
-        return "StdDevCost";
+        throw new IllegalArgumentException("gradient calculation not supported by the mean cost function");
     }
 
     @Override
     public String getMetric() {
-        return "std deviation";
+        return "mean";
     }
+    
 }

@@ -17,12 +17,14 @@
  */
 package agents.dataset;
 
+import agents.fitnessFunction.costFunction.CostFunction;
+import agents.plan.Plan;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,10 +40,16 @@ public class FileDataset implements Dataset {
     private final String format = ".plans";
     private final File[] agentDataDirs;
     private int planSize = -1;
-
+    private final Comparator<Plan> order;
+    
     public FileDataset(String location, String config) {
+        this(location, config, null);
+    }
+
+    public FileDataset(String location, String config, Comparator<Plan> order) {
         this.location = location;
         this.config = config;
+        this.order = order;
 
         File dir = new File(location + "/" + config);
         this.agentDataDirs = dir.listFiles((File pathname) -> pathname.isDirectory());
@@ -55,7 +63,7 @@ public class FileDataset implements Dataset {
     public List<AgentDataset> getAgentDataSources(int maxAgents) {
         List<AgentDataset> agents = new ArrayList<>();
         for (int i = 0; i < agentDataDirs.length && i < maxAgents; i++) {
-            agents.add(createAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize()));
+            agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize(), order));
         }
         return agents;
     }
@@ -79,9 +87,5 @@ public class FileDataset implements Dataset {
 
     @Override
     public void init(int num) {
-    }
-
-    AgentDataset createAgentDataset(String planLocation, String config, String id, String format, int planSize) {
-        return new FileAgentDataset(planLocation, config, id, format, planSize);
     }
 }

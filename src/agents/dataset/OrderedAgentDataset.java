@@ -15,45 +15,37 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction.costFunction;
+package agents.dataset;
 
+import agents.fitnessFunction.costFunction.CostFunction;
 import agents.plan.Plan;
+import java.util.Comparator;
+import java.util.List;
+import org.joda.time.DateTime;
 
 /**
  *
  * @author Peter
  */
-public class StdDevCostFunction implements CostFunction {
-
+public abstract class OrderedAgentDataset implements AgentDataset {
+    private final Comparator<Plan> order;
+    
+    public OrderedAgentDataset(Comparator<Plan> order) {
+        this.order = order;
+    }
+    
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        double cost = Math.sqrt(plan.variance());
-        if(costSignal != null) {
-            cost += costSignal.dot(plan);
+    public List<Plan> getPlans(DateTime phase) {
+        List<Plan> plans = getUnorderedPlans(phase);
+        
+        if(order != null) {
+            plans.sort(order);
         }
-        return cost;
+        
+        return plans;
     }
-
-    @Override
-    public Plan calcGradient(Plan plan) {
-        Plan p = plan.clone();
-        p.subtract(p.avg());
-        double x = Math.sqrt(p.dot(p));
-        if(x == 0.0) {
-            p.set(0);
-        } else {
-            p.multiply(1/x * 1.0/Math.sqrt(plan.getNumberOfStates()-1));
-        }
-        return p;
-    }
-
-    @Override
-    public String toString() {
-        return "StdDevCost";
-    }
-
-    @Override
-    public String getMetric() {
-        return "std deviation";
-    }
+    
+    abstract List<Plan> getUnorderedPlans(DateTime phase);
+    
+    
 }
