@@ -5,6 +5,7 @@
 package experiments.output;
 
 import agents.Agent;
+import agents.TreeNode;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
 import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
@@ -58,7 +59,7 @@ public class IEPOSVisualizer {
     private Forest<Node, Integer> graph;
     private int numIterations;
     private int curIteration;
-    private Map<Agent, float[]> values;
+    private Map<TreeNode, float[]> values;
 
     public static IEPOSVisualizer create(MeasurementLog log) {
         IEPOSVisualizer visualizer = new IEPOSVisualizer();
@@ -68,7 +69,7 @@ public class IEPOSVisualizer {
         visualizer.numIterations = log.getMaxEpochNumber();;
 
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
-        Map<Agent, float[]> values = new HashMap<>();
+        Map<TreeNode, float[]> values = new HashMap<>();
         
         String measureTag = null;
         for(Object tagObj : log.getTagsOfType(String.class)) {
@@ -83,14 +84,13 @@ public class IEPOSVisualizer {
             throw new IllegalArgumentException("no local measurements available");
         }
 
-        for (Object agentObj : log.getTagsOfType(Agent.class)) {
-            Agent agent = (Agent) agentObj;
-            Peer peer = agent.getPeer();
+        for (Object agentObj : log.getTagsOfType(TreeNode.class)) {
+            TreeNode agent = (TreeNode) agentObj;
             
             Node node = new Node();
             node.agent = agent;
 
-            idx2Node.put(peer.getNetworkAddress(), node);
+            idx2Node.put(agent.id.getNetworkAddress(), node);
             graph.addVertex(node);
 
             float[] agentValues = new float[visualizer.numIterations];
@@ -108,7 +108,7 @@ public class IEPOSVisualizer {
 
         int edge = 0;
         for (Node node : graph.getVertices()) {
-            for (Finger f : node.agent.getChildren()) {
+            for (Finger f : node.agent.children) {
                 Node child = idx2Node.get(f.getNetworkAddress());
                 graph.addEdge(edge++, node, child);
             }
@@ -254,7 +254,7 @@ public class IEPOSVisualizer {
 
     private static class Node {
 
-        public Agent agent;
+        public TreeNode agent;
         public float val;
 
         @Override

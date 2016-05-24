@@ -18,8 +18,10 @@
 package experiments.output;
 
 import agents.Agent;
+import agents.TreeNode;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +63,7 @@ public abstract class IEPOSEvaluator {
                 }
             }
             
-            List<Agent> agents = log.getTagsOfType(Agent.class).stream().map(x -> (Agent) x).collect(Collectors.toList());
+            Set<Object> agents = log.getTagsOfType(TreeNode.class);
             
             configMeasurement.localMeasurements = getMeasurements(log, localTag, agents);
             configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
@@ -74,7 +76,7 @@ public abstract class IEPOSEvaluator {
     
     abstract void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out);
     
-    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, List<Agent> agents) {
+    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, Iterable<Object> agents) {
         if(tag == null) {
             return null;
         }
@@ -82,10 +84,10 @@ public abstract class IEPOSEvaluator {
         List<Aggregate> list = new ArrayList<>();
         for(int i = 0; true; i++) {
             Aggregate aggregate = null;
-            for(Agent agent : agents) {
+            for(Object agent : agents) {
                 Aggregate value = log.getAggregate(i, tag, agent);
                 if(value.getNumValues() == 0) {
-                    break;
+                    continue;
                 }
                 if(aggregate == null) {
                     aggregate = value;
