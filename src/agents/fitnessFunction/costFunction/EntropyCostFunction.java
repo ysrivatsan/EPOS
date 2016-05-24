@@ -23,35 +23,21 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class EntropyCostFunction implements CostFunction {
+public class EntropyCostFunction extends IterativeCostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        /*Plan p = plan.clone();
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+        Plan p = plan.clone();
         p.add(costSignal);
-        return -p.entropy();/**/
         
-        double sum = plan.sum();
-        double entropy = 0.0;
-        if (sum == 0) {
-            return 0;
+        if(iterationCost == null) {
+            return -p.entropy();
         }
-        for(int i = 0; i < plan.getNumberOfStates(); i++) {
-            double state = plan.getValue(i);
-            double p = state / sum;
-            if (p <= 0.0) {
-                entropy += 0.0;
-            } else {
-                entropy += p * Math.log(p);
-            }
-        }
-        return entropy + costSignal.dot(plan);/**/
+        return -p.entropy() + iterationCost.dot(p);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
-        /*return plan;/**/
-        
+    public Plan calcGradient(Plan plan, Plan costSignal) {
         double sum = plan.sum();
         
         Plan grad = plan.clone();

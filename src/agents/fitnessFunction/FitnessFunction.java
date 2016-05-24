@@ -39,23 +39,14 @@ public abstract class FitnessFunction implements CostFunction {
         return getRobustnessMeasure();
     }
 
-    @Override
-    public Plan calcGradient(Plan plan) {
-        return null;
-    }
-
     public abstract double getRobustness(Plan plan, Plan costSignal, AgentPlans historic);
     
     public String getRobustnessMeasure() {
         return "score";
     }
 
-    public int select(Agent agent, List<Plan> plans, Plan costSignal) {
-        return 0;
-    }
-
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal) {
-        return select(agent, plans, costSignal);
+        return 0;
     }
 
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic) {

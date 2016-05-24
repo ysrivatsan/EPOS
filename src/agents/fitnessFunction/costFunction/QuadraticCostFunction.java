@@ -17,7 +17,6 @@
  */
 package agents.fitnessFunction.costFunction;
 
-import agents.fitnessFunction.IterMinCostGmA;
 import agents.plan.Plan;
 import java.util.Random;
 
@@ -25,31 +24,32 @@ import java.util.Random;
  *
  * @author Peter
  */
-public class QuadraticCostFunction implements CostFunction {
+public class QuadraticCostFunction extends IterativeCostFunction {
+
     private Random rand;
-    
+
     public QuadraticCostFunction() {
         this(new Random());
     }
-    
+
     public QuadraticCostFunction(long seed) {
         this(new Random(seed));
     }
-    
+
     private QuadraticCostFunction(Random rand) {
         this.rand = rand;
     }
-    
+
     private double[][] A;
     private double[] B;
-    
+
     private void prepAB(int n) {
-        if(A == null || A.length != n) {
+        if (A == null || A.length != n) {
             A = new double[n][n];
             B = new double[n];
-            
-            for(int i=0; i<n; i++) {
-                for(int j=0; j<n; j++) {
+
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
                     //A[i][j] = -1/n; // min var
                     //A[i][j] = (((i+j)%2)==0?1:-1)*rand.nextDouble(); // 1'*A*1 == 0
                     A[i][j] = rand.nextGaussian();
@@ -57,7 +57,7 @@ public class QuadraticCostFunction implements CostFunction {
                 //A[i][i] += 1; // min var
                 B[i] = rand.nextDouble();
             }
-            
+
             /*double[][] AA = new double[n][n];
             for(int i=0; i<n; i++) {
                 for(int j=0; j<n; j++) {
@@ -67,9 +67,8 @@ public class QuadraticCostFunction implements CostFunction {
                 }
             }
             A = AA; // convexify
-            */
-            
-            /*
+             */
+ /*
             System.out.println("A = [");
             for(int i=0; i<n; i++) {
                 for(int j=0; j<n; j++) {
@@ -82,31 +81,37 @@ public class QuadraticCostFunction implements CostFunction {
     }
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        int n = plan.getNumberOfStates();
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+        Plan p = plan.clone();
+        p.add(costSignal);
+
+        int n = p.getNumberOfStates();
         prepAB(n);
-        
+
         double v = 0;
-        for(int i=0; i<n; i++) {
-            for(int j=0; j<n; j++) {
-                v += A[i][j]*plan.getValue(i)*plan.getValue(j);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                v += A[i][j] * p.getValue(i) * p.getValue(j);
             }
-            v += B[i]*plan.getValue(i);
+            v += B[i] * p.getValue(i);
         }
-        
-        return v + costSignal.dot(plan);
+
+        if (iterationCost == null) {
+            return v;
+        }
+        return v + iterationCost.dot(p);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
+    public Plan calcGradient(Plan plan, Plan costSignal) {
         int n = plan.getNumberOfStates();
         prepAB(n);
-        
+
         Plan grad = plan.clone();
-        for(int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             double x = B[i];
-            for(int j=0; j<n; j++) {
-                x += (A[i][j]+A[j][i])*plan.getValue(j);
+            for (int j = 0; j < n; j++) {
+                x += (A[i][j] + A[j][i]) * plan.getValue(j);
             }
             grad.setValue(i, x);
         }
@@ -122,5 +127,5 @@ public class QuadraticCostFunction implements CostFunction {
     public String getMetric() {
         return "cost";
     }
-    
+
 }

@@ -49,24 +49,24 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
         if (prevProbs == null) {
-            prevProbs = new double[combinationalPlans.size()];
+            prevProbs = new double[plans.size()];
             Arrays.fill(prevProbs, 1);
         }
 
         double cumProb = 0;
-        double[] probs = new double[combinationalPlans.size()];
-        for (int i = 0; i < combinationalPlans.size(); i++) {
-            Plan combinationalPlan = combinationalPlans.get(i);
+        double[] probs = new double[plans.size()];
+        for (int i = 0; i < plans.size(); i++) {
+            Plan combinationalPlan = plans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(combinationalPlan);
 
             Plan target = new GlobalPlan(agent);
-            target.set(pattern);
+            target.set(costSignal);
             target.subtract(target.min());
             
             //target.pow(2);
@@ -97,16 +97,16 @@ public class IterProbGmA extends IterativeFitnessFunction {
             cumProb += probs[i];
         }
         
-        for(int i=0; i<combinationalPlans.size(); i++) {
+        for(int i=0; i<plans.size(); i++) {
             probs[i] /= cumProb;
             if(Double.isNaN(probs[i])) {
-                probs[i] = 1.0/combinationalPlans.size();
+                probs[i] = 1.0/plans.size();
             }
         }
 
         double rand = Math.random();
         cumProb = 0;
-        for (int i = 0; i < combinationalPlans.size(); i++) {
+        for (int i = 0; i < plans.size(); i++) {
             cumProb += probs[i];
             if (rand <= cumProb) {
                 selected = i;
@@ -120,7 +120,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(0);
 
@@ -133,7 +133,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
         x.add(childAggregatePlan);
         incentive.add(x);
 
-        return select(agent, childAggregatePlan, combinationalPlans, incentive, historic);
+        return select(agent, childAggregatePlan, combinationalPlans, incentive);
     }
 
     @Override

@@ -23,10 +23,10 @@ import agents.plan.Plan;
  * 
  * @author Peter
  */
-public class MatchEstimateCostFunction implements CostFunction {
-
+public class MatchEstimateCostFunction extends IterativeCostFunction {
+    
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
         Plan cPlan = plan.clone();
         cPlan.subtract(cPlan.avg());
         
@@ -42,11 +42,16 @@ public class MatchEstimateCostFunction implements CostFunction {
         
         // cost is the difference of the plan and the target signal
         cPlan.subtract(cCost);
-        return cPlan.norm();
+        
+        
+        if(iterationCost == null) {
+            return cPlan.norm();
+        }
+        return cPlan.norm() + iterationCost.dot(cPlan);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
+    public Plan calcGradient(Plan plan, Plan costSignal) {
         return plan;
     }
 

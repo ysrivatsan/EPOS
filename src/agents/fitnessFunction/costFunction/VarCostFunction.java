@@ -23,23 +23,25 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class VarCostFunction implements CostFunction {
+public class VarCostFunction extends IterativeCostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        /*Plan p = plan.clone();
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+        Plan p = plan.clone();
         p.add(costSignal);
-        p.subtract(p.avg());
-        return p.variance();/**/
         
-        return plan.variance() + costSignal.dot(plan);
+        if(iterationCost == null) {
+            return p.variance();
+        }
+        return p.variance() + iterationCost.dot(p);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
+    public Plan calcGradient(Plan plan, Plan costSignal) {
         Plan p = plan.clone();
+        p.add(costSignal);
         p.subtract(p.avg());
-        p.multiply(2.0/(plan.getNumberOfStates()-1));
+        p.multiply(2.0/(p.getNumberOfStates()-1));
         return p;
     }
 

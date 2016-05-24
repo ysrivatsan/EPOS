@@ -23,6 +23,7 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import java.util.List;
 import java.util.Random;
 
@@ -34,10 +35,10 @@ import java.util.Random;
  */
 public abstract class IterMinCost extends IterativeFitnessFunction {
 
-    CostFunction costFunc;
+    IterativeCostFunction costFunc;
     public Double rampUpBias;
 
-    public IterMinCost(CostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
+    public IterMinCost(IterativeCostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
         super(combinatorG, combinatorA, combinatorS, combinatorSC);
         this.costFunc = costFunc;
     }
@@ -47,17 +48,12 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         return costFunc.calcCost(plan, costSignal, 0, 0);
     }
 
+    @Override
     public String getRobustnessMeasure() {
         return costFunc.getMetric();
     }
 
-    @Override
-    public Plan calcGradient(Plan plan) {
-        return costFunc.calcGradient(plan);
-    }
-
-    @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, Plan iterativeCost) {
         double minCost = Double.POSITIVE_INFINITY;
         int selected = -1;
         int numOpt = 0;
@@ -67,14 +63,14 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             random = new Random(agent.getPeer().getIndexNumber());
         }
 
-        for (int i = 0; i < combinationalPlans.size(); i++) {
-            Plan combinationalPlan = combinationalPlans.get(i);
+        for (int i = 0; i < plans.size(); i++) {
+            Plan combinationalPlan = plans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
 
-            testAggregatePlan.add(aggregatePlan);
+            testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = costFunc.calcCost(testAggregatePlan, pattern, i, combinationalPlans.size());
+            double cost = costFunc.calcCost(testAggregatePlan, costSignal, iterativeCost);
             if (rampUpBias != null && !agent.isRoot()) {
                 cost *= (1 + rampUpBias * i/(double)combinationalPlan.getNumberOfStates());
             }
@@ -94,6 +90,6 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
-    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
+    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
 
 }

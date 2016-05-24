@@ -23,27 +23,13 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class MaxCostFunction implements CostFunction {
+public abstract class IterativeCostFunction implements CostFunction {
+    
+    public abstract double calcCost(Plan plan, Plan costSignal, Plan iterationCost);
+    public abstract Plan calcGradient(Plan plan, Plan costSignal);
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        Plan p = plan.clone();
-        p.add(costSignal);
-        return p.max();
-    }
-
-    @Override
-    public Plan calcGradient(Plan plan) {
-        return plan;
-    }
-
-    @Override
-    public String toString() {
-        return "MaxCost";
-    }
-
-    @Override
-    public String getMetric() {
-        return "max";
+    public final double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
+        return calcCost(plan, costSignal, null);
     }
 }

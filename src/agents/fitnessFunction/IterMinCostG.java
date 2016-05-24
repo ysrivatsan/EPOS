@@ -22,7 +22,7 @@ import agents.fitnessFunction.iterative.Factor;
 import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
-import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.plan.AggregatePlan;
 import java.util.List;
@@ -35,20 +35,20 @@ public class IterMinCostG extends IterMinCost {
     private final Factor factor;
     private Plan totalGGradient;
     
-    public IterMinCostG(CostFunction costFunc, Factor factor, PlanCombinator combinator) {
+    public IterMinCostG(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
-        super.updatePrevious(previous, current, iteration);
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+        super.updatePrevious(previous, current, costSignal, iteration);
         
-        totalGGradient = combinatorG.combine(totalGGradient, calcGradient(current.globalPlan), iteration);
+        totalGGradient = combinatorG.combine(totalGGradient, costFunc.calcGradient(current.globalPlan, costSignal), iteration);
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan modifiedCostSignal = new AggregatePlan(agent);
         if(!previous.isEmpty()) {
             modifiedCostSignal.set(totalGGradient);

@@ -40,7 +40,7 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
         this.combinatorSC = combinatorSC;
     }
     
-    public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
         if(previous == null) {
             return;
         }
@@ -49,13 +49,13 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
         previous.selectedPlan = combinatorS.combine(previous.selectedPlan, current.selectedPlan, iteration);
         previous.selectedCombinationalPlan = combinatorSC.combine(previous.selectedCombinationalPlan, current.selectedCombinationalPlan, iteration);
     }
-
+    
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
-        return select(agent, aggregate, plans, costSignal, historic);
+        return select(agent, aggregate, plans, costSignal);
     }
-
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        return select(agent, aggregate, plans, costSignal, historic, previous);
+    
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        return select(agent, aggregate, plans, costSignal, null, previous);
     }
     
     @Override

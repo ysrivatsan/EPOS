@@ -23,18 +23,21 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class RelStdDevCostFunction implements CostFunction {
-
+public class RelStdDevCostFunction extends IterativeCostFunction {
+    
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        return plan.relativeStdDeviation() + costSignal.dot(plan);/**/
-        /*Plan p = plan.clone();
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+        Plan p = plan.clone();
         p.add(costSignal);
-        return p.relativeStdDeviation();/**/
+        
+        if(iterationCost == null) {
+            return p.relativeStdDeviation();
+        }
+        return p.relativeStdDeviation() + iterationCost.dot(p);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
+    public Plan calcGradient(Plan plan, Plan costSignal) {
         /*return plan; /**/
         int n = plan.getNumberOfStates();
         double mean = plan.avg();

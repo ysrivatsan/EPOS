@@ -23,20 +23,19 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class DirectionCostFunction implements CostFunction {
+public class DirectionCostFunction extends IterativeCostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        return plan.dot(costSignal);
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+        if(iterationCost == null) {
+            return costSignal.dot(plan);
+        }
+        return costSignal.dot(plan) + iterationCost.dot(plan);
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
-        //return plan;
-        
-        Plan c = plan.clone();
-        c.multiply(plan.sum()<=0?1:-1);
-        return c;
+    public Plan calcGradient(Plan plan, Plan costSignal) {
+        return costSignal;
     }
 
     @Override

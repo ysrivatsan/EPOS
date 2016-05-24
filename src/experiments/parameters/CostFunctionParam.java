@@ -26,14 +26,7 @@ import agents.fitnessFunction.costFunction.*;
 public class CostFunctionParam extends MapParam<CostFunction> {
 
     public CostFunctionParam() {
-        map.put("std", new StdDevCostFunction());
-        map.put("var", new VarCostFunction());
-        map.put("dot", new DirectionCostFunction());
-        map.put("match", new MatchEstimateCostFunction());
-        map.put("rand", new QuadraticCostFunction(1));
-        map.put("relStd", new RelStdDevCostFunction());
-        map.put("entropy", new EntropyCostFunction());
-        map.put("max", new MaxCostFunction());
+        super(new IterativeCostFunctionParam());
         map.put("index", new IndexCostFunction());
         map.put("mean", new MeanCostFunction());
         map.put("discomfort", new DiscomfortCostFunction());

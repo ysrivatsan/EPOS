@@ -43,15 +43,15 @@ public class IterLocalSearch extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
         double minVariance = Double.MAX_VALUE;
         int selected = -1;
         int numOpt = 0;
 
-        for (int i = 0; i < combinationalPlans.size(); i++) {
-            Plan combinationalPlan = combinationalPlans.get(i);
+        for (int i = 0; i < plans.size(); i++) {
+            Plan combinationalPlan = plans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
-            testAggregatePlan.add(aggregatePlan);
+            testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
 
             double variance = testAggregatePlan.variance();
@@ -70,7 +70,7 @@ public class IterLocalSearch extends IterativeFitnessFunction {
         return selected;
     }
 
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous) {
         if(previous.globalPlan == null) {
             return select(agent, childAggregatePlan, combinationalPlans, pattern);
         } else {

@@ -17,36 +17,22 @@
  */
 package experiments.parameters;
 
-import java.util.HashMap;
-import java.util.Map;
+import agents.fitnessFunction.costFunction.*;
 
 /**
  *
  * @author Peter
  */
-public class MapParam<T> implements Param<T> {
+public class IterativeCostFunctionParam extends MapParam<CostFunction> {
 
-    final Map<String, T> map = new HashMap<>();
-    
-    public MapParam() {
-    }
-    
-    public MapParam(MapParam<? extends T> subParam) {
-        map.putAll(subParam.map);
-    }
-
-    @Override
-    public boolean isValid(String param) {
-        return map.containsKey(param);
-    }
-
-    @Override
-    public String validDescription() {
-        return map.keySet().toString();
-    }
-
-    @Override
-    public T get(String param) {
-        return map.get(param);
+    public IterativeCostFunctionParam() {
+        map.put("std", new StdDevCostFunction());
+        map.put("var", new VarCostFunction());
+        map.put("dot", new DirectionCostFunction());
+        map.put("match", new MatchEstimateCostFunction());
+        map.put("rand", new QuadraticCostFunction(1));
+        map.put("relStd", new RelStdDevCostFunction());
+        map.put("entropy", new EntropyCostFunction());
+        map.put("", null);
     }
 }

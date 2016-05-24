@@ -99,7 +99,7 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(1);
         
@@ -111,7 +111,7 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
         }
         x.add(childAggregatePlan);
         
-        return select(agent, x, combinationalPlans, incentive, historic);
+        return select(agent, x, combinationalPlans, incentive);
     }
 
     @Override

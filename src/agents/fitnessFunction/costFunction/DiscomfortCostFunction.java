@@ -31,11 +31,6 @@ public class DiscomfortCostFunction implements CostFunction {
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
-        throw new IllegalArgumentException("gradient for discomfort cost cannot be computed");
-    }
-
-    @Override
     public String getMetric() {
         return "discomfort";
     }

@@ -32,11 +32,6 @@ public class MeanCostFunction implements CostFunction {
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
-        throw new IllegalArgumentException("gradient calculation not supported by the mean cost function");
-    }
-
-    @Override
     public String getMetric() {
         return "mean";
     }

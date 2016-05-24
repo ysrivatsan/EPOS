@@ -184,7 +184,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
                     plans.remove(idx);
                 }*/
             }
-            int selectedCombination = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            int selectedCombination = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
             this.selectedCombination = subCombinationalSelections.get(selectedCombination);
             
             current.selectedCombinationalPlan = subSelectablePlans.get(selectedCombination);
@@ -201,7 +201,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
     @Override
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
-        int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = possiblePlans.get(selected);
         measureLocal(current.selectedPlan, costSignal, selected, possiblePlans.size());
         current.globalPlan.set(current.aggregatePlan);
@@ -221,7 +221,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.globalPlan+";");
             
             Plan c = costSignal.clone();
-            if(prevAggregate.globalPlan != null) {
+            if(iteration > 0) {
                 c.multiply(1+iteration);
                 c.add(prevAggregate.globalPlan);
             }
@@ -262,9 +262,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         layer = parent.hops;
         avgNumChildren = parent.sumChildren/Math.max(0.1,(double)parent.hops);
 
-        fitnessFunction.updatePrevious(prevAggregate, current, iteration);
+        fitnessFunction.updatePrevious(prevAggregate, current, costSignal, iteration);
         if(isRoot()) {
-            fitnessFunctionRoot.updatePrevious(null, current, iteration);
+            fitnessFunctionRoot.updatePrevious(null, current, costSignal, iteration);
         }
         previous = current;
         

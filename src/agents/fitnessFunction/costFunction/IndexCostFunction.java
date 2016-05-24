@@ -31,11 +31,6 @@ public class IndexCostFunction implements CostFunction {
     }
 
     @Override
-    public Plan calcGradient(Plan plan) {
-        throw new IllegalArgumentException("gradient calculation not supported for this cost function");
-    }
-
-    @Override
     public String getMetric() {
         return "plan index";
     }

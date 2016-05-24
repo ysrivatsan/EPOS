@@ -19,6 +19,7 @@ package experiments.parameters;
 
 import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.iterative.Factor;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import experiments.ConfigurableExperiment;
@@ -67,7 +68,7 @@ public class FitnessFunctionParam implements Param<IterativeFitnessFunction> {
             }
 
             Map<Class, Param<?>> params = new HashMap<>();
-            params.put(CostFunction.class, new CostFunctionParam());
+            params.put(IterativeCostFunction.class, new IterativeCostFunctionParam());
             params.put(Factor.class, new FactorParam());
             params.put(PlanCombinator.class, new PlanCombinatorParam());
 

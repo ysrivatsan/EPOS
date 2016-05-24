@@ -167,7 +167,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
                 subSelectablePlans.add(plans.get(idx));
             }*/
         }
-        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, historic, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        int selectedPlan = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedPlan = subSelectablePlans.get(selectedPlan);
         measureLocal(current.selectedPlan, costSignal, selectedPlan, possiblePlans.size());
         
@@ -199,7 +199,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.globalPlan+";");
             
             Plan c = costSignal.clone();
-            if(prevAggregate.globalPlan != null) {
+            if(iteration > 0) {
                 c.multiply(1+iteration);
                 c.add(prevAggregate.globalPlan);
             }
@@ -236,7 +236,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         measureGlobal(current.globalPlan, costSignal);
-        fitnessFunction.updatePrevious(prevAggregate, current, iteration);
+        fitnessFunction.updatePrevious(prevAggregate, current, costSignal, iteration);
         previous = current;
 
         List<IGreedyDown> msgs = new ArrayList<>();

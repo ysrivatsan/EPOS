@@ -23,7 +23,7 @@ import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
-import agents.fitnessFunction.costFunction.CostFunction;
+import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.iterative.NoOpCombinator;
 import java.util.List;
 
@@ -36,38 +36,39 @@ public class IterMinCostGmA extends IterMinCost {
     private final Factor factor;
     private Plan totalGmAGradient;
     
-    public IterMinCostGmA(CostFunction costFunc, Factor factor, PlanCombinator combinator) {
+    public IterMinCostGmA(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, int iteration) {
-        super.updatePrevious(previous, current, iteration);
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+        super.updatePrevious(previous, current, costSignal, iteration);
         
         Plan p = current.globalPlan.clone();
         p.subtract(current.aggregatePlan);
-        totalGmAGradient = combinatorG.combine(totalGmAGradient, calcGradient(p), iteration);
+        totalGmAGradient = combinatorG.combine(totalGmAGradient, costFunc.calcGradient(p, costSignal), iteration);
     }
     
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans historic, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        Plan modifiedCostSignal = new AggregatePlan(agent);
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        Plan iterativeCost = new AggregatePlan(agent);
+        
         if(!previous.isEmpty()) {
-            modifiedCostSignal.set(totalGmAGradient);
-            double f = factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
-            modifiedCostSignal.multiply(f);
+            iterativeCost.set(totalGmAGradient);
+            double f = factor.calcFactor(iterativeCost, aggregate, plans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
+            iterativeCost.multiply(f);
             
-            Plan c = costSignal.clone();
+            /*Plan c = costSignal.clone();
             if(numNodesSubtree < numNodes) {
                 c.multiply(numNodesSubtree/(double)numNodes + iteration*f*(numNodes-numNodesSubtree)/(double)numNodes);
             }
-            modifiedCostSignal.add(c);
+            modifiedCostSignal.add(c);*/
         } else {
-            modifiedCostSignal.set(costSignal);
+            //modifiedCostSignal.set(costSignal);
         }
         
-        return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);
+        return select(agent, aggregate, plans, costSignal, iterativeCost);
     }
 
     @Override
