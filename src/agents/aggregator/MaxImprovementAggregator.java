@@ -30,16 +30,8 @@ import java.util.List;
  * @author Peter
  */
 public class MaxImprovementAggregator extends Aggregator {
-
-    private List<Plan> prevAggregates;
-
     @Override
-    public void initPhase() {
-        prevAggregates = new ArrayList<>();
-    }
-
-    @Override
-    List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, Plan global, Plan costSignal, FitnessFunction fitnessFunction) {
+    List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, List<Plan> prevAggregates, Plan global, Plan costSignal, FitnessFunction fitnessFunction) {
         try {
             List<Boolean> selected;
 
@@ -80,18 +72,11 @@ public class MaxImprovementAggregator extends Aggregator {
 
                 int selectedCombination = fitnessFunction.select(agent, new AggregatePlan(agent), combPlans, costSignal, null);
                 selected = combSelections.get(selectedCombination);
-
-                for (int i = 0; i < childAggregates.size(); i++) {
-                    if (selected.get(i)) {
-                        prevAggregates.set(i, childAggregates.get(i));
-                    }
-                }
             } else {
                 selected = new ArrayList<>();
                 for (Plan p : childAggregates) {
                     selected.add(true);
                 }
-                prevAggregates.addAll(childAggregates);
             }
 
             return selected;

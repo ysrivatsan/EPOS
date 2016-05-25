@@ -21,6 +21,7 @@ import agents.Agent;
 import agents.fitnessFunction.FitnessFunction;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,22 +33,32 @@ import java.util.logging.Logger;
 public abstract class Aggregator implements Cloneable {
 
     private List<Boolean> selected;
+    private List<Plan> prevAggregates;
 
-    public abstract void initPhase();
+    public void initPhase() {
+        prevAggregates = new ArrayList<>();
+    }
 
     public final List<Boolean> getSelected() {
         return selected;
     }
 
-    abstract List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction);
+    abstract List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, List<Plan> prevAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction);
 
     public final Plan calcAggregate(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction) {
-        selected = calcSelected(agent, childAggregates, globalPlan, costSignal, fitnessFunction);
+        selected = calcSelected(agent, childAggregates, prevAggregates, globalPlan, costSignal, fitnessFunction);
+        
+        if(prevAggregates.isEmpty()) {
+            prevAggregates.addAll(childAggregates);
+        }
 
         Plan plan = new AggregatePlan(agent);
         for (int i = 0; i < selected.size(); i++) {
             if (selected.get(i)) {
                 plan.add(childAggregates.get(i));
+                prevAggregates.set(i, childAggregates.get(i));
+            } else {
+                plan.add(prevAggregates.get(i));
             }
         }
         return plan;

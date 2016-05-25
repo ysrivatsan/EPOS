@@ -30,11 +30,7 @@ import java.util.List;
 public class AllAggregator extends Aggregator {
 
     @Override
-    public void initPhase() {
-    }
-
-    @Override
-     List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction) {
+     List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, List<Plan> prevAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction) {
         List<Boolean> selected = new ArrayList<>();
         childAggregates.stream().forEach(x -> selected.add(true));
         return selected;
