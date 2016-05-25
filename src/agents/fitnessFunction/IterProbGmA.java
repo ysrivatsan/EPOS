@@ -22,7 +22,6 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.iterative.Factor;
-import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.plan.GlobalPlan;
 import java.util.Arrays;
@@ -42,7 +41,6 @@ public class IterProbGmA extends IterativeFitnessFunction {
     private Plan totalGmAPlan;
 
     public IterProbGmA(Factor factor, PlanCombinator combinator) {
-        super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
         this.combinator = combinator;
     }
@@ -53,7 +51,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
     
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmAPlan = combinator.combine(totalGmAPlan, p, iteration);
@@ -147,7 +145,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
 
     @Override
     public String toString() {
-        return "IterProbGmA a+" + combinatorG + "(g-a)*" + factor;
+        return "IterProbGmA a+" + combinator + "(g-a)*" + factor;
     }
 
     @Override

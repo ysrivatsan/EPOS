@@ -20,54 +20,52 @@ package agents.fitnessFunction;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.fitnessFunction.iterative.Factor;
 import agents.Agent;
-import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
-import agents.fitnessFunction.iterative.NoOpCombinator;
 import java.util.List;
 
 /**
- * minimize variance (submodular/convex compared to std deviation)
- * weight B according to optimum without aggregate and equal Bi
+ * minimize variance (submodular/convex compared to std deviation) weight B
+ * according to optimum without aggregate and equal Bi
+ *
  * @author Peter
  */
 public class IterMinCostGmA extends IterMinCost {
+
     private final Factor factor;
-    
+
     private final PlanCombinator combinator;
     private Plan totalGmAGradient;
-    
+
     public IterMinCostGmA(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
-        super(costFunc, combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+        super(costFunc);
         this.factor = factor;
         this.combinator = combinator;
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
-        super.updatePrevious(previous, current, costSignal, iteration);
-        
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmAGradient = combinator.combine(totalGmAGradient, costFunc.calcGradient(p, costSignal), iteration);
     }
-    
+
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan iterativeCost = null;
-        
-        if(iteration > 0) {
+
+        if (iteration > 0) {
             iterativeCost = totalGmAGradient.clone();
             double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
         }
-        
+
         return select(agent, aggregate, plans, costSignal, iterativeCost);
     }
 
     @Override
     public String toString() {
-        return "IterMinCostGmA "+costFunc.toString()+" p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterMinCostGmA " + costFunc.toString() + " p+a+" + combinator + "(g-a)*" + factor;
     }
 }

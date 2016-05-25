@@ -48,6 +48,10 @@ import protopeer.measurement.MeasurementLog;
 import tree.BalanceType;
 import util.Util;
 import agents.dataset.Dataset;
+import agents.log.AgentLogger;
+import agents.log.DetailLogger;
+import agents.log.MovieLogger;
+import agents.log.ProgressIndicator;
 import experiments.parameters.AgentFactoryParam;
 import experiments.parameters.BooleanParam;
 import experiments.parameters.CostSignalParam;
@@ -144,17 +148,19 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
         initializer.put("showGraph", x -> showGraph = x, new BooleanParam());
         initializer.put("inMemory", x -> launcher.agentFactory.inMemory = launcher.inMemoryLog = x, new BooleanParam(), 1);
-        initializer.put("outputMovie", x -> launcher.agentFactory.outputMovie = x, new BooleanParam(), 1);
+        initializer.put("outputMovie", x -> launcher.agentFactory.addLogger("movie", x ? new MovieLogger() : null), new BooleanParam(), 1);
+        initializer.put("outputDetail", x -> launcher.agentFactory.addLogger("detail", x ? new DetailLogger() : null), new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localMeasure", x -> launcher.agentFactory.localMeasure = x, new CostFunctionParam(), 1);
         initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
         initializer.put("rampUpRate", x -> launcher.agentFactory.rampUpRate = x, new OptPosDoubleParam(), 1);
-        initializer.put("rampUpBias", x -> ((IterMinCost)launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptPosDoubleParam(), 1);
+        initializer.put("rampUpBias", x -> ((IterMinCost) launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptPosDoubleParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
-        lazyInit.put("runDuration", e -> launcher.runDuration = 4 + launcher.agentFactory.numIterations, 2);
-        lazyInit.put("peersLog", e -> launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis(), 3);
+        lazyInit.put("runDuration", e -> launcher.runDuration = 3 + launcher.agentFactory.numIterations, 2);
+        lazyInit.put("showProgress", e -> launcher.agentFactory.addLogger("progress", new ProgressIndicator()), 2);
+        lazyInit.put("peersLog", e -> launcher.peersLog = peersLog + "/Experiment " + System.currentTimeMillis(), 2);
 
         List<Init> init = new ArrayList<>();
         List<Init> outer = new ArrayList<>();
@@ -221,7 +227,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                 }
 
                 // init plot
-                Map<String,MeasurementLog> experiments = new LinkedHashMap<>();
+                Map<String, MeasurementLog> experiments = new LinkedHashMap<>();
                 String title = Util.merge(outerName);
                 plotNumber++;
 
@@ -253,13 +259,17 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
-                    
-                    if(showGraph) {
+
+                    if (showGraph) {
                         IEPOSVisualizer visualizer = IEPOSVisualizer.create(launcher.getMeasurementLog());
                         visualizer.showGraph();
                     }
 
                     experiments.put(launcher.peersLog, launcher.getMeasurementLog());
+
+                    for(AgentLogger logger : launcher.agentFactory.getLoggers()) {
+                        logger.print(launcher.getMeasurementLog());
+                    }
                 }
 
                 // plot result
@@ -278,7 +288,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         MeasurementLog log = new MeasurementLog();
         log.log(1, "title=" + title, 0);
         log.log(1, "label=" + label, 0);
-        
+
         super.run(log);
     }
 

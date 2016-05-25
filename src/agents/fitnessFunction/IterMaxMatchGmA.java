@@ -22,7 +22,6 @@ import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.iterative.Factor;
-import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.plan.GlobalPlan;
 import java.util.List;
@@ -33,13 +32,13 @@ import java.util.List;
  * @author Peter
  */
 public class IterMaxMatchGmA extends IterativeFitnessFunction {
+
     private Factor factor;
-    
+
     private PlanCombinator combinator;
     private Plan totalGmA;
 
     public IterMaxMatchGmA(Factor factor, PlanCombinator combinator) {
-        super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
     }
 
@@ -49,7 +48,7 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmA = combinator.combine(totalGmA, p, iteration);
@@ -59,9 +58,9 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
         int numOpt = 0;
-        
+
         double lowerBound = aggregate.min();
-        for(Plan p : plans) {
+        for (Plan p : plans) {
             lowerBound += p.min();
         }
 
@@ -70,40 +69,40 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
             Plan testAggregatePlan = new AggregatePlan(agent);
             testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
-            
+
             Plan target = new GlobalPlan(agent);
             target.set(costSignal);
-            double f1 = 1.0/target.norm();
-            if(!Double.isFinite(f1)) {
+            double f1 = 1.0 / target.norm();
+            if (!Double.isFinite(f1)) {
                 f1 = 1.0;
             }
             target.multiply(f1);
-            
-            if(testAggregatePlan.dot(target) < 0) {
+
+            if (testAggregatePlan.dot(target) < 0) {
                 testAggregatePlan.multiply(-1);
             }
-            
+
             testAggregatePlan.add(1);
 
-            double f2 = 1.0/testAggregatePlan.norm();
-            if(!Double.isFinite(f2)) {
+            double f2 = 1.0 / testAggregatePlan.norm();
+            if (!Double.isFinite(f2)) {
                 f2 = 1.0;
             }
             testAggregatePlan.multiply(f2);
-            
+
             double cost = -Math.abs(testAggregatePlan.dot(target));
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;
                 numOpt = 1;
-            } else if(cost == minCost) {
+            } else if (cost == minCost) {
                 numOpt++;
-                if(Math.random()<=1.0/numOpt) {
+                if (Math.random() <= 1.0 / numOpt) {
                     selected = i;
                 }
             }
         }
-        
+
         return selected;
     }
 
@@ -111,24 +110,24 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(1);
-        
+
         Plan x = new GlobalPlan(agent);
-        if(iteration > 0) {
+        if (iteration > 0) {
             x.set(totalGmA);
             x.multiply(factor.calcFactor(x, combinationalPlans, numNodes, numNodesSubtree, layer, avgChildren));
         }
         x.add(childAggregatePlan);
-        
+
         return select(agent, x, combinationalPlans, incentive);
     }
 
     @Override
     public String toString() {
-        return "IterMaxMatch p+a+"+combinatorG+"(g-a)*" + factor;
+        return "IterMaxMatch p+a+" + combinator + "(g-a)*" + factor;
     }
-    
+
     @Override
     public IterMaxMatchGmA clone() {
-        return new IterMaxMatchGmA(factor, combinatorG);
+        return new IterMaxMatchGmA(factor, combinator);
     }
 }

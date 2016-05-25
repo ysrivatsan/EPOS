@@ -32,6 +32,8 @@ import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
+import agents.log.AgentLogger;
+import agents.log.MovieLogger;
 import protopeer.measurement.MeasurementLog;
 
 /**

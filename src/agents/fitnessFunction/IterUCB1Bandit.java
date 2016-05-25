@@ -20,11 +20,8 @@ package agents.fitnessFunction;
 import agents.Agent;
 import agents.AgentPlans;
 import agents.fitnessFunction.iterative.MostRecentCombinator;
-import agents.fitnessFunction.iterative.NoOpCombinator;
 import agents.fitnessFunction.iterative.PlanCombinator;
-import agents.plan.CombinationalPlan;
 import agents.plan.Plan;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,17 +38,13 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
     private Plan previousGlobalPlan;
     private Plan previousSelectedPlan;
 
-    public IterUCB1Bandit() {
-        super(new MostRecentCombinator(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), new MostRecentCombinator());
-    }
-
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
         return Math.sqrt(plan.variance());
     }
     
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         previousGlobalPlan = combinator.combine(previousGlobalPlan, current.global, iteration);
         previousSelectedPlan = combinator.combine(previousSelectedPlan, current.selectedPlan, iteration);
     }

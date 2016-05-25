@@ -18,36 +18,19 @@
 package agents.fitnessFunction;
 
 import agents.Agent;
-import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.AgentPlans;
 import agents.plan.Plan;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Peter
  */
 public abstract class IterativeFitnessFunction extends FitnessFunction implements Cloneable {
-    public PlanCombinator combinatorG;
-    public PlanCombinator combinatorA;
-    public PlanCombinator combinatorS;
-    public PlanCombinator combinatorSC;
     
-    public IterativeFitnessFunction(PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
-        this.combinatorG = combinatorG;
-        this.combinatorA = combinatorA;
-        this.combinatorS = combinatorS;
-        this.combinatorSC = combinatorSC;
-    }
-    
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
-        if(previous == null) {
-            return;
-        }
-        previous.global = combinatorG.combine(previous.global, current.global, iteration);
-        previous.aggregate = combinatorA.combine(previous.aggregate, current.aggregate, iteration);
-        previous.selectedLocalPlan = combinatorS.combine(previous.selectedLocalPlan, current.selectedLocalPlan, iteration);
-        previous.selectedPlan = combinatorSC.combine(previous.selectedPlan, current.selectedPlan, iteration);
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
     }
     
     @Override
@@ -59,16 +42,11 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
     
     @Override
     public IterativeFitnessFunction clone() {
-        IterativeFitnessFunction clone = null;
         try {
-            clone = (IterativeFitnessFunction) super.clone();
-            clone.combinatorA = combinatorA;
-            clone.combinatorG = combinatorG;
-            clone.combinatorS = combinatorS;
-            clone.combinatorSC = combinatorSC;
+            return (IterativeFitnessFunction) super.clone();
         } catch (CloneNotSupportedException ex) {
-            ex.printStackTrace();
+            Logger.getLogger(IterativeFitnessFunction.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return clone;
+        return null;
     }
 }

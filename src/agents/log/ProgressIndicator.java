@@ -15,48 +15,44 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction.costFunction;
+package agents.log;
 
 import agents.plan.Plan;
+import protopeer.measurement.MeasurementLog;
 
 /**
  *
  * @author Peter
  */
-public class StdDevCostFunction extends IterativeCostFunction{
+public class ProgressIndicator extends AgentLogger {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
-        Plan p = plan.clone();
-        p.add(costSignal);
-        
-        if(iterationCost == null) {
-            return Math.sqrt(p.variance());
+    public void init(int agentId) {
+    }
+
+    @Override
+    public void initRoot(Plan costSignal) {
+    }
+
+    @Override
+    public void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan) {
+    }
+
+    @Override
+    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
+        if (iteration % 10 == 9) {
+            System.out.print("%");
         }
-        return Math.sqrt(p.variance()) + iterationCost.dot(p);
-    }
-
-    @Override
-    public Plan calcGradient(Plan plan, Plan costSignal) {
-        Plan p = plan.clone();
-        p.add(costSignal);
-        p.subtract(p.avg());
-        double x = Math.sqrt(p.dot(p));
-        if(x == 0.0) {
-            p.set(0);
-        } else {
-            p.multiply(1/x * 1.0/Math.sqrt(plan.getNumberOfStates()-1));
+        if (iteration % 100 == 99) {
+            System.out.print(" ");
         }
-        return p;
+        if (iteration + 1 == numIterations) {
+            System.out.println("");
+        }
     }
 
     @Override
-    public String toString() {
-        return "StdDevCost";
+    public void print(MeasurementLog log) {
     }
-
-    @Override
-    public String getMetric() {
-        return "std deviation";
-    }
+    
 }

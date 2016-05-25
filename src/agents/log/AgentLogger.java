@@ -26,7 +26,7 @@ import protopeer.measurement.MeasurementLog;
  *
  * @author Peter
  */
-public abstract class FileLog {
+public abstract class AgentLogger implements Cloneable {
 
     public abstract void init(int agentId);
 
@@ -34,16 +34,16 @@ public abstract class FileLog {
 
     public abstract void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan);
 
-    public abstract void logRoot(MeasurementLog log, int epoch, int iteration, Plan global);
-    
+    public abstract void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations);
+
     public abstract void print(MeasurementLog log);
-    
+
     @Override
-    public FileLog clone() {
+    public AgentLogger clone() {
         try {
-            return (FileLog) super.clone();
+            return (AgentLogger) super.clone();
         } catch (CloneNotSupportedException ex) {
-            Logger.getLogger(FileLog.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AgentLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

@@ -36,19 +36,13 @@ public class IterLocalSearch extends IterativeFitnessFunction {
     private final PlanCombinator combinator = MostRecentCombinator.getInstance();
     private Plan totalGmA;
 
-    public IterLocalSearch() {
-        super(MostRecentCombinator.getInstance(), MostRecentCombinator.getInstance(), MostRecentCombinator.getInstance(), MostRecentCombinator.getInstance());
-    }
-
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
         return Math.sqrt(plan.variance());
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
-        super.updatePrevious(previous, current, costSignal, iteration);
-
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmA = combinator.combine(totalGmA, p, iteration);
@@ -77,7 +71,7 @@ public class IterLocalSearch extends IterativeFitnessFunction {
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan modifiedAggregate = aggregate.clone();
-        if (iteration >= 0) {
+        if (iteration > 0) {
             modifiedAggregate.add(totalGmA);
         }
         return select(agent, modifiedAggregate, plans, costSignal);

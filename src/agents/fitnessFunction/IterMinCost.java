@@ -17,12 +17,10 @@
  */
 package agents.fitnessFunction;
 
-import agents.fitnessFunction.iterative.PlanCombinator;
 import agents.Agent;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import agents.AgentPlans;
-import agents.fitnessFunction.costFunction.CostFunction;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import java.util.List;
 import java.util.Random;
@@ -38,8 +36,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     IterativeCostFunction costFunc;
     public Double rampUpBias;
 
-    public IterMinCost(IterativeCostFunction costFunc, PlanCombinator combinatorG, PlanCombinator combinatorA, PlanCombinator combinatorS, PlanCombinator combinatorSC) {
-        super(combinatorG, combinatorA, combinatorS, combinatorSC);
+    public IterMinCost(IterativeCostFunction costFunc) {
         this.costFunc = costFunc;
     }
 

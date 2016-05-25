@@ -24,10 +24,12 @@ import java.io.File;
 import java.util.Objects;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
-import agents.fitnessFunction.costFunction.DiscomfortCostFunction;
+import agents.log.AgentLogger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -41,7 +43,7 @@ public abstract class AgentFactory implements Cloneable {
     public Double rampUpRate;
     public CostFunction measure = null;
     public CostFunction localMeasure = null;
-    public boolean outputMovie;
+    public Map<String, AgentLogger> loggers = new HashMap<>();
     public boolean inMemory = true;
 
     public abstract Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize);
@@ -53,7 +55,7 @@ public abstract class AgentFactory implements Cloneable {
             return Arrays.asList(fitnessFunction);
         }
     }
-    
+
     public List<CostFunction> getLocalMeasures() {
         if (localMeasure != null) {
             return Arrays.asList(localMeasure);
@@ -62,9 +64,28 @@ public abstract class AgentFactory implements Cloneable {
         }
     }
 
+    public List<AgentLogger> getLoggers() {
+        List<AgentLogger> loggerList = new ArrayList<>();
+        for(AgentLogger logger : loggers.values()) {
+            loggerList.add(logger.clone());
+        }
+        return loggerList;
+    }
+
+    public void addLogger(String name, AgentLogger logger) {
+        if (logger == null) {
+            loggers.remove(name);
+        } else {
+            loggers.put(name, logger);
+        }
+    }
+
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {
         AgentFactory f = (AgentFactory) super.clone();
+        if (loggers != null) {
+            f.loggers = new HashMap<>(loggers);
+        }
         return f;
     }
 

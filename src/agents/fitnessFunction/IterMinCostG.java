@@ -23,48 +23,46 @@ import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
-import agents.fitnessFunction.iterative.NoOpCombinator;
-import agents.plan.AggregatePlan;
 import java.util.List;
 
 /**
  * minimize variance (submodular/convex compared to std deviation)
+ *
  * @author Peter
  */
 public class IterMinCostG extends IterMinCost {
+
     private final Factor factor;
-    
+
     private final PlanCombinator combinator;
     private Plan totalGGradient;
-    
+
     public IterMinCostG(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
-        super(costFunc, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
+        super(costFunc);
         this.factor = factor;
         this.combinator = combinator;
     }
 
     @Override
-    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
-        super.updatePrevious(previous, current, costSignal, iteration);
-        
+    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
         totalGGradient = combinator.combine(totalGGradient, costFunc.calcGradient(current.global, costSignal), iteration);
     }
 
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan iterativeCost = null;
-        
-        if(iteration > 0) {
+
+        if (iteration > 0) {
             iterativeCost = totalGGradient.clone();
             double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
         }
-        
+
         return select(agent, aggregate, plans, costSignal, iterativeCost);
     }
 
     @Override
     public String toString() {
-        return "IterMinCostG "+costFunc.toString()+" p+"+combinatorG+"(g)*" + factor;
+        return "IterMinCostG " + costFunc.toString() + " p+" + combinator + "(g)*" + factor;
     }
 }

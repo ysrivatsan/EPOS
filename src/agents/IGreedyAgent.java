@@ -31,20 +31,20 @@ import messages.IGreedyDown;
 import messages.IGreedyUp;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
+import agents.log.AgentLogger;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import protopeer.measurement.MeasurementLog;
 
 /**
  *
  * @author Evangelos
  */
 public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown> {
-
-    private boolean outputMovie;
-    private boolean outputDetail = false;
+    
     private PrintStream out;
     private PrintStream rootOut;
 
@@ -62,7 +62,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private Plan costSignal;
     private AgentPlans current = new AgentPlans();
     private AgentPlans previous = new AgentPlans();
-    private AgentPlans prevAggregate = new AgentPlans();
     private AgentPlans historic;
 
     private Double rampUpRate;
@@ -70,11 +69,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private List<Integer> selectedCombination = new ArrayList<>();
     private LocalSearch localSearch;
 
+    private List<AgentLogger> loggers = new ArrayList<>();
+
     public static class Factory extends AgentFactory {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, outputMovie, getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
+            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, getLoggers(), getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
         }
 
         @Override
@@ -83,13 +84,13 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
     }
 
-    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, boolean outputMovie, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
+    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
         super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures, inMemory);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.localSearch = localSearch == null ? null : localSearch.clone();
-        this.outputMovie = outputMovie;
+        this.loggers = loggers;
         this.rampUpRate = rampUpRate;
     }
 
@@ -98,7 +99,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         if (this.history.size() > this.historySize) {
             this.history.remove(this.history.firstKey());
         }
-        prevAggregate.reset();
         previous.reset();
 
         if (previousPhase != null) {
@@ -109,15 +109,11 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         numNodes = -1;
         fitnessFunction = fitnessFunctionPrototype.clone();
 
-        if (outputDetail) {
-            try {
-                new File("output-data/detail").mkdir();
-                out = new PrintStream("output-data/detail/" + getPeer().getIndexNumber() + ".txt");
-                if (isRoot()) {
-                    rootOut = new PrintStream("output-data/detail/root.txt");
-                }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(IGreedyAgent.class.getName()).log(Level.SEVERE, null, ex);
+        // init loggers
+        for (AgentLogger logger : loggers) {
+            logger.init(getPeer().getIndexNumber());
+            if (isRoot()) {
+                logger.initRoot(costSignal);
             }
         }
     }
@@ -169,10 +165,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         current.aggregate.set(childAggregate);
         current.aggregate.add(current.selectedLocalPlan);
 
-        if (outputDetail) {
-            out.println(iteration + ": " + current.selectedLocalPlan);
-        }
-
         IGreedyUp msg = new IGreedyUp();
         msg.aggregate = current.aggregate;
         msg.numNodes = numNodesSubtree;
@@ -184,34 +176,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         current.global.set(current.aggregate);
 
         this.history.put(this.currentPhase, current);
-
-        // Log + output
-        if (outputMovie) {
-            if (iteration == 0) {
-                System.out.println("C(1:" + costSignal.getNumberOfStates() + "," + (iteration + 1) + ")=" + costSignal + ";");
-            }
-            System.out.println("D(1:" + costSignal.getNumberOfStates() + "," + (iteration + 1) + ")=" + current.global + ";");
-
-            Plan c = costSignal.clone();
-            if (iteration > 0) {
-                c.multiply(1 + iteration);
-                c.add(prevAggregate.global);
-            }
-            System.out.println("T(1:" + costSignal.getNumberOfStates() + "," + (iteration + 1) + ")=" + c + ";");
-            if (outputDetail) {
-                rootOut.println(iteration + ": " + Math.sqrt(measures.get(0).calcCost(current.global, costSignal, 0, 0)) + "," + current.global + "," + c);
-            }
-        } else {
-            if (iteration % 10 == 9) {
-                System.out.print("%");
-            }
-            if (iteration % 100 == 99) {
-                System.out.print(" ");
-            }
-            if (iteration + 1 == numIterations) {
-                System.out.println("");
-            }
-        }
 
         IGreedyDown msg = new IGreedyDown(current.global, numNodesSubtree, 0, 0);
         return msg;
@@ -230,7 +194,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         measureGlobal(current.global, costSignal);
-        fitnessFunction.updatePrevious(prevAggregate, current, costSignal, iteration);
+        fitnessFunction.updatePrevious(current, costSignal, iteration);
         previous = current;
 
         List<IGreedyDown> msgs = new ArrayList<>();
@@ -242,5 +206,17 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             msgs.add(msg);
         }
         return msgs;
+    }
+
+    @Override
+    void measure(MeasurementLog log, int epochNumber) {
+        super.measure(log, epochNumber);
+
+        for (AgentLogger logger : loggers) {
+            logger.log(log, epochNumber, iteration, current.selectedLocalPlan);
+            if (isRoot()) {
+                logger.logRoot(log, epochNumber, iteration, current.global, numIterations);
+            }
+        }
     }
 }

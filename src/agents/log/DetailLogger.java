@@ -23,24 +23,28 @@ import agents.plan.Plan;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import protopeer.measurement.MeasurementLog;
 
 /**
  *
  * @author Peter
  */
-public class DetailLog extends FileLog {
+public class DetailLogger extends AgentLogger {
 
     private String dir = "output-data/detail";
     private int agentId;
 
     private Plan iterativeCost;
     private Plan costSignal;
-
+    
     private IterativeCostFunction measure = new StdDevCostFunction();
 
     @Override
@@ -59,12 +63,13 @@ public class DetailLog extends FileLog {
         entry.agentId = agentId;
         entry.iteration = iteration;
         entry.selectedLocalPlan = selectedLocalPlan;
+        
         log.log(epoch, agentId, entry, 0.0);
     }
 
     @Override
-    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global) {
-        if (iterativeCost != null) {
+    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
+        if (iterativeCost == null) {
             iterativeCost = global.clone();
         } else {
             iterativeCost = iterativeCost.clone();
@@ -76,7 +81,7 @@ public class DetailLog extends FileLog {
         entry.cost = measure.calcCost(global, costSignal, 0, 0);
         entry.global = global;
         entry.iterativeCost = iterativeCost;
-
+        
         log.log(epoch, entry, 0.0);
     }
 
@@ -86,17 +91,19 @@ public class DetailLog extends FileLog {
 
         Map<Integer, PrintStream> outStreams = new HashMap<>();
         try {
-            for (Object entryObj : log.getTagsOfType(Entry.class)) {
-                Entry entry = (Entry) entryObj;
+            List<Entry> entries = log.getTagsOfType(Entry.class).stream().map(x -> (Entry) x).collect(Collectors.toList());
+            entries.sort((a,b) -> Integer.compare(a.iteration, b.iteration));
+            
+            for (Entry entry : entries) {
                 PrintStream out = outStreams.get(entry.agentId);
                 if (out == null) {
-                    out = new PrintStream(dir + "/" + agentId + ".txt");
+                    out = new PrintStream(dir + "/" + entry.agentId + ".txt");
                     outStreams.put(entry.agentId, out);
                 }
                 out.println(entry.iteration + ": " + entry.selectedLocalPlan);
             }
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(DetailLog.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             for (PrintStream out : outStreams.values()) {
                 out.close();
@@ -109,7 +116,7 @@ public class DetailLog extends FileLog {
                 outRoot.println(entry.iteration + ": " + entry.cost + "," + entry.global + "," + entry.iterativeCost);
             }
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(DetailLog.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
