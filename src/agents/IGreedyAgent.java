@@ -17,6 +17,7 @@
  */
 package agents;
 
+import agents.aggregator.Aggregator;
 import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.fitnessFunction.IterativeFitnessFunction;
@@ -32,11 +33,9 @@ import messages.IGreedyUp;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
 import agents.log.AgentLogger;
-import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -44,9 +43,6 @@ import protopeer.measurement.MeasurementLog;
  * @author Evangelos
  */
 public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown> {
-    
-    private PrintStream out;
-    private PrintStream rootOut;
 
     private final int historySize;
     private final TreeMap<DateTime, AgentPlans> history = new TreeMap<>();
@@ -67,7 +63,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private Double rampUpRate;
 
     private List<Integer> selectedCombination = new ArrayList<>();
-    private LocalSearch localSearch;
+    private Aggregator aggregator;
 
     private List<AgentLogger> loggers = new ArrayList<>();
 
@@ -75,7 +71,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, getLoggers(), getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
+            return new IGreedyAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, getAggregator(), getLoggers(), getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
         }
 
         @Override
@@ -84,12 +80,12 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
     }
 
-    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
+    public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, Aggregator aggregator, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
         super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures, inMemory);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
-        this.localSearch = localSearch == null ? null : localSearch.clone();
+        this.aggregator = aggregator;
         this.loggers = loggers;
         this.rampUpRate = rampUpRate;
     }
@@ -108,6 +104,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
         numNodes = -1;
         fitnessFunction = fitnessFunctionPrototype.clone();
+        aggregator.initPhase();
 
         // init loggers
         for (AgentLogger logger : loggers) {
@@ -132,19 +129,8 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     public IGreedyUp up(List<IGreedyUp> msgs) {
-        Plan childAggregate = new AggregatePlan(this);
-
-        if (localSearch != null) {
-            List<Plan> childAggregates = new ArrayList<>();
-            for (IGreedyUp msg : msgs) {
-                childAggregates.add(msg.aggregate);
-            }
-            childAggregate = localSearch.calcAggregate(this, childAggregates, previous.global, costSignal);
-        } else {
-            for (IGreedyUp msg : msgs) {
-                childAggregate.add(msg.aggregate);
-            }
-        }
+        List<Plan> childAggregates = msgs.stream().map(msg -> msg.aggregate).collect(Collectors.toList());
+        Plan childAggregate = aggregator.calcAggregate(this, childAggregates, previous.global, costSignal, fitnessFunction);
 
         for (IGreedyUp msg : msgs) {
             numNodesSubtree += msg.numNodes;
@@ -159,26 +145,21 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
         int selectedPlan = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedLocalPlan = subSelectablePlans.get(selectedPlan);
+        
         measureLocal(current.selectedLocalPlan, costSignal, selectedPlan, possiblePlans.size());
 
         current.selectedPlan = current.selectedLocalPlan;
         current.aggregate.set(childAggregate);
         current.aggregate.add(current.selectedLocalPlan);
 
-        IGreedyUp msg = new IGreedyUp();
-        msg.aggregate = current.aggregate;
-        msg.numNodes = numNodesSubtree;
-        return msg;
+        return new IGreedyUp(numNodesSubtree, current.aggregate);
     }
 
     @Override
     public IGreedyDown atRoot(IGreedyUp rootMsg) {
         current.global.set(current.aggregate);
-
-        this.history.put(this.currentPhase, current);
-
-        IGreedyDown msg = new IGreedyDown(current.global, numNodesSubtree, 0, 0);
-        return msg;
+        history.put(currentPhase, current);
+        return new IGreedyDown(current.global, numNodesSubtree, 0, 0);
     }
 
     @Override
@@ -194,14 +175,14 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         measureGlobal(current.global, costSignal);
-        fitnessFunction.updatePrevious(current, costSignal, iteration);
+        fitnessFunction.afterIteration(current, costSignal, iteration);
         previous = current;
 
         List<IGreedyDown> msgs = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
             IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
-            if (localSearch != null) {
-                msg.discard = parent.discard || !localSearch.getSelected().get(i);
+            if (aggregator != null) {
+                msg.discard = parent.discard || !aggregator.getSelected().get(i);
             }
             msgs.add(msg);
         }

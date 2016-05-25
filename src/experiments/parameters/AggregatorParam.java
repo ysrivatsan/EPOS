@@ -17,16 +17,19 @@
  */
 package experiments.parameters;
 
-import agents.LocalSearch;
+import agents.aggregator.Aggregator;
+import agents.aggregator.AllAggregator;
+import agents.aggregator.MaxImprovementAggregator;
 
 /**
  *
  * @author Peter
  */
-public class LocalSearchParam extends MapParam<LocalSearch> {
+public class AggregatorParam extends MapParam<Aggregator> {
 
-    public LocalSearchParam() {
+    public AggregatorParam() {
         map.put("", null);
-        map.put("LS", new LocalSearch());
+        map.put("all", new AllAggregator());
+        map.put("maxImprovement", new MaxImprovementAggregator());
     }
 }

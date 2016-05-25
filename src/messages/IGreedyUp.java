@@ -18,13 +18,18 @@
 package messages;
 
 import agents.plan.Plan;
-import java.util.List;
 
 /**
  *
  * @author Peter
  */
 public class IGreedyUp extends UpMessage {
+
     public int numNodes;
     public Plan aggregate;
+
+    public IGreedyUp(int numNodes, Plan aggregate) {
+        this.numNodes = numNodes;
+        this.aggregate = aggregate;
+    }
 }

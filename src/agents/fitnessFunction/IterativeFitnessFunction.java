@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public abstract class IterativeFitnessFunction extends FitnessFunction implements Cloneable {
     
-    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
     }
     
     @Override

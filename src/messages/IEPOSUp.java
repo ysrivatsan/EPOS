@@ -25,7 +25,14 @@ import java.util.List;
  * @author Peter
  */
 public class IEPOSUp extends UpMessage {
+
     public int numNodes;
     public List<Plan> possiblePlans;
     public Plan aggregate;
+
+    public IEPOSUp(int numNodes, List<Plan> possiblePlans, Plan aggregate) {
+        this.numNodes = numNodes;
+        this.possiblePlans = possiblePlans;
+        this.aggregate = aggregate;
+    }
 }

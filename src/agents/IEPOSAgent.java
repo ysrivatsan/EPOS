@@ -17,6 +17,7 @@
  */
 package agents;
 
+import agents.aggregator.Aggregator;
 import agents.plan.AggregatePlan;
 import agents.plan.CombinationalPlan;
 import agents.plan.GlobalPlan;
@@ -34,6 +35,7 @@ import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
 import agents.log.AgentLogger;
 import java.util.Random;
+import java.util.stream.Collectors;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -64,7 +66,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     private Double rampUpRate;
 
     private List<Integer> selectedCombination = new ArrayList<>();
-    private LocalSearch localSearch;
+    private Aggregator aggregator;
 
     private List<AgentLogger> loggers = new ArrayList<>();
 
@@ -72,7 +74,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, localSearch, getLoggers(), getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
+            return new IEPOSAgent(id, dataSource, treeStamp, outFolder, (IterativeFitnessFunction) fitnessFunction, initialPhase, previousPhase, costSignal, historySize, numIterations, getAggregator(), getLoggers(), getMeasures(), getLocalMeasures(), rampUpRate, inMemory);
         }
 
         @Override
@@ -81,12 +83,12 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         }
     }
 
-    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, LocalSearch localSearch, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
+    public IEPOSAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, Aggregator aggregator, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
         super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures, inMemory);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
-        this.localSearch = localSearch == null ? null : localSearch.clone();
+        this.aggregator = aggregator;
         this.loggers = loggers;
         this.rampUpRate = rampUpRate;
     }
@@ -134,21 +136,11 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public IEPOSUp up(List<IEPOSUp> msgs) {
         if (!msgs.isEmpty()) {
-            Plan childAggregate = new AggregatePlan(this);
             List<Plan> combinationalPlans = new ArrayList<>();
             List<List<Integer>> combinationalSelections = new ArrayList<>();
 
-            if (localSearch != null) {
-                List<Plan> childAggregates = new ArrayList<>();
-                for (IEPOSUp msg : msgs) {
-                    childAggregates.add(msg.aggregate);
-                }
-                childAggregate = localSearch.calcAggregate(this, childAggregates, previous.global, costSignal);
-            } else {
-                for (IEPOSUp msg : msgs) {
-                    childAggregate.add(msg.aggregate);
-                }
-            }
+            List<Plan> childAggregates = msgs.stream().map(msg -> msg.aggregate).collect(Collectors.toList());
+            Plan childAggregate = aggregator.calcAggregate(this, childAggregates, previous.global, costSignal, fitnessFunction);
 
             // init combinations
             int numCombinations = 1;
@@ -194,11 +186,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             current.aggregate.add(current.selectedPlan);
         }
 
-        IEPOSUp msg = new IEPOSUp();
-        msg.possiblePlans = possiblePlans;
-        msg.aggregate = current.aggregate;
-        msg.numNodes = numNodesSubtree;
-        return msg;
+        return new IEPOSUp(numNodesSubtree, possiblePlans, current.aggregate);
     }
 
     @Override
@@ -209,10 +197,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         current.global.set(current.aggregate);
         current.global.add(current.selectedLocalPlan);
 
-        this.history.put(this.currentPhase, current);
+        history.put(currentPhase, current);
 
-        IEPOSDown msg = new IEPOSDown(current.global, numNodesSubtree, 0, 0, selected);
-        return msg;
+        return new IEPOSDown(current.global, numNodesSubtree, 0, 0, selected);
     }
 
     @Override
@@ -235,9 +222,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         layer = parent.hops;
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
-        fitnessFunction.updatePrevious(current, costSignal, iteration);
+        fitnessFunction.afterIteration(current, costSignal, iteration);
         if (isRoot()) {
-            fitnessFunctionRoot.updatePrevious(current, costSignal, iteration);
+            fitnessFunctionRoot.afterIteration(current, costSignal, iteration);
         }
         previous = current;
 
@@ -245,8 +232,8 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         for (int i = 0; i < selectedCombination.size(); i++) {
             int selected = selectedCombination.get(i);
             IEPOSDown msg = new IEPOSDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size(), selected);
-            if (localSearch != null) {
-                msg.discard = parent.discard || !localSearch.getSelected().get(i);
+            if (aggregator != null) {
+                msg.discard = parent.discard || !aggregator.getSelected().get(i);
             }
             msgs.add(msg);
         }

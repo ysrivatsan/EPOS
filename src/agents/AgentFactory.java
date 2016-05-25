@@ -17,13 +17,14 @@
  */
 package agents;
 
+import agents.aggregator.Aggregator;
+import agents.aggregator.AllAggregator;
 import agents.plan.Plan;
-import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
 import java.io.File;
-import java.util.Objects;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
+import agents.fitnessFunction.IterativeFitnessFunction;
 import agents.log.AgentLogger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +39,8 @@ import java.util.Map;
 public abstract class AgentFactory implements Cloneable {
 
     public int numIterations;
-    public FitnessFunction fitnessFunction;
-    public LocalSearch localSearch;
+    public IterativeFitnessFunction fitnessFunction;
+    public Aggregator aggregator;
     public Double rampUpRate;
     public CostFunction measure = null;
     public CostFunction localMeasure = null;
@@ -79,6 +80,14 @@ public abstract class AgentFactory implements Cloneable {
             loggers.put(name, logger);
         }
     }
+    
+    public Aggregator getAggregator() {
+        if(aggregator == null) {
+            return new AllAggregator();
+        } else {
+            return aggregator.clone();
+        }
+    }
 
     @Override
     public AgentFactory clone() throws CloneNotSupportedException {
@@ -87,38 +96,5 @@ public abstract class AgentFactory implements Cloneable {
             f.loggers = new HashMap<>(loggers);
         }
         return f;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 67 * hash + this.numIterations;
-        hash = 67 * hash + Objects.hashCode(this.fitnessFunction);
-        hash = 67 * hash + Objects.hashCode(this.localSearch);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final AgentFactory other = (AgentFactory) obj;
-        if (this.numIterations != other.numIterations) {
-            return false;
-        }
-        if (!Objects.equals(this.fitnessFunction, other.fitnessFunction)) {
-            return false;
-        }
-        if (!Objects.equals(this.localSearch, other.localSearch)) {
-            return false;
-        }
-        return true;
     }
 }

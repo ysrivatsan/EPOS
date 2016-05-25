@@ -60,7 +60,7 @@ import experiments.parameters.Init;
 import experiments.parameters.EnumParam;
 import experiments.parameters.Initializer;
 import experiments.parameters.InitializerMap;
-import experiments.parameters.LocalSearchParam;
+import experiments.parameters.AggregatorParam;
 import experiments.parameters.CostFunctionParam;
 import experiments.parameters.FitnessFunctionParam;
 import experiments.parameters.LazyMap;
@@ -153,7 +153,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localMeasure", x -> launcher.agentFactory.localMeasure = x, new CostFunctionParam(), 1);
-        initializer.put("localSearch", x -> launcher.agentFactory.localSearch = x, new LocalSearchParam(), 1);
+        initializer.put("aggregator", x -> launcher.agentFactory.aggregator = x, new AggregatorParam(), 1);
         initializer.put("rampUpRate", x -> launcher.agentFactory.rampUpRate = x, new OptPosDoubleParam(), 1);
         initializer.put("rampUpBias", x -> ((IterMinCost) launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptPosDoubleParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());

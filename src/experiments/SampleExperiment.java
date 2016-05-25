@@ -20,8 +20,11 @@ package experiments;
 import agents.network.TreeArchitecture;
 import agents.*;
 import agents.dataset.FileDataset;
-import agents.fitnessFunction.SampleFitnessFunction;
 import agents.dataset.FilePlanGenerator;
+import agents.fitnessFunction.IterMinCostGmA;
+import agents.fitnessFunction.costFunction.StdDevCostFunction;
+import agents.fitnessFunction.iterative.Factor1;
+import agents.fitnessFunction.iterative.SumCombinator;
 import dsutil.generic.RankPriority;
 import dsutil.protopeer.services.topology.trees.DescriptorType;
 import dsutil.protopeer.services.topology.trees.TreeType;
@@ -54,7 +57,7 @@ public class SampleExperiment extends ExperimentLauncher {
         
         AgentFactory agentFactory = new EPOSAgent.Factory();
         //AgentFactory agentFactory = new OPTAgent.Factory();
-        agentFactory.fitnessFunction = new SampleFitnessFunction(80);
+        agentFactory.fitnessFunction = new IterMinCostGmA(new StdDevCostFunction(), new Factor1(), new SumCombinator());
         //agentFactory.fitnessFunction = new SampleFitnessFunction(0);
         
         IEPOSExperiment experiment = new IEPOSExperiment(

@@ -51,7 +51,7 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
     
     @Override
-    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmAPlan = combinator.combine(totalGmAPlan, p, iteration);

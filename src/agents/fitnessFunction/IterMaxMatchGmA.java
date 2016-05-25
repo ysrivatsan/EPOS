@@ -48,7 +48,7 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public void updatePrevious(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         totalGmA = combinator.combine(totalGmA, p, iteration);

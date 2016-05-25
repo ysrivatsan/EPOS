@@ -15,24 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction.iterative;
+package agents.aggregator;
 
+import agents.Agent;
+import agents.fitnessFunction.FitnessFunction;
 import agents.plan.Plan;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class Factor1 implements Factor {
+public class AllAggregator extends Aggregator {
 
     @Override
-    public double calcFactor(Plan rawIterationCost, List<Plan> plans, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
-        return 1;
+    public void initPhase() {
     }
-    
+
     @Override
-    public String toString() {
-        return "1";
+     List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction) {
+        List<Boolean> selected = new ArrayList<>();
+        childAggregates.stream().forEach(x -> selected.add(true));
+        return selected;
     }
 }
