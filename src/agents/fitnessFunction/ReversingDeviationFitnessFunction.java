@@ -34,7 +34,7 @@ public class ReversingDeviationFitnessFunction extends FitnessFunction {
         if (historic == null) {
             return 0.0;
         } else {
-            Plan historicGlobalPlan = historic.globalPlan;
+            Plan historicGlobalPlan = historic.global;
             return globalPlan.correlationCoefficient(historicGlobalPlan);
         }
     }
@@ -51,9 +51,9 @@ public class ReversingDeviationFitnessFunction extends FitnessFunction {
             for (int i = 0; i < combinationalPlans.size(); i++) {
                 Plan combinationalPlan = combinationalPlans.get(i);
                 Plan testAggregatePlan = new AggregatePlan(agent);
-                testAggregatePlan.add(historic.globalPlan);
-                testAggregatePlan.subtract(historic.aggregatePlan);
-                testAggregatePlan.subtract(historic.selectedPlan);
+                testAggregatePlan.add(historic.global);
+                testAggregatePlan.subtract(historic.aggregate);
+                testAggregatePlan.subtract(historic.selectedLocalPlan);
                 testAggregatePlan.add(aggregatePlan);
                 testAggregatePlan.add(combinationalPlan);
 

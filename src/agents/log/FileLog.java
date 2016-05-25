@@ -15,15 +15,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.fitnessFunction.iterative;
+package agents.log;
 
 import agents.plan.Plan;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import protopeer.measurement.MeasurementLog;
 
 /**
  *
  * @author Peter
  */
-public interface Factor {
-    public double calcFactor(Plan rawIterationCost, List<Plan> plans, int numNodes, int numNodesSubtree, int layer, double avgChildren);
+public abstract class FileLog {
+
+    public abstract void init(int agentId);
+
+    public abstract void initRoot(Plan costSignal);
+
+    public abstract void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan);
+
+    public abstract void logRoot(MeasurementLog log, int epoch, int iteration, Plan global);
+    
+    public abstract void print(MeasurementLog log);
+    
+    @Override
+    public FileLog clone() {
+        try {
+            return (FileLog) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            Logger.getLogger(FileLog.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 }

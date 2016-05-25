@@ -28,13 +28,13 @@ import java.util.List;
 public class FactorNormalizeStd implements Factor {
 
     @Override
-    public double calcFactor(Plan factorTargetPlan, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+    public double calcFactor(Plan rawIterationCost, List<Plan> plans, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
             double std = 0;
-            for(Plan p : combinationalPlans) {
+            for(Plan p : plans) {
                 std += p.stdDeviation();
             }
-            std = std/combinationalPlans.size();
-            double factor = std/factorTargetPlan.stdDeviation();
+            std = std/plans.size();
+            double factor = std/rawIterationCost.stdDeviation();
         if(!Double.isFinite(factor)) {
             factor = 1;
         }

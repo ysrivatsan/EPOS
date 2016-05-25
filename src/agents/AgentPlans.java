@@ -24,36 +24,36 @@ import agents.plan.Plan;
  * @author Peter
  */
 public class AgentPlans {
-    public Plan globalPlan;
-    public Plan aggregatePlan;
+    public Plan global;
+    public Plan aggregate;
+    public Plan selectedLocalPlan;
     public Plan selectedPlan;
-    public Plan selectedCombinationalPlan;
     
     public AgentPlans() {
     }
     
     public AgentPlans(AgentPlans other) {
-        this.globalPlan = other.globalPlan;
-        this.aggregatePlan = other.aggregatePlan;
+        this.global = other.global;
+        this.aggregate = other.aggregate;
+        this.selectedLocalPlan = other.selectedLocalPlan;
         this.selectedPlan = other.selectedPlan;
-        this.selectedCombinationalPlan = other.selectedCombinationalPlan;
     }
 
     public void set(Plan globalPlan, Plan aggregatedPlan, Plan selectedPlan, Plan selectedCombinationalPlan) {
-        this.globalPlan = globalPlan;
-        this.aggregatePlan = aggregatedPlan;
-        this.selectedPlan = selectedPlan;
-        this.selectedCombinationalPlan = selectedCombinationalPlan;
+        this.global = globalPlan;
+        this.aggregate = aggregatedPlan;
+        this.selectedLocalPlan = selectedPlan;
+        this.selectedPlan = selectedCombinationalPlan;
     }
     
     public void reset() {
-        globalPlan = null;
-        aggregatePlan = null;
+        global = null;
+        aggregate = null;
+        selectedLocalPlan = null;
         selectedPlan = null;
-        selectedCombinationalPlan = null;
     }
     
     public boolean isEmpty() {
-        return globalPlan == null;
+        return global == null;
     }
 }

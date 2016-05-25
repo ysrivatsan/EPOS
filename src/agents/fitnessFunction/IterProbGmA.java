@@ -37,19 +37,29 @@ public class IterProbGmA extends IterativeFitnessFunction {
 
     private Factor factor;
     private double[] prevProbs;
+    
+    private PlanCombinator combinator;
+    private Plan totalGmAPlan;
 
     public IterProbGmA(Factor factor, PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
+        this.combinator = combinator;
     }
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
         return Math.sqrt(plan.variance());
     }
-
+    
     @Override
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+        Plan p = current.global.clone();
+        p.subtract(current.aggregate);
+        totalGmAPlan = combinator.combine(totalGmAPlan, p, iteration);
+    }
+
+    private int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
 
@@ -120,15 +130,14 @@ public class IterProbGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(0);
 
         Plan x = new GlobalPlan(agent);
-        if (previous.globalPlan != null) {
-            x.set(previous.globalPlan);
-            x.subtract(previous.aggregatePlan);
-            x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+        if (iteration > 0) {
+            x.set(totalGmAPlan);
+            x.multiply(factor.calcFactor(x, combinationalPlans, numNodes, numNodesSubtree, layer, avgChildren));
         }
         x.add(childAggregatePlan);
         incentive.add(x);

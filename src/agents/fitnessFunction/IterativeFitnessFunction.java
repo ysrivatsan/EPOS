@@ -44,19 +44,18 @@ public abstract class IterativeFitnessFunction extends FitnessFunction implement
         if(previous == null) {
             return;
         }
-        previous.globalPlan = combinatorG.combine(previous.globalPlan, current.globalPlan, iteration);
-        previous.aggregatePlan = combinatorA.combine(previous.aggregatePlan, current.aggregatePlan, iteration);
-        previous.selectedPlan = combinatorS.combine(previous.selectedPlan, current.selectedPlan, iteration);
-        previous.selectedCombinationalPlan = combinatorSC.combine(previous.selectedCombinationalPlan, current.selectedCombinationalPlan, iteration);
+        previous.global = combinatorG.combine(previous.global, current.global, iteration);
+        previous.aggregate = combinatorA.combine(previous.aggregate, current.aggregate, iteration);
+        previous.selectedLocalPlan = combinatorS.combine(previous.selectedLocalPlan, current.selectedLocalPlan, iteration);
+        previous.selectedPlan = combinatorSC.combine(previous.selectedPlan, current.selectedPlan, iteration);
     }
     
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
-        return select(agent, aggregate, plans, costSignal);
+    @Override
+    public final int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic) {
+        return select(agent, aggregate, plans, costSignal, 0, 0, 0, 0, 0);
     }
     
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        return select(agent, aggregate, plans, costSignal, null, previous);
-    }
+    public abstract int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
     
     @Override
     public IterativeFitnessFunction clone() {

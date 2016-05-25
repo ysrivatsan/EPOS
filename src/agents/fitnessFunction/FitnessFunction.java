@@ -45,11 +45,7 @@ public abstract class FitnessFunction implements CostFunction {
         return "score";
     }
 
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal) {
-        return 0;
-    }
-
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic) {
-        return select(agent, aggregate, plans, costSignal);
+        return 0;
     }
 }

@@ -34,7 +34,7 @@ public class MinCorrelationFitnessFunction extends FitnessFunction {
         if (historic == null) {
             return 0.0;
         } else {
-            return globalPlan.correlationCoefficient(historic.globalPlan);
+            return globalPlan.correlationCoefficient(historic.global);
         }
     }
 
@@ -52,7 +52,7 @@ public class MinCorrelationFitnessFunction extends FitnessFunction {
                 testAggregatePlan.add(aggregatePlan);
                 testAggregatePlan.add(combinationalPlan);
 
-                double correlation = testAggregatePlan.correlationCoefficient(historic.aggregatePlan);
+                double correlation = testAggregatePlan.correlationCoefficient(historic.aggregate);
                 if (correlation < minCorrelation) {
                     minCorrelation = correlation;
                     selected = i;

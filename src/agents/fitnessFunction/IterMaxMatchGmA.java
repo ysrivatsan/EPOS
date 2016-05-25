@@ -34,6 +34,9 @@ import java.util.List;
  */
 public class IterMaxMatchGmA extends IterativeFitnessFunction {
     private Factor factor;
+    
+    private PlanCombinator combinator;
+    private Plan totalGmA;
 
     public IterMaxMatchGmA(Factor factor, PlanCombinator combinator) {
         super(combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
@@ -46,24 +49,30 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+        Plan p = current.global.clone();
+        p.subtract(current.aggregate);
+        totalGmA = combinator.combine(totalGmA, p, iteration);
+    }
+
+    private int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal) {
         double minCost = Double.MAX_VALUE;
         int selected = -1;
         int numOpt = 0;
         
-        double lowerBound = childAggregatePlan.min();
-        for(Plan p : combinationalPlans) {
+        double lowerBound = aggregate.min();
+        for(Plan p : plans) {
             lowerBound += p.min();
         }
 
-        for (int i = 0; i < combinationalPlans.size(); i++) {
-            Plan combinationalPlan = combinationalPlans.get(i);
+        for (int i = 0; i < plans.size(); i++) {
+            Plan combinationalPlan = plans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
-            testAggregatePlan.add(childAggregatePlan);
+            testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
             
             Plan target = new GlobalPlan(agent);
-            target.set(pattern);
+            target.set(costSignal);
             double f1 = 1.0/target.norm();
             if(!Double.isFinite(f1)) {
                 f1 = 1.0;
@@ -99,15 +108,14 @@ public class IterMaxMatchGmA extends IterativeFitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         Plan incentive = new GlobalPlan(agent);
         incentive.set(1);
         
         Plan x = new GlobalPlan(agent);
-        if(previous.globalPlan != null) {
-            x.set(previous.globalPlan);
-            x.subtract(previous.aggregatePlan);
-            x.multiply(factor.calcFactor(x, childAggregatePlan, combinationalPlans, pattern, previous, numNodes, numNodesSubtree, layer, avgChildren));
+        if(iteration > 0) {
+            x.set(totalGmA);
+            x.multiply(factor.calcFactor(x, combinationalPlans, numNodes, numNodesSubtree, layer, avgChildren));
         }
         x.add(childAggregatePlan);
         

@@ -26,5 +26,5 @@ import java.util.List;
  */
 public class IGreedyUp extends UpMessage {
     public int numNodes;
-    public Plan aggregatePlan;
+    public Plan aggregate;
 }

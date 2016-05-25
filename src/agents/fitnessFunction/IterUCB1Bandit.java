@@ -35,10 +35,11 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
 
     private double[] estimate;
     private double[] timesSelected;
-    private int iteration = 0;
     private int prevSelected;
     
-    private double minVar = Double.MAX_VALUE;
+    private PlanCombinator combinator = MostRecentCombinator.getInstance();
+    private Plan previousGlobalPlan;
+    private Plan previousSelectedPlan;
 
     public IterUCB1Bandit() {
         super(new MostRecentCombinator(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), new MostRecentCombinator());
@@ -48,9 +49,15 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
         return Math.sqrt(plan.variance());
     }
+    
+    @Override
+    public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
+        previousGlobalPlan = combinator.combine(previousGlobalPlan, current.global, iteration);
+        previousSelectedPlan = combinator.combine(previousSelectedPlan, current.selectedPlan, iteration);
+    }
 
     @Override
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans historic, AgentPlans previous) {
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         int selected = -1;
         
         if (iteration == 0) {
@@ -59,8 +66,8 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
 
             selected = (int) (Math.random() * plans.size());
         } else {
-            Plan g = previous.globalPlan.clone();
-            Plan s = previous.selectedCombinationalPlan.clone();
+            Plan g = previousGlobalPlan.clone();
+            Plan s = previousSelectedPlan.clone();
             g.subtract(g.avg());
             s.subtract(s.avg());
             double reward = 0.5-0.5*g.dot(s) / Math.max(0.000001, g.norm()*s.norm());

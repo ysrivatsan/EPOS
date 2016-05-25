@@ -24,6 +24,14 @@ import agents.plan.Plan;
  * @author Peter
  */
 public class MostRecentCombinator implements PlanCombinator {
+    private static MostRecentCombinator instance;
+    
+    public static MostRecentCombinator getInstance() {
+        if(instance == null) {
+            instance = new MostRecentCombinator();
+        }
+        return instance;
+    }
 
     @Override
     public Plan combine(Plan target, Plan other, int iteration) {

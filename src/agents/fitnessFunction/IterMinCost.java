@@ -90,6 +90,6 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
     }
 
     @Override
-    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
+    public abstract int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan pattern, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration);
 
 }

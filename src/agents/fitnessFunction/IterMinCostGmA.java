@@ -34,38 +34,33 @@ import java.util.List;
  */
 public class IterMinCostGmA extends IterMinCost {
     private final Factor factor;
+    
+    private final PlanCombinator combinator;
     private Plan totalGmAGradient;
     
     public IterMinCostGmA(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
+        this.combinator = combinator;
     }
 
     @Override
     public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
         super.updatePrevious(previous, current, costSignal, iteration);
         
-        Plan p = current.globalPlan.clone();
-        p.subtract(current.aggregatePlan);
-        totalGmAGradient = combinatorG.combine(totalGmAGradient, costFunc.calcGradient(p, costSignal), iteration);
+        Plan p = current.global.clone();
+        p.subtract(current.aggregate);
+        totalGmAGradient = combinator.combine(totalGmAGradient, costFunc.calcGradient(p, costSignal), iteration);
     }
     
     @Override
-    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        Plan iterativeCost = new AggregatePlan(agent);
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        Plan iterativeCost = null;
         
-        if(!previous.isEmpty()) {
-            iterativeCost.set(totalGmAGradient);
-            double f = factor.calcFactor(iterativeCost, aggregate, plans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
+        if(iteration > 0) {
+            iterativeCost = totalGmAGradient.clone();
+            double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
-            
-            /*Plan c = costSignal.clone();
-            if(numNodesSubtree < numNodes) {
-                c.multiply(numNodesSubtree/(double)numNodes + iteration*f*(numNodes-numNodesSubtree)/(double)numNodes);
-            }
-            modifiedCostSignal.add(c);*/
-        } else {
-            //modifiedCostSignal.set(costSignal);
         }
         
         return select(agent, aggregate, plans, costSignal, iterativeCost);

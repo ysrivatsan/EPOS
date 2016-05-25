@@ -35,7 +35,7 @@ public class MinDeviationFitnessFunction extends FitnessFunction {
     }
 
     @Override
-    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern) {
+    public int select(Agent agent, Plan aggregatePlan, List<Plan> combinationalPlans, Plan pattern, AgentPlans historic) {
         double minStandardDeviation = Double.MAX_VALUE;
         int selected = -1;
 

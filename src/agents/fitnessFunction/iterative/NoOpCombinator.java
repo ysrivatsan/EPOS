@@ -24,9 +24,12 @@ import agents.plan.Plan;
  * @author Peter
  */
 public class NoOpCombinator implements PlanCombinator {
-    private static final NoOpCombinator instance = new NoOpCombinator();
+    private static NoOpCombinator instance;
     
     public static NoOpCombinator getInstance() {
+        if(instance == null) {
+            instance = new NoOpCombinator();
+        }
         return instance;
     }
     

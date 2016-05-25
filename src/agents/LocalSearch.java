@@ -48,7 +48,7 @@ public class LocalSearch implements Cloneable {
         return useNew;
     }
 
-    public Plan calcAggregate(Agent agent, List<Plan> childAggregates, Plan globalPlan) {
+    public Plan calcAggregate(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal) {
         if(prevAggregates != null) {
             List<Plan> combPlans = new ArrayList<>();
             List<List<Boolean>> combSelections = new ArrayList<>();
@@ -84,12 +84,8 @@ public class LocalSearch implements Cloneable {
                 factor *= numPlans;
             }
 
-            int selected = fitnessFunction.select(agent, new AggregatePlan(agent), combPlans, new GlobalPlan(agent));
+            int selected = fitnessFunction.select(agent, new AggregatePlan(agent), combPlans, costSignal, null);
             useNew = combSelections.get(selected);
-            /*useNew.clear();
-            for(Plan p : childAggregates) {
-                useNew.add(false);
-            }*/
         } else {
             useNew = new ArrayList<>();
             for(Plan p : childAggregates) {

@@ -33,38 +33,34 @@ import java.util.List;
  */
 public class IterMinCostG extends IterMinCost {
     private final Factor factor;
+    
+    private final PlanCombinator combinator;
     private Plan totalGGradient;
     
     public IterMinCostG(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc, combinator, NoOpCombinator.getInstance(), NoOpCombinator.getInstance(), NoOpCombinator.getInstance());
         this.factor = factor;
+        this.combinator = combinator;
     }
 
     @Override
     public void updatePrevious(AgentPlans previous, AgentPlans current, Plan costSignal, int iteration) {
         super.updatePrevious(previous, current, costSignal, iteration);
         
-        totalGGradient = combinatorG.combine(totalGGradient, costFunc.calcGradient(current.globalPlan, costSignal), iteration);
+        totalGGradient = combinator.combine(totalGGradient, costFunc.calcGradient(current.global, costSignal), iteration);
     }
 
     @Override
-    public int select(Agent agent, Plan childAggregatePlan, List<Plan> combinationalPlans, Plan costSignal, AgentPlans previous, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        Plan modifiedCostSignal = new AggregatePlan(agent);
-        if(!previous.isEmpty()) {
-            modifiedCostSignal.set(totalGGradient);
-            double f = factor.calcFactor(modifiedCostSignal, childAggregatePlan, combinationalPlans, costSignal, previous, numNodes, numNodesSubtree, layer, avgChildren);
-            modifiedCostSignal.multiply(f);
-            
-            Plan c = costSignal.clone();
-            if(numNodesSubtree < numNodes) {
-                c.multiply(numNodesSubtree/(double)numNodes + iteration*f);
-            }
-            modifiedCostSignal.add(c);
-        } else {
-            modifiedCostSignal.set(costSignal);
+    public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        Plan iterativeCost = null;
+        
+        if(iteration > 0) {
+            iterativeCost = totalGGradient.clone();
+            double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
+            iterativeCost.multiply(f);
         }
         
-        return select(agent, childAggregatePlan, combinationalPlans, modifiedCostSignal);
+        return select(agent, aggregate, plans, costSignal, iterativeCost);
     }
 
     @Override

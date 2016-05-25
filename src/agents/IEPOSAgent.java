@@ -111,10 +111,10 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     void initIteration() {
         current = new AgentPlans();
-        current.globalPlan = new GlobalPlan(this);
-        current.aggregatePlan = new AggregatePlan(this);
-        current.selectedPlan = new PossiblePlan(this);
-        current.selectedCombinationalPlan = new CombinationalPlan(this);
+        current.global = new GlobalPlan(this);
+        current.aggregate = new AggregatePlan(this);
+        current.selectedLocalPlan = new PossiblePlan(this);
+        current.selectedPlan = new CombinationalPlan(this);
         numNodesSubtree = 1;
         avgNumChildren = children.size();
         layer = 0;
@@ -123,19 +123,19 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     @Override
     public IEPOSUp up(List<IEPOSUp> msgs) {
         if(!msgs.isEmpty()) {
-            Plan childAggregatePlan = new AggregatePlan(this);
+            Plan childAggregate = new AggregatePlan(this);
             List<Plan> combinationalPlans = new ArrayList<>();
             List<List<Integer>> combinationalSelections = new ArrayList<>();
             
             if(localSearch != null) {
-                List<Plan> childAggregatePlans = new ArrayList<>();
+                List<Plan> childAggregates = new ArrayList<>();
                 for(IEPOSUp msg : msgs) {
-                    childAggregatePlans.add(msg.aggregatePlan);
+                    childAggregates.add(msg.aggregate);
                 }
-                childAggregatePlan = localSearch.calcAggregate(this, childAggregatePlans, previous.globalPlan);
+                childAggregate = localSearch.calcAggregate(this, childAggregates, previous.global, costSignal);
             } else {
                 for(IEPOSUp msg : msgs) {
-                    childAggregatePlan.add(msg.aggregatePlan);
+                    childAggregate.add(msg.aggregate);
                 }
             }
             
@@ -174,56 +174,47 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
                 int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble()*2-1);
                 subSelectablePlans = combinationalPlans.subList(0, Math.min(numPlans,possiblePlans.size()));
                 subCombinationalSelections = subCombinationalSelections.subList(0, Math.min(numPlans,combinationalPlans.size()));;
-                /*List<Plan> plans = new ArrayList<>(combinationalPlans);
-                subSelectablePlans = new ArrayList<>();
-                subCombinationalSelections = new ArrayList<>();
-                for(int i = 0; i < numPlans && !plans.isEmpty(); i++) {
-                    int idx = r.nextInt(plans.size());
-                    subSelectablePlans.add(plans.get(idx));
-                    subCombinationalSelections.add(combinationalSelections.get(idx));
-                    plans.remove(idx);
-                }*/
             }
-            int selectedCombination = fitnessFunction.select(this, childAggregatePlan, subSelectablePlans, costSignal, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            int selectedCombination = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
             this.selectedCombination = subCombinationalSelections.get(selectedCombination);
             
-            current.selectedCombinationalPlan = subSelectablePlans.get(selectedCombination);
-            current.aggregatePlan.set(childAggregatePlan);
-            current.aggregatePlan.add(current.selectedCombinationalPlan);
+            current.selectedPlan = subSelectablePlans.get(selectedCombination);
+            current.aggregate.set(childAggregate);
+            current.aggregate.add(current.selectedPlan);
         }
         
         IEPOSUp msg = new IEPOSUp();
         msg.possiblePlans = possiblePlans;
-        msg.aggregatePlan = current.aggregatePlan;
+        msg.aggregate = current.aggregate;
         msg.numNodes = numNodesSubtree;
         return msg;
     }
 
     @Override
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
-        int selected = fitnessFunctionRoot.select(this, current.aggregatePlan, possiblePlans, costSignal, prevAggregate, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
-        current.selectedPlan = possiblePlans.get(selected);
-        measureLocal(current.selectedPlan, costSignal, selected, possiblePlans.size());
-        current.globalPlan.set(current.aggregatePlan);
-        current.globalPlan.add(current.selectedPlan);
+        int selected = fitnessFunctionRoot.select(this, current.aggregate, possiblePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        current.selectedLocalPlan = possiblePlans.get(selected);
+        measureLocal(current.selectedLocalPlan, costSignal, selected, possiblePlans.size());
+        current.global.set(current.aggregate);
+        current.global.add(current.selectedLocalPlan);
 
         this.history.put(this.currentPhase, current);
 
         // Log + output
-        //robustness = fitnessFunction.getRobustness(current.globalPlan, costSignal, historic);
+        //robustness = fitnessFunction.getRobustness(current.global, costSignal, historic);
         //log.log(measurementEpoch, iteration, robustness);
         //getPeer().getMeasurementLogger().log(measurementEpoch, iteration, robustness);
-        //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.globalPlan);
+        //System.out.println(planSize + "," + currentPhase.toString("yyyy-MM-dd") + "," + robustness + ": " + current.global);
         if(outputMovie) {
             if(iteration == 0) {
                 System.out.println("C(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+costSignal+";");
             }
-            System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.globalPlan+";");
+            System.out.println("D(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+current.global+";");
             
             Plan c = costSignal.clone();
             if(iteration > 0) {
                 c.multiply(1+iteration);
-                c.add(prevAggregate.globalPlan);
+                c.add(prevAggregate.global);
             }
             System.out.println("T(1:"+costSignal.getNumberOfStates()+","+(iteration+1)+")="+c+";");
         } else {
@@ -238,21 +229,21 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             }
         }
         
-        IEPOSDown msg = new IEPOSDown(current.globalPlan, numNodesSubtree, 0, 0, selected);
+        IEPOSDown msg = new IEPOSDown(current.global, numNodesSubtree, 0, 0, selected);
         return msg;
     }
 
     @Override
     public List<IEPOSDown> down(IEPOSDown parent) {
-        current.globalPlan.set(parent.globalPlan);
+        current.global.set(parent.globalPlan);
         if(parent.discard) {
-            current.aggregatePlan = previous.aggregatePlan;
+            current.aggregate = previous.aggregate;
+            current.selectedLocalPlan = previous.selectedLocalPlan;
             current.selectedPlan = previous.selectedPlan;
-            current.selectedCombinationalPlan = previous.selectedCombinationalPlan;
         } else {
-            current.selectedPlan.set(possiblePlans.get(parent.selected));
+            current.selectedLocalPlan.set(possiblePlans.get(parent.selected));
         }
-        measureLocal(current.selectedPlan, costSignal, parent.selected, possiblePlans.size());
+        measureLocal(current.selectedLocalPlan, costSignal, parent.selected, possiblePlans.size());
         
         if(isRoot()) {
             measureGlobal(costSignal, costSignal);
