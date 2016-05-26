@@ -209,6 +209,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             current.aggregate = previous.aggregate;
             current.selectedLocalPlan = previous.selectedLocalPlan;
             current.selectedPlan = previous.selectedPlan;
+            aggregator.discardChanges();
         } else {
             current.selectedLocalPlan.set(possiblePlans.get(parent.selected));
         }
@@ -232,9 +233,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         for (int i = 0; i < selectedCombination.size(); i++) {
             int selected = selectedCombination.get(i);
             IEPOSDown msg = new IEPOSDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size(), selected);
-            if (aggregator != null) {
-                msg.discard = parent.discard || !aggregator.getSelected().get(i);
-            }
+            msg.discard = !aggregator.getSelected().get(i);
             msgs.add(msg);
         }
         return msgs;

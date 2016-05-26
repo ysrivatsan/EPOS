@@ -22,6 +22,7 @@ import agents.fitnessFunction.FitnessFunction;
 import agents.plan.AggregatePlan;
 import agents.plan.Plan;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,34 +35,55 @@ public abstract class Aggregator implements Cloneable {
 
     private List<Boolean> selected;
     private List<Plan> prevAggregates;
+    private List<Plan> newAggregates;
 
     public void initPhase() {
-        prevAggregates = new ArrayList<>();
     }
 
     public final List<Boolean> getSelected() {
         return selected;
     }
+    
+    public final void discardChanges() {
+        Collections.fill(selected, false);
+    }
 
     abstract List<Boolean> calcSelected(Agent agent, List<Plan> childAggregates, List<Plan> prevAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction);
 
     public final Plan calcAggregate(Agent agent, List<Plan> childAggregates, Plan globalPlan, Plan costSignal, FitnessFunction fitnessFunction) {
-        selected = calcSelected(agent, childAggregates, prevAggregates, globalPlan, costSignal, fitnessFunction);
+        prevAggregates = getAggregates(agent);
+        newAggregates = childAggregates;
         
-        if(prevAggregates.isEmpty()) {
-            prevAggregates.addAll(childAggregates);
-        }
-
+        selected = calcSelected(agent, newAggregates, prevAggregates, globalPlan, costSignal, fitnessFunction);
+        
+        return getAggregate(agent);
+    }
+    
+    private Plan getAggregate(Agent agent) {
         Plan plan = new AggregatePlan(agent);
         for (int i = 0; i < selected.size(); i++) {
             if (selected.get(i)) {
-                plan.add(childAggregates.get(i));
-                prevAggregates.set(i, childAggregates.get(i));
+                plan.add(newAggregates.get(i));
             } else {
                 plan.add(prevAggregates.get(i));
             }
         }
         return plan;
+    }
+    private List<Plan> getAggregates(Agent agent) {
+        if(prevAggregates == null) {
+            return new ArrayList<>();
+        }
+        
+        List<Plan> aggregates = new ArrayList<>();
+        for (int i = 0; i < selected.size(); i++) {
+            if (selected.get(i)) {
+                aggregates.add(newAggregates.get(i));
+            } else {
+                aggregates.add(prevAggregates.get(i));
+            }
+        }
+        return aggregates;
     }
 
     @Override

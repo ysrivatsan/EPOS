@@ -169,6 +169,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             current.aggregate = previous.aggregate;
             current.selectedLocalPlan = previous.selectedLocalPlan;
             current.selectedPlan = previous.selectedPlan;
+            aggregator.discardChanges();
         }
         numNodes = parent.numNodes;
         layer = parent.hops;
@@ -177,13 +178,12 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         measureGlobal(current.global, costSignal);
         fitnessFunction.afterIteration(current, costSignal, iteration);
         previous = current;
+        
 
         List<IGreedyDown> msgs = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
             IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
-            if (aggregator != null) {
-                msg.discard = parent.discard || !aggregator.getSelected().get(i);
-            }
+            msg.discard = !aggregator.getSelected().get(i);
             msgs.add(msg);
         }
         return msgs;
