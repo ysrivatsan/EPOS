@@ -19,6 +19,7 @@ package agents.fitnessFunction;
 
 import agents.Agent;
 import agents.AgentPlans;
+import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.plan.Plan;
 import java.util.List;
 import java.util.logging.Level;

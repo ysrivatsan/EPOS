@@ -23,9 +23,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +44,7 @@ public class FileDataset implements Dataset {
     private final String config;
     private final String format = ".plans";
     private final File[] agentDataDirs;
+    private int seed;
     private int planSize = -1;
     private final Comparator<Plan> order;
     
@@ -61,8 +67,21 @@ public class FileDataset implements Dataset {
 
     @Override
     public List<AgentDataset> getAgentDataSources(int maxAgents) {
+        TreeMap<Double, Integer> indices = new TreeMap<>();
+        Random rand = new Random(seed);
+        for(int i = 0; i < agentDataDirs.length; i++) {
+            indices.put(rand.nextDouble(), i);
+        }
+        Set<Integer> selected = new TreeSet<>();
+        for(Integer i : indices.values()) {
+            selected.add(i);
+            if(selected.size() == maxAgents) {
+                break;
+            }
+        }
+        
         List<AgentDataset> agents = new ArrayList<>();
-        for (int i = 0; i < agentDataDirs.length && i < maxAgents; i++) {
+        for (int i : selected) {
             agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize(), order));
         }
         return agents;
@@ -87,5 +106,6 @@ public class FileDataset implements Dataset {
 
     @Override
     public void init(int num) {
+        seed = num;
     }
 }

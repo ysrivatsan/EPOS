@@ -19,6 +19,11 @@ package agents.aggregator;
 
 import agents.Agent;
 import agents.fitnessFunction.FitnessFunction;
+import agents.fitnessFunction.IterMinCostGmA;
+import agents.fitnessFunction.MinCost;
+import agents.fitnessFunction.costFunction.VarCostFunction;
+import agents.fitnessFunction.iterative.FactorMOverNmM;
+import agents.fitnessFunction.iterative.SumCombinator;
 import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
@@ -70,6 +75,7 @@ public class MaxImprovementAggregator extends Aggregator {
                 factor *= numPlans;
             }
 
+            fitnessFunction = new MinCost(fitnessFunction);
             int selectedCombination = fitnessFunction.select(agent, new AggregatePlan(agent), combPlans, costSignal, null);
             selected = combSelections.get(selectedCombination);
         } else {

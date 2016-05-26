@@ -24,8 +24,9 @@ import agents.plan.Plan;
  * @author Peter
  */
 public abstract class IterativeCostFunction implements CostFunction {
-    
+
     public abstract double calcCost(Plan plan, Plan costSignal, Plan iterationCost);
+
     public abstract Plan calcGradient(Plan plan, Plan costSignal);
 
     @Override
