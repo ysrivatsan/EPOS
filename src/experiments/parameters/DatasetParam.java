@@ -43,7 +43,7 @@ public class DatasetParam implements Param<Dataset> {
                 params = Arrays.copyOf(params, params.length-1);
             }
             
-            if (x.matches("^E[157]\\.[135]$")) {
+            if (x.matches("^E[157](\\.[135])?$")) {
                 return params.length == 1;
             } else if (x.startsWith("B")) {
                 if(params.length == 1) {
@@ -81,7 +81,7 @@ public class DatasetParam implements Param<Dataset> {
 
     @Override
     public String validDescription() {
-        return "E<1, 5 or 7>.<1, 3 or 5>[_<order func>], B<even int from 0 to 22>[_<order func>], Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>][_<order func>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>][_<order func>]";
+        return "E<1, 5 or 7>[.<1, 3 or 5>][_<order func>], B<even int from 0 to 22>[_<order func>], Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>][_<order func>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>][_<order func>]";
     }
 
     @Override
@@ -96,7 +96,11 @@ public class DatasetParam implements Param<Dataset> {
         }
         
         if (x.startsWith("E")) {
-            return new FileDataset("input-data" + File.separator + "Archive", x.charAt(x.length() - 3) + "." + x.charAt(x.length() - 1), order);
+            if(x.contains(".")) {
+                return new FileDataset("input-data" + File.separator + "Archive", x.charAt(x.length() - 3) + "." + x.charAt(x.length() - 1), order);
+            } else {
+                return new FileDataset("input-data" + File.separator + "Archive", x.charAt(x.length() - 1) + "", order);
+            }
         } else if (x.startsWith("B")) {
             int num = Integer.parseInt(x.substring(1));
             return new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips", order);
