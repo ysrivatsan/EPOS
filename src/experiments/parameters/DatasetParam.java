@@ -52,12 +52,24 @@ public class DatasetParam implements Param<Dataset> {
                 }
             } else if (x.startsWith("N")) {
                 if (params.length >= 5 || params.length <= 6) {
-                    Integer.parseUnsignedInt(params[1]);
+                    if(params[1].contains("-")) {
+                        String[] numPlanStr = params[1].split("-");
+                        Integer.parseUnsignedInt(numPlanStr[0]);
+                        Integer.parseUnsignedInt(numPlanStr[1]);
+                    } else {
+                        Integer.parseUnsignedInt(params[1]);
+                    }
                     Integer.parseUnsignedInt(params[2]);
                     Double.parseDouble(params[3]);
                     double std = Double.parseDouble(params[4]);
                     if(params.length >= 6) {
-                        Integer.parseUnsignedInt(params[5]);
+                        if(params[5].contains("-")) {
+                            String[] nonZeroStr = params[5].split("-");
+                            Integer.parseUnsignedInt(nonZeroStr[0]);
+                            Integer.parseUnsignedInt(nonZeroStr[1]);
+                        } else {
+                            Integer.parseUnsignedInt(params[5]);
+                        }
                     }
                     return std >= 0;
                 }
@@ -81,7 +93,7 @@ public class DatasetParam implements Param<Dataset> {
 
     @Override
     public String validDescription() {
-        return "E<1, 5 or 7>[.<1, 3 or 5>][_<order func>], B<even int from 0 to 22>[_<order func>], Noise_<numPlans>_<planSize>_<mean>_<std>[_<nonZero>][_<order func>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>][_<order func>]";
+        return "E<1, 5 or 7>[.<1, 3 or 5>][_<order func>], B<even int from 0 to 22>[_<order func>], Noise_<numPlans/range>_<planSize>_<mean>_<std>[_<nonZero>][_<order func>], Sparse_<numPlans>_<planSize>_<std>[_<generationSteps>][_<order func>]";
     }
 
     @Override
@@ -105,12 +117,18 @@ public class DatasetParam implements Param<Dataset> {
             int num = Integer.parseInt(x.substring(1));
             return new FileDataset("input-data/bicycle", "user_plans_unique_" + num + "to" + (num + 2) + "_force_trips", order);
         } else if (x.startsWith("N")) {
+            String[] numPlansStr = params[1].split("-");
+            int numPlansMin = Integer.parseInt(numPlansStr[0]);
+            int numPlansMax = numPlansStr.length == 1 ? numPlansMin : Integer.parseInt(numPlansStr[1]);
             int planSize = Integer.parseInt(params[2]);
-            int nonZero = planSize;
+            int nonZeroMin = planSize;
+            int nonZeroMax = nonZeroMin;
             if(params.length >= 6) {
-                planSize = Integer.parseInt(params[5]);
+                String[] nonZeroStr = params[5].split("-");
+                nonZeroMin = Integer.parseInt(nonZeroStr[0]);
+                nonZeroMax = nonZeroStr.length == 1 ? nonZeroMin : Integer.parseInt(nonZeroStr[1]);
             }
-            return new NoiseDataset(Integer.parseInt(params[1]), planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), nonZero, order);
+            return new NoiseDataset(numPlansMin, numPlansMax, planSize, Double.parseDouble(params[3]), Double.parseDouble(params[4]), nonZeroMin, nonZeroMax, order);
         } else if (x.startsWith("S")) {
             int generationSteps = 0;
             if(params.length >= 5) {

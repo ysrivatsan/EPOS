@@ -19,6 +19,7 @@ package agents.network;
 
 import agents.Agent;
 import agents.plan.Plan;
+import java.util.List;
 import java.util.function.BiFunction;
 import org.joda.time.DateTime;
 
@@ -26,19 +27,29 @@ import org.joda.time.DateTime;
  *
  * @author Peter
  */
-public class InvStdRankGenerator implements BiFunction<Integer, Agent, Double>{
+public class NumPlanStdRankGenerator implements BiFunction<Integer, Agent, Double> {
 
     @Override
     public Double apply(Integer idx, Agent agent) {
         double rank = 0;
         int count = 0;
-        for(DateTime phase : agent.dataSource.getPhases()) {
-            for(Plan plan : agent.dataSource.getPlans(phase)) {
-                rank += 1/Math.max(0.000001,plan.stdDeviation());
+        
+        double avgStd = 0;
+        int numPlans = 0;
+        
+        for (DateTime phase : agent.dataSource.getPhases()) {
+            List<Plan> plans = agent.dataSource.getPlans(phase);
+            for (Plan plan : plans) {
+                avgStd += plan.stdDeviation();
             }
-            count += 1;
+            numPlans += plans.size();
+            count++;
         }
-        rank /= count;
+        
+        avgStd = avgStd / numPlans;
+        double avgNumPlans = numPlans/count;
+        
+        rank += avgNumPlans - 1 / (2 + avgStd);
         return rank;
     }
 }

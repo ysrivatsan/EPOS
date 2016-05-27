@@ -33,6 +33,6 @@ public class NumPlanRankGenerator implements BiFunction<Integer, Agent, Double>{
         for(DateTime phase : agent.dataSource.getPhases()) {
             count += agent.dataSource.getPlans(phase).size();
         }
-        return (double) count;
+        return count / (double) agent.dataSource.getPhases().size();
     }
 }

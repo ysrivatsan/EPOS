@@ -35,24 +35,28 @@ import org.joda.time.DateTime;
 public class NoiseAgentDataset extends OrderedAgentDataset {
 
     private final int id;
-    private final int numPlans;
+    private final int numPlansMin;
+    private final int numPlansMax;
     private final int planSize;
     private final double mean;
     private final double std;
     private final long seed;
-    private final int nonZero;
+    private final int nonZeroMin;
+    private final int nonZeroMax;
 
     private final String config;
 
-    public NoiseAgentDataset(int id, int numPlans, int planSize, double mean, double std, int nonZero, Random r, Comparator<Plan> order) {
+    public NoiseAgentDataset(int id, int numPlansMin, int numPlansMax, int planSize, double mean, double std, int nonZeroMin, int nonZeroMax, Random r, Comparator<Plan> order) {
         super(order);
         this.id = id;
-        this.numPlans = numPlans;
+        this.numPlansMin = numPlansMin;
+        this.numPlansMax = numPlansMax;
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
         this.seed = r.nextLong();
-        this.nonZero = nonZero;
+        this.nonZeroMin = nonZeroMin;
+        this.nonZeroMax = nonZeroMax;
 
         this.config = "mean" + mean + "_std" + std;
     }
@@ -60,6 +64,8 @@ public class NoiseAgentDataset extends OrderedAgentDataset {
     @Override
     List<Plan> getUnorderedPlans(DateTime phase) {
         Random r = new Random(seed);
+
+        int numPlans = numPlansMin + r.nextInt(numPlansMax - numPlansMin + 1);
 
         List<Plan> plans = new ArrayList<>();
         for (int i = 0; i < numPlans; i++) {
@@ -92,8 +98,8 @@ public class NoiseAgentDataset extends OrderedAgentDataset {
         Plan plan = new PossiblePlan();
         plan.init(planSize);
 
-        //double nonZero = 1;
-        double setZero = planSize - nonZero;
+        int nonZero = nonZeroMin + r.nextInt(nonZeroMax - nonZeroMin + 1);
+        int setZero = planSize - nonZero;
         Queue<Double> indices = new PriorityQueue<>();
 
         for (int i = 0; i < planSize; i++) {

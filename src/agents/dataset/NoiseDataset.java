@@ -28,20 +28,24 @@ import java.util.Random;
  * @author Peter
  */
 public class NoiseDataset implements Dataset {
-    private final int numPlans;
+    private final int numPlansMin;
+    private final int numPlansMax;
     private final int planSize;
     private final double mean;
     private final double std;
     private int seed;
-    private final int nonZero;
+    private final int nonZeroMin;
+    private final int nonZeroMax;
     private final Comparator<Plan> order;
 
-    public NoiseDataset(int numPlans, int planSize, double mean, double std, int nonZero, Comparator<Plan> order) {
-        this.numPlans = numPlans;
+    public NoiseDataset(int numPlansMin, int numPlansMax, int planSize, double mean, double std, int nonZeroMin, int nonZeroMax, Comparator<Plan> order) {
+        this.numPlansMin = numPlansMin;
+        this.numPlansMax = numPlansMax;
         this.planSize = planSize;
         this.mean = mean;
         this.std = std;
-        this.nonZero = nonZero;
+        this.nonZeroMin = nonZeroMin;
+        this.nonZeroMax = nonZeroMax;
         this.order = order;
     }
 
@@ -51,7 +55,7 @@ public class NoiseDataset implements Dataset {
         Random rand = new Random(seed);
         List<AgentDataset> res = new ArrayList<>();
         for(int i = 0; i < maxAgents; i++) {
-            res.add(new NoiseAgentDataset(i, numPlans, planSize, mean, std, nonZero, rand, order));
+            res.add(new NoiseAgentDataset(i, numPlansMin, numPlansMax, planSize, mean, std, nonZeroMin, nonZeroMax, rand, order));
         }
         return res;
     }
