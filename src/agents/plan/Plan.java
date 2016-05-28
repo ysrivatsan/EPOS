@@ -329,6 +329,10 @@ public class Plan implements Serializable, Cloneable {
         }
     }
 
+    /**
+     * Multiplies the other plan element wise to this one.
+     * @param other 
+     */
     public void multiply(Plan other) {
         for (int i = 0; i < values.length; i++) {
             values[i] *= other.values[i];

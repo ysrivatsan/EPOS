@@ -18,6 +18,7 @@
 package experiments.parameters;
 
 import agents.fitnessFunction.IterMaxMatchGmA;
+import agents.fitnessFunction.IterMinCostAdamGmA;
 import agents.fitnessFunction.IterMinCostG;
 import agents.fitnessFunction.IterMinCostGmA;
 import agents.fitnessFunction.IterProbGmA;
@@ -38,6 +39,7 @@ public class FFConstructorParam extends MapParam<Constructor> {
     public FFConstructorParam() {
         try {
             map.put("MinCostGmA", IterMinCostGmA.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
+            map.put("MinCostAdamGmA", IterMinCostAdamGmA.class.getConstructor(IterativeCostFunction.class, Factor.class));
             map.put("MinCostG", IterMinCostG.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
             map.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             map.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));
