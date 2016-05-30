@@ -30,6 +30,7 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
 import edu.uci.ics.jung.visualization.VisualizationModel;
+import java.awt.Graphics2D;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -232,20 +233,33 @@ public class IEPOSVisualizer {
                     return ".png files";
                 }
             });
+            fileChooser.addChoosableFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().endsWith(".svg");
+                }
+
+                @Override
+                public String getDescription() {
+                    return ".svg files";
+                }
+            });
             int returnVal = fileChooser.showSaveDialog(frame);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-
-                BufferedImage img = new BufferedImage(viewer.getWidth(), viewer.getHeight(), ColorSpace.TYPE_CMYK);
+                
+                ImageFile img = null;
+                if(file.getName().endsWith(".png")) {
+                    img = new PngFile(file, viewer.getWidth(), viewer.getHeight());
+                } else if(file.getName().endsWith(".svg")) {
+                    img = new SvgFile(file, viewer.getWidth(), viewer.getHeight());
+                }
+                
                 viewer.setDoubleBuffered(false);
                 viewer.getRootPane().paintComponents(img.createGraphics());
                 viewer.setDoubleBuffered(true);
 
-                try {
-                    ImageIO.write(img, "png", file);
-                } catch (IOException ex) {
-                    Logger.getLogger(IEPOSVisualizer.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                img.write();
             }
         });
         menu.add(saveas);
