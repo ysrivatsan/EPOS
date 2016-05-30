@@ -4,7 +4,6 @@
  */
 package experiments.output;
 
-import agents.Agent;
 import agents.TreeNode;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
 import edu.uci.ics.jung.graph.Forest;
@@ -19,18 +18,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.Shape;
-import java.awt.color.ColorSpace;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import org.apache.commons.collections15.Transformer;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
 import edu.uci.ics.jung.visualization.VisualizationModel;
-import java.awt.Graphics2D;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -40,13 +34,9 @@ import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import protopeer.Finger;
-import protopeer.Peer;
 import protopeer.measurement.MeasurementLog;
 import protopeer.network.NetworkAddress;
 
@@ -128,10 +118,6 @@ public class IEPOSVisualizer {
         viewer.getRenderContext().setVertexFillPaintTransformer(getVertexFillPaintTransformer());
         viewer.setGraphMouse(getGraphMouse());
         return viewer;
-    }
-
-    private VisualizationViewer<Node, Integer> visualize(Forest<Node, Integer> graph) {
-        return visualize(new DefaultVisualizationModel(getLayout(graph)));
     }
 
     private void initIteration(int iteration) {

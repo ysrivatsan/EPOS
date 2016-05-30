@@ -69,6 +69,7 @@ import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
 import experiments.output.IEPOSVisualizer;
+import experiments.output.JFreeChartEvaluator;
 import java.util.LinkedHashMap;
 import protopeer.Experiment;
 
@@ -128,7 +129,8 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         String configFile = getConfigFile(args);
         String peersLog = initPeersLog(configFile);
         Properties properties = loadConfig(configFile);
-        IEPOSEvaluator evaluator = new MatlabEvaluator();
+        //IEPOSEvaluator evaluator = new MatlabEvaluator();
+        IEPOSEvaluator evaluator = new JFreeChartEvaluator();
 
         launcher = new ConfigurableExperiment();
         launcher.architecture = new TreeArchitecture();
