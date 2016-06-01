@@ -20,8 +20,11 @@ package experiments.output;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
+import java.awt.Stroke;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,44 +47,37 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        YIntervalSeriesCollection dataset = new YIntervalSeriesCollection();
-        
-        for(IEPOSMeasurement config : configMeasurements) {
-            YIntervalSeries series = new YIntervalSeries(config.label);
-           // OHLCSeries series = new OHLCSeries(config.label);
-            for(int i = 0; i < config.globalMeasurements.size(); i++) {
-                Aggregate aggregate = config.globalMeasurements.get(i);
-                double avg = aggregate.getAverage();
-                double std = aggregate.getStdDev();
-                series.add(i+1, avg, avg - std, avg + std);
-            }
-            dataset.addSeries(series);
+        boolean printLocal = configMeasurements.get(0).localMeasure != null;
+
+        xAxis = new NumberAxis(getXLabel());
+        List<PlotInfo> plotInfos = new ArrayList<>();
+        plotInfos.add(new PlotInfo()
+                .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.globalMeasurements))))
+                .yLabel(getYLabel(configMeasurements.stream().map(x -> x.globalMeasure))));
+        if(printLocal) {
+            plotInfos.add(new PlotInfo()
+                    .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.localMeasurements))))
+                    .yLabel(getYLabel(configMeasurements.stream().map(x -> x.localMeasure))));
         }
         
-        //JFreeChart chart = ChartFactory.createXYAreaChart(title, getXLabel(), getYLabel(configMeasurements.stream().map(x -> x.globalMeasure)), dataset, PlotOrientation.VERTICAL, true, true, true);
+        XYPlot plot = new XYPlot();
+        plot.setDomainAxis(0, xAxis);
         
-        CombinedDomainXYPlot combPlot = new CombinedDomainXYPlot();
-        DeviationRenderer renderer = new DeviationRenderer(true, false);
-        
-        XYPlot plot = new XYPlot(dataset, new NumberAxis(getXLabel()), new NumberAxis(getYLabel(configMeasurements.stream().map(x -> x.globalMeasure))), renderer);
-        
-        renderer.setAlpha(0.3f);
-        for(int i = 0; i < plot.getSeriesCount(); i++) {
-            renderer.setSeriesFillPaint(i, renderer.lookupSeriesPaint(i));
+        for(int i = 0; i < plotInfos.size(); i++) {
+            PlotInfo plotInfo = plotInfos.get(i);
+            plotInfo.addToPlot(plot, i);
         }
         
-        combPlot.add(plot);
-        JFreeChart chart = new JFreeChart(title, combPlot);
-        
+        JFreeChart chart = new JFreeChart(title, plot);
+        chart.setBackgroundPaint(Color.WHITE);
+
         // show plot
         ChartPanel panel = new ChartPanel(chart);
         frame.setContentPane(panel);
         frame.setSize(512, 512);
         frame.setVisible(true);
-    }
 
-    private String toMatlabString(String str) {
-        return str.replace("_", "\\_");
+        frame = frame;
     }
 
     private String getConvergencePoints(String conVar, String valVar, int num) {
@@ -108,27 +104,21 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         return configMeasurements.collect(Collectors.toSet()).stream().reduce((a, b) -> a + "," + b).get();
     }
 
-    private String getLegend(List<IEPOSMeasurement> configMeasurements) {
-        return configMeasurements.stream().map(x -> "'" + toMatlabString(x.label) + "'").reduce((a, b) -> a + "," + b).get();
-    }
+    private YIntervalSeriesCollection toDataset(Map<String, List<Aggregate>> configMeasurements) {
+        YIntervalSeriesCollection dataset = new YIntervalSeriesCollection();
 
-    private void printMatrix(String name, Stream<List<Aggregate>> iterationAggregates, Function<Aggregate, Double> function, PrintStream out) {
-        out.println(name + " = [");
-        iterationAggregates.forEachOrdered((List<Aggregate> log) -> {
-            out.print(function.apply(log.get(0)));
-            for (int i = 1; i < log.size(); i++) {
-                double val = function.apply(log.get(i));
-                if (val == Double.POSITIVE_INFINITY) {
-                    out.print(", inf");
-                } else if (val == Double.NEGATIVE_INFINITY) {
-                    out.print(", -inf");
-                } else {
-                    out.print(", " + val);
-                }
+        for (Map.Entry<String, List<Aggregate>> config : configMeasurements.entrySet()) {
+            YIntervalSeries series = new YIntervalSeries(config.getKey());
+            for (int i = 0; i < config.getValue().size(); i++) {
+                Aggregate aggregate = config.getValue().get(i);
+                double avg = aggregate.getAverage();
+                double std = aggregate.getStdDev();
+                series.add(i + 1, avg, avg - std, avg + std);
             }
-            out.println(";");
-        });
-        out.println("];");
+            dataset.addSeries(series);
+        }
+
+        return dataset;
     }
 
     private void printConvergence(String name, Stream<List<Aggregate>> iterationAggregates, PrintStream out) {
@@ -143,5 +133,43 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             out.print(convergence + " ");
         });
         out.println("]';");
+    }
+        
+    private ValueAxis xAxis;
+    
+    private class PlotInfo {
+        private XYDataset dataset;
+        private String yLabel;
+        
+        public PlotInfo dataset(XYDataset dataset) {
+            this.dataset = dataset;
+            return this;
+        }
+        
+        public PlotInfo yLabel(String yLabel) {
+            this.yLabel = yLabel;
+            return this;
+        }
+        
+        public void addToPlot(XYPlot plot, int idx) {
+            DeviationRenderer renderer = new DeviationRenderer(true, false);
+        
+            plot.setRangeAxis(idx, new NumberAxis(yLabel));
+            plot.setDataset(idx, dataset);
+            plot.mapDatasetToRangeAxis(idx, idx);
+            plot.setRenderer(idx, renderer);
+            
+            renderer.setAlpha(0.2f);
+            for (int i = 0; i < plot.getSeriesCount(); i++) {
+                Paint paint = ((DeviationRenderer)plot.getRenderer(0)).lookupSeriesPaint(i);
+                renderer.setSeriesPaint(i, paint);
+                renderer.setSeriesFillPaint(i, paint);
+                if(idx > 0) {
+                    renderer.setSeriesStroke(i, new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{2,4}, 0));
+                    renderer.setAlpha(0.1f);
+                    renderer.setSeriesVisibleInLegend(i, false);
+                }
+            }
+        }
     }
 }
