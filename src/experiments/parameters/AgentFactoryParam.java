@@ -18,6 +18,7 @@
 package experiments.parameters;
 
 import agents.AgentFactory;
+import agents.CohdaAgent;
 import agents.IEPOSAgent;
 import agents.IGreedyAgent;
 import agents.OPTAgent;
@@ -32,5 +33,6 @@ public class AgentFactoryParam extends MapParam<AgentFactory> {
         map.put("IEPOS", new IEPOSAgent.Factory());
         map.put("IGreedy", new IGreedyAgent.Factory());
         map.put("Opt", new OPTAgent.Factory());
+        map.put("COHDA", new CohdaAgent.Factory());
     }
 }
