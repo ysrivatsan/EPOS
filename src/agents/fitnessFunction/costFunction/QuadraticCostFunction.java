@@ -68,15 +68,21 @@ public class QuadraticCostFunction extends IterativeCostFunction {
             }
             A = AA; // convexify
              */
- /*
-            System.out.println("A = [");
+ 
+            /*System.out.println("A = [");
             for(int i=0; i<n; i++) {
                 for(int j=0; j<n; j++) {
                     System.out.print(A[i][j] + (j==n-1?"":","));
                 }
                 System.out.println((i==n-1?"":";"));
             }
-            System.out.println("]");*/
+            System.out.println("];");
+            System.out.print("B = [");
+            for(int i=0; i<n; i++) {
+                System.out.print(B[i] + (i==n-1?"":","));
+            }
+            System.out.println("];");
+            /**/
         }
     }
 
@@ -108,6 +114,8 @@ public class QuadraticCostFunction extends IterativeCostFunction {
         prepAB(n);
 
         Plan grad = plan.clone();
+        /*grad.multiply(-1);
+        return grad;/**/
         for (int i = 0; i < n; i++) {
             double x = B[i];
             for (int j = 0; j < n; j++) {
@@ -115,6 +123,8 @@ public class QuadraticCostFunction extends IterativeCostFunction {
             }
             grad.setValue(i, x);
         }
+        grad = plan.clone();
+        grad.multiply(-1);
         return grad;/**/
     }
 

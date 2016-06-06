@@ -35,7 +35,7 @@ public class IterMinCostG extends IterMinCost {
     private final Factor factor;
 
     private final PlanCombinator combinator;
-    private Plan totalGGradient;
+    private Plan iterativeCost;
 
     public IterMinCostG(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc);
@@ -45,7 +45,7 @@ public class IterMinCostG extends IterMinCost {
 
     @Override
     public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
-        totalGGradient = combinator.combine(totalGGradient, costFunc.calcGradient(current.global, costSignal), iteration);
+        iterativeCost = combinator.combine(iterativeCost, costFunc.calcGradient(current.global, costSignal), iteration);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class IterMinCostG extends IterMinCost {
         Plan iterativeCost = null;
 
         if (iteration > 0) {
-            iterativeCost = totalGGradient.clone();
+            iterativeCost = this.iterativeCost.clone();
             double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
         }

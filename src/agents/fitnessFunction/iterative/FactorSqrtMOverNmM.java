@@ -15,26 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments.parameters;
+package agents.fitnessFunction.iterative;
 
-import agents.fitnessFunction.iterative.*;
+import agents.AgentPlans;
+import agents.plan.Plan;
+import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class FactorParam extends MapParam<Factor> {
+public class FactorSqrtMOverNmM implements Factor {
 
-    public FactorParam() {
-        map.put("1", new Factor1());
-        map.put("1/l", new Factor1OverLayer());
-        map.put("1/n", new Factor1OverN());
-        map.put("1/sqrtn", new Factor1OverSqrtN());
-        map.put("d/n", new FactorDepthOverN());
-        map.put("m/n", new FactorMOverN());
-        map.put("m/n-m", new FactorMOverNmM());
-        map.put("sqrt_m/n-m", new FactorSqrtMOverNmM());
-        map.put("sqrt_m/n_-m/n", new FactorSqrtMNmMN());
-        map.put("std", new FactorNormalizeStd());
+    @Override
+    public double calcFactor(Plan rawIterationCost, List<Plan> plans, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        double factor = 0.1*Math.sqrt(numNodesSubtree/((double)numNodes-numNodesSubtree));
+        if(!Double.isFinite(factor)) {
+            factor = 1;
+        }
+        return factor;
+    }
+    
+    @Override
+    public String toString() {
+        return "sqrt(m/(n-m))";
     }
 }

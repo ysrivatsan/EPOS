@@ -23,7 +23,15 @@ import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
+import agents.plan.GlobalPlan;
+import agents.plan.PossiblePlan;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.security.SecureRandom;
 import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * minimize variance (submodular/convex compared to std deviation) weight B
@@ -31,28 +39,55 @@ import java.util.List;
  *
  * @author Peter
  */
-public class IterMinCostGmA extends IterMinCost {
+public class IterMinCostRand extends IterMinCost {
 
     private final Factor factor;
 
     private final PlanCombinator combinator;
     private Plan iterativeCost;
+    private Agent agent;
 
-    public IterMinCostGmA(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
+    public IterMinCostRand(IterativeCostFunction costFunc, Factor factor, PlanCombinator combinator) {
         super(costFunc);
         this.factor = factor;
         this.combinator = combinator;
     }
+    
+    private PrintStream out;
 
     @Override
     public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
-        Plan p = current.global.clone();
-        p.subtract(current.aggregate);
-        iterativeCost = combinator.combine(iterativeCost, costFunc.calcGradient(p, costSignal), iteration);
+        if(agent.getPeer().getIndexNumber() == 0) {
+            if(iteration == 0) {
+                //out = System.out;
+                try {
+                    out = new PrintStream("output-data/out.m");
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(IterMinCostRand.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+            if(iterativeCost == null) {
+                out.println("X(:,"+(1+iteration)+") = " + new GlobalPlan(agent) + ";");
+            } else {
+                out.println("X(:,"+(1+iteration)+") = " + iterativeCost + ";");
+            }
+            
+            Plan gma = current.global.clone();
+            gma.subtract(current.aggregate);
+            out.println("G(:,"+(1+iteration)+") = " + current.global + ";");
+            out.println("GmA(:,"+(1+iteration)+") = " + gma + ";");
+        }
+        Random r = new SecureRandom((iteration+"").getBytes());
+        iterativeCost = new PossiblePlan(agent);
+        for(int i = 0; i < iterativeCost.getNumberOfStates(); i++) {
+            iterativeCost.setValue(i, r.nextGaussian()*10);
+        }
     }
 
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
+        this.agent = agent; //TODO: remove
         Plan iterativeCost = null;
 
         if (iteration > 0) {
