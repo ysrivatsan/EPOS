@@ -123,8 +123,6 @@ public class QuadraticCostFunction extends IterativeCostFunction {
             }
             grad.setValue(i, x);
         }
-        grad = plan.clone();
-        grad.multiply(-1);
         return grad;/**/
     }
 

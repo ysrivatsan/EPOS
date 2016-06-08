@@ -40,7 +40,7 @@ public class VarCostFunction extends IterativeCostFunction {
     public Plan calcGradient(Plan plan, Plan costSignal) {
         Plan p = plan.clone();
         p.add(costSignal);
-        p.subtract(p.avg());
+        //p.subtract(p.avg());
         p.multiply(2.0/(p.getNumberOfStates()-1));
         return p;
     }
