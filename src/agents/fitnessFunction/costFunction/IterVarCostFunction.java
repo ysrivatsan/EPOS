@@ -23,17 +23,17 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public class VarCostFunction extends IterativeCostFunction {
+public class IterVarCostFunction extends IterativeCostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
         Plan p = plan.clone();
         p.add(costSignal);
         
-        if(iterationCost == null) {
+        if(iterationCost == null || iterationCost.normSqr() == 0.0) {
             return p.variance();
         }
-        return p.variance() + iterationCost.dot(p);
+        return iterationCost.dot(p);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class VarCostFunction extends IterativeCostFunction {
 
     @Override
     public String toString() {
-        return "VarCost";
+        return "IVarCost";
     }
 
     @Override

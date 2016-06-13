@@ -114,8 +114,6 @@ public class QuadraticCostFunction extends IterativeCostFunction {
         prepAB(n);
 
         Plan grad = plan.clone();
-        /*grad.multiply(-1);
-        return grad;/**/
         for (int i = 0; i < n; i++) {
             double x = B[i];
             for (int j = 0; j < n; j++) {
