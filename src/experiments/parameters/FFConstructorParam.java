@@ -17,13 +17,7 @@
  */
 package experiments.parameters;
 
-import agents.fitnessFunction.IterMaxMatchGmA;
-import agents.fitnessFunction.IterMinCostAdamGmA;
-import agents.fitnessFunction.IterMinCostG;
-import agents.fitnessFunction.IterMinCostGmA;
-import agents.fitnessFunction.IterMinCostRand;
-import agents.fitnessFunction.IterProbGmA;
-import agents.fitnessFunction.IterUCB1Bandit;
+import agents.fitnessFunction.*;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.iterative.Factor;
 import agents.fitnessFunction.iterative.PlanCombinator;
@@ -39,9 +33,12 @@ public class FFConstructorParam extends MapParam<Constructor> {
 
     public FFConstructorParam() {
         try {
-            map.put("MinCostGmA", IterMinCostGmA.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
-            map.put("MinCostAdamGmA", IterMinCostAdamGmA.class.getConstructor(IterativeCostFunction.class, Factor.class));
             map.put("MinCostG", IterMinCostG.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
+            map.put("MinCostGmS", IterMinCostGmS.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
+            map.put("MinCostGmA", IterMinCostGmA.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
+            map.put("MinCostAdamG", IterMinCostAdamG.class.getConstructor(IterativeCostFunction.class, Factor.class));
+            map.put("MinCostAdamGmS", IterMinCostAdamGmS.class.getConstructor(IterativeCostFunction.class, Factor.class));
+            map.put("MinCostAdamGmA", IterMinCostAdamGmA.class.getConstructor(IterativeCostFunction.class, Factor.class));
             map.put("MinCostRand", IterMinCostRand.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
             map.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             map.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));

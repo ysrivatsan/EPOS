@@ -129,8 +129,8 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         String configFile = getConfigFile(args);
         String peersLog = initPeersLog(configFile);
         Properties properties = loadConfig(configFile);
-        IEPOSEvaluator evaluator = new MatlabEvaluator();
-        //IEPOSEvaluator evaluator = new JFreeChartEvaluator();
+        //IEPOSEvaluator evaluator = new MatlabEvaluator();
+        IEPOSEvaluator evaluator = new JFreeChartEvaluator();
 
         launcher = new ConfigurableExperiment();
         launcher.architecture = new TreeArchitecture();

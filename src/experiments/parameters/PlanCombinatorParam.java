@@ -17,11 +17,7 @@
  */
 package experiments.parameters;
 
-import agents.fitnessFunction.iterative.AvgCombinator;
-import agents.fitnessFunction.iterative.MostRecentCombinator;
-import agents.fitnessFunction.iterative.PlanCombinator;
-import agents.fitnessFunction.iterative.SumCombinator;
-import agents.fitnessFunction.iterative.WeightedSumCombinator2;
+import agents.fitnessFunction.iterative.*;
 
 /**
  *
@@ -33,6 +29,6 @@ public class PlanCombinatorParam extends MapParam<PlanCombinator> {
         map.put("sum", new SumCombinator());
         map.put("avg", new AvgCombinator());
         map.put("prev", new MostRecentCombinator());
-        map.put("wsum", new WeightedSumCombinator2());
+        map.put("wsum", new WeightedSumCombinator(-0.5));
     }
 }
