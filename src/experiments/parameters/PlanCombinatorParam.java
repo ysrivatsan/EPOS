@@ -29,6 +29,7 @@ public class PlanCombinatorParam extends MapParam<PlanCombinator> {
         map.put("sum", new SumCombinator());
         map.put("avg", new AvgCombinator());
         map.put("prev", new MostRecentCombinator());
-        map.put("wsum", new WeightedSumCombinator(-0.5));
+        map.put("wsum0.5", new WeightedSumCombinator(-0.5));
+        map.put("wsum1", new WeightedSumCombinator(-1));
     }
 }

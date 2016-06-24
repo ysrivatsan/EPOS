@@ -36,5 +36,6 @@ public class FactorParam extends MapParam<Factor> {
         map.put("sqrt_m/n-m", new FactorSqrtMOverNmM());
         map.put("sqrt_m/n_-m/n", new FactorSqrtMNmMN());
         map.put("std", new FactorNormalizeStd());
+        map.put("0root", new FactorZeroRoot());
     }
 }

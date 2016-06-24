@@ -19,15 +19,25 @@ package experiments.output;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Frame;
 import java.awt.Paint;
-import java.awt.Stroke;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
@@ -42,11 +52,25 @@ import protopeer.measurement.Aggregate;
  */
 public class JFreeChartEvaluator extends IEPOSEvaluator {
 
+    public static void main(String[] args) throws IOException {
+        Frame f = new Frame();
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(f) == JFileChooser.APPROVE_OPTION) {
+            try (BufferedReader br = new BufferedReader(new FileReader(chooser.getSelectedFile()))) {
+                new JFreeChartEvaluator().readAndExecuteState(br);
+            }
+        }
+    }
+
     @Override
     void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
+        if (out != null) {
+            writeState(id, title, configMeasurements, out);
+        }
+
         JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         boolean printLocal = configMeasurements.get(0).localMeasure != null;
 
         xAxis = new NumberAxis(getXLabel());
@@ -54,20 +78,20 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         plotInfos.add(new PlotInfo()
                 .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.globalMeasurements))))
                 .yLabel(getYLabel(configMeasurements.stream().map(x -> x.globalMeasure))));
-        if(printLocal) {
+        if (printLocal) {
             plotInfos.add(new PlotInfo()
                     .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.localMeasurements))))
                     .yLabel(getYLabel(configMeasurements.stream().map(x -> x.localMeasure))));
         }
-        
+
         XYPlot plot = new XYPlot();
         plot.setDomainAxis(0, xAxis);
-        
-        for(int i = 0; i < plotInfos.size(); i++) {
+
+        for (int i = 0; i < plotInfos.size(); i++) {
             PlotInfo plotInfo = plotInfos.get(i);
             plotInfo.addToPlot(plot, i);
         }
-        
+
         JFreeChart chart = new JFreeChart(title, plot);
         chart.setBackgroundPaint(Color.WHITE);
 
@@ -134,42 +158,100 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         });
         out.println("]';");
     }
-        
+
     private ValueAxis xAxis;
-    
+
     private class PlotInfo {
+
         private XYDataset dataset;
         private String yLabel;
-        
+
         public PlotInfo dataset(XYDataset dataset) {
             this.dataset = dataset;
             return this;
         }
-        
+
         public PlotInfo yLabel(String yLabel) {
             this.yLabel = yLabel;
             return this;
         }
-        
+
         public void addToPlot(XYPlot plot, int idx) {
             DeviationRenderer renderer = new DeviationRenderer(true, false);
-        
+
             plot.setRangeAxis(idx, new NumberAxis(yLabel));
             plot.setDataset(idx, dataset);
             plot.mapDatasetToRangeAxis(idx, idx);
             plot.setRenderer(idx, renderer);
-            
+
             renderer.setAlpha(0.2f);
             for (int i = 0; i < plot.getSeriesCount(); i++) {
-                Paint paint = ((DeviationRenderer)plot.getRenderer(0)).lookupSeriesPaint(i);
+                Paint paint = ((DeviationRenderer) plot.getRenderer(0)).lookupSeriesPaint(i);
                 renderer.setSeriesPaint(i, paint);
                 renderer.setSeriesFillPaint(i, paint);
-                if(idx > 0) {
-                    renderer.setSeriesStroke(i, new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{2,4}, 0));
+                if (idx > 0) {
+                    renderer.setSeriesStroke(i, new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{2, 4}, 0));
                     renderer.setAlpha(0.1f);
                     renderer.setSeriesVisibleInLegend(i, false);
                 }
             }
         }
+    }
+
+    private void writeState(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
+        Base64.Encoder encoder = Base64.getEncoder();
+
+        out.println(id);
+        out.println(title);
+        for (IEPOSMeasurement m : configMeasurements) {
+            out.println(m.label);
+            out.println(m.globalMeasure);
+            out.println(m.localMeasure);
+            out.println(encoder.encodeToString(convertToBytes(m.globalMeasurements)));
+            out.println(encoder.encodeToString(convertToBytes(m.localMeasurements)));
+        }
+    }
+
+    private void readAndExecuteState(BufferedReader br) throws IOException {
+        Base64.Decoder decoder = Base64.getDecoder();
+
+        int id = Integer.parseInt(br.readLine());
+        String title = br.readLine();
+        List<IEPOSMeasurement> configMeasurements = new ArrayList<>();
+        String line;
+        while ((line = br.readLine()) != null) {
+            IEPOSMeasurement m = new IEPOSMeasurement();
+            m.label = line;
+            m.globalMeasure = br.readLine();
+            m.localMeasure = br.readLine();
+            if("null".equals(m.localMeasure)) {
+                m.localMeasure = null;
+            }
+            m.globalMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(br.readLine()));
+            m.localMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(br.readLine()));
+            configMeasurements.add(m);
+        }
+        evaluate(id, title, configMeasurements, null);
+    }
+
+    private byte[] convertToBytes(Object object) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(object);
+            return bos.toByteArray();
+        } catch (IOException ex) {
+            Logger.getLogger(JFreeChartEvaluator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    private Object convertFromBytes(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                ObjectInputStream in = new ObjectInputStream(bis)) {
+            return in.readObject();
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(JFreeChartEvaluator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

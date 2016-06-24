@@ -18,34 +18,21 @@
 package agents.fitnessFunction.iterative;
 
 import agents.plan.Plan;
+import java.util.List;
 
 /**
  *
  * @author Peter
  */
-public class WeightedSumCombinator implements PlanCombinator {
-    private double exp = -0.25;
-    
-    public WeightedSumCombinator() {
-    }
-    
-    public WeightedSumCombinator(double iterExp) {
-        this.exp = iterExp;
-    }
+public class FactorZeroRoot implements Factor {
 
     @Override
-    public Plan combine(Plan target, Plan other, int iteration) {
-        if (target == null) {
-            return other.clone();
-        }
-        Plan x = other.clone();
-        x.multiply(Math.pow(iteration,exp));
-        target.add(x);
-        return target;
+    public double calcFactor(Plan rawIterationCost, List<Plan> plans, int numNodes, int numNodesSubtree, int layer, double avgChildren) {
+        return numNodesSubtree<numNodes?1:0;
     }
-
+    
     @Override
     public String toString() {
-        return "wsum"+exp;
+        return "0Root";
     }
 }
