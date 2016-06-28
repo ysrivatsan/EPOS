@@ -56,7 +56,9 @@ public class MatlabEvaluator extends IEPOSEvaluator {
         }
 
         String xcon = "XCon" + id;
-        printConvergence(xcon, configMeasurements.stream().map(x -> x.globalMeasurements), out);
+        printConvergence(xcon, 0.01, configMeasurements.stream().map(x -> x.globalMeasurements), out);
+        printConvergence(xcon+"x", 0.1, configMeasurements.stream().map(x -> x.globalMeasurements), out);
+        printConvergence(xcon+"xx", 0.5, configMeasurements.stream().map(x -> x.globalMeasurements), out);
 
         out.println("figure(" + id + ");");
         if(printLocal) {
@@ -131,8 +133,8 @@ public class MatlabEvaluator extends IEPOSEvaluator {
         out.println("];");
     }
 
-    private void printConvergence(String name, Stream<List<Aggregate>> iterationAggregates, PrintStream out) {
-        Convergence con = new EpsilonConvergence(0.1);
+    private void printConvergence(String name, double percentage, Stream<List<Aggregate>> iterationAggregates, PrintStream out) {
+        Convergence con = new EpsilonConvergence(percentage);
         out.print(name + " = [");
         iterationAggregates.forEachOrdered((List<Aggregate> log) -> {
             double[] signal = new double[log.size()];

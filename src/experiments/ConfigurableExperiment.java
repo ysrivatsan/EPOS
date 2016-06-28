@@ -129,8 +129,6 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         String configFile = getConfigFile(args);
         String peersLog = initPeersLog(configFile);
         Properties properties = loadConfig(configFile);
-        //IEPOSEvaluator evaluator = new MatlabEvaluator();
-        IEPOSEvaluator evaluator = new JFreeChartEvaluator();
 
         launcher = new ConfigurableExperiment();
         launcher.architecture = new TreeArchitecture();
@@ -209,6 +207,13 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
 
         try (PrintStream out = outFile == null ? System.out : new PrintStream(outFile)) {
             int plotNumber = 0;
+            IEPOSEvaluator evaluator;
+            
+            if(outFile != null && outFile.endsWith(".m")) {
+                evaluator = new MatlabEvaluator();
+            } else {
+                evaluator = new JFreeChartEvaluator();
+            }
 
             // outer loops
             List<Iterator<? extends Object>> outerState = Util.repeat(outer.size(), (Iterator<? extends Object>) null);

@@ -36,8 +36,8 @@ public class IterMinCostAdamGmA extends IterMinCost {
     private final Factor factor;
     
     private final double alpha = 0.1;
-    private final double beta1 = 0.6;
-    private final double beta2 = 0.999; //0.999
+    private final double beta1 = 0.0; //0.6
+    private final double beta2 = 0.5; //0.999
     private final double epsilon = 1e-8;
     private Plan theta;
     private Plan m;

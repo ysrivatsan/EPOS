@@ -17,13 +17,18 @@
  */
 package experiments.output;
 
+import com.orsoncharts.legend.StandardLegendBuilder;
+import com.orsoncharts.util.Anchor2D;
+import com.orsoncharts.util.Orientation;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Paint;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,6 +49,8 @@ import org.jfree.chart.axis.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.xy.*;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
 import protopeer.measurement.Aggregate;
 
 /**
@@ -51,10 +58,14 @@ import protopeer.measurement.Aggregate;
  * @author Peter
  */
 public class JFreeChartEvaluator extends IEPOSEvaluator {
+    
+    private static File defaultSrcDir = new File("C:\\Users\\Peter\\OneDrive\\Dokumente\\Master Studium\\Master Thesis\\MyThesis\\fig\\Plot Files");
+    private static File defaultDstDir = new File("C:\\Users\\Peter\\OneDrive\\Dokumente\\Master Studium\\Master Thesis\\MyThesis\\fig");
 
     public static void main(String[] args) throws IOException {
-        Frame f = new Frame();
-        JFileChooser chooser = new JFileChooser();
+        JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFileChooser chooser = new JFileChooser(defaultSrcDir);
         if (chooser.showOpenDialog(f) == JFileChooser.APPROVE_OPTION) {
             try (BufferedReader br = new BufferedReader(new FileReader(chooser.getSelectedFile()))) {
                 new JFreeChartEvaluator().readAndExecuteState(br);
@@ -94,11 +105,19 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
         JFreeChart chart = new JFreeChart(title, plot);
         chart.setBackgroundPaint(Color.WHITE);
-
+        
+        Font font = new Font("Computer Modern", Font.PLAIN, 12);
+        chart.getXYPlot().getDomainAxis().setLabelFont(font);
+        chart.getXYPlot().getDomainAxis().setTickLabelFont(font);
+        chart.getXYPlot().getRangeAxis().setLabelFont(font);
+        chart.getXYPlot().getRangeAxis().setTickLabelFont(font);
+        chart.getLegend().setItemFont(font);
+        
         // show plot
         ChartPanel panel = new ChartPanel(chart);
+        panel.setDefaultDirectoryForSaveAs(defaultDstDir);
         frame.setContentPane(panel);
-        frame.setSize(512, 512);
+        frame.setSize(256, 256);
         frame.setVisible(true);
 
         frame = frame;
