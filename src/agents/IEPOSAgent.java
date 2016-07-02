@@ -223,9 +223,9 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         layer = parent.hops;
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
-        fitnessFunction.afterIteration(current, costSignal, iteration);
+        fitnessFunction.afterIteration(current, costSignal, iteration, numNodes);
         if (isRoot()) {
-            fitnessFunctionRoot.afterIteration(current, costSignal, iteration);
+            fitnessFunctionRoot.afterIteration(current, costSignal, iteration, numNodes);
         }
         previous = current;
 

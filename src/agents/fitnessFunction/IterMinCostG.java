@@ -44,7 +44,7 @@ public class IterMinCostG extends IterMinCost {
     }
 
     @Override
-    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         iterativeCost = combinator.combine(iterativeCost, costFunc.calcGradient(current.global, costSignal), iteration);
     }
 

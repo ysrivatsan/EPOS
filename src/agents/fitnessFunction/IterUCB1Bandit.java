@@ -44,7 +44,7 @@ public class IterUCB1Bandit extends IterativeFitnessFunction {
     }
     
     @Override
-    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         previousGlobalPlan = combinator.combine(previousGlobalPlan, current.global, iteration);
         previousSelectedPlan = combinator.combine(previousSelectedPlan, current.selectedPlan, iteration);
     }

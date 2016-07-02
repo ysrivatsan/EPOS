@@ -176,7 +176,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
 
         measureGlobal(current.global, costSignal);
-        fitnessFunction.afterIteration(current, costSignal, iteration);
+        fitnessFunction.afterIteration(current, costSignal, iteration, numNodes);
         previous = current;
         
 

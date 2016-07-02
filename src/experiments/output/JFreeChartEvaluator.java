@@ -17,14 +17,19 @@
  */
 package experiments.output;
 
-import com.orsoncharts.legend.StandardLegendBuilder;
-import com.orsoncharts.util.Anchor2D;
-import com.orsoncharts.util.Orientation;
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Panel;
+import java.awt.Rectangle;
+import java.awt.event.InputMethodListener;
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,9 +39,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.text.AttributedString;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,11 +53,19 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
+import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.block.BlockContainer;
+import org.jfree.chart.block.CenterArrangement;
+import org.jfree.chart.block.ColorBlock;
+import org.jfree.chart.block.RectangleConstraint;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.*;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.TextAnchor;
 import protopeer.measurement.Aggregate;
 
 /**
@@ -75,6 +90,7 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
     @Override
     void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
+        Locale.setDefault(Locale.US);
         if (out != null) {
             writeState(id, title, configMeasurements, out);
         }
@@ -94,7 +110,7 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
                     .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.localMeasurements))))
                     .yLabel(getYLabel(configMeasurements.stream().map(x -> x.localMeasure))));
         }
-
+        xAxis.setRange(0,plotInfos.get(0).dataset.getItemCount(0));
         XYPlot plot = new XYPlot();
         plot.setDomainAxis(0, xAxis);
 
@@ -103,20 +119,42 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             plotInfo.addToPlot(plot, i);
         }
 
-        JFreeChart chart = new JFreeChart(title, plot);
+        Font font = new Font("Computer Modern", Font.PLAIN, 12);
+        JFreeChart chart = new JFreeChart(null, font,  plot, false);
         chart.setBackgroundPaint(Color.WHITE);
         
-        Font font = new Font("Computer Modern", Font.PLAIN, 12);
         chart.getXYPlot().getDomainAxis().setLabelFont(font);
         chart.getXYPlot().getDomainAxis().setTickLabelFont(font);
         chart.getXYPlot().getRangeAxis().setLabelFont(font);
         chart.getXYPlot().getRangeAxis().setTickLabelFont(font);
-        chart.getLegend().setItemFont(font);
+        
+        LegendTitle legend = new LegendTitle(plot);
+        legend.setItemFont(font);
+        legend.setItemLabelPadding(new RectangleInsets(0, 0, 0, 5));
+        legend.setFrame(new BlockBorder());
+        legend.getItemContainer().add(new ColorBlock(Color.BLUE, 20, 20));
+        Panel myPanel = new Panel()/* {
+            @Override
+            public void paintAll(Graphics g) {
+                super.paintAll(g);
+                paint(g);
+            }
+
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                legend.draw((Graphics2D)g, new Rectangle(100, 100, 200, 300));
+            }
+        }*/;
+        legend.setPosition(RectangleEdge.BOTTOM);
+        chart.addLegend(legend);
         
         // show plot
         ChartPanel panel = new ChartPanel(chart);
         panel.setDefaultDirectoryForSaveAs(defaultDstDir);
-        frame.setContentPane(panel);
+        myPanel.setLayout(new BorderLayout(0,0));
+        myPanel.add(panel);
+        frame.setContentPane(myPanel);
         frame.setSize(256, 256);
         frame.setVisible(true);
 
@@ -184,6 +222,8 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
         private XYDataset dataset;
         private String yLabel;
+        private String range;
+        private ValueAxis axis;
 
         public PlotInfo dataset(XYDataset dataset) {
             this.dataset = dataset;
@@ -191,14 +231,30 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         }
 
         public PlotInfo yLabel(String yLabel) {
+            yLabel = yLabel.trim();
+            if(yLabel.endsWith(")")) {
+                range = yLabel.substring(yLabel.indexOf("("));
+                range = range.substring(1,range.length()-1);
+                yLabel = yLabel.substring(0,yLabel.indexOf("("));
+            }
+            if(yLabel.startsWith("log_")) {
+                axis = new LatexLogAxis(yLabel.substring(4));
+            } else {
+                axis = new NumberAxis(yLabel);
+            }
             this.yLabel = yLabel;
             return this;
         }
 
         public void addToPlot(XYPlot plot, int idx) {
             DeviationRenderer renderer = new DeviationRenderer(true, false);
-
-            plot.setRangeAxis(idx, new NumberAxis(yLabel));
+            
+            plot.setRangeAxis(idx, axis);
+            if(range != null) {
+                String[] fromTo = range.split("-");
+                plot.getRangeAxis().setRange(Double.parseDouble(fromTo[0]), Double.parseDouble(fromTo[1]));
+            }
+            
             plot.setDataset(idx, dataset);
             plot.mapDatasetToRangeAxis(idx, idx);
             plot.setRenderer(idx, renderer);
@@ -272,5 +328,12 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             Logger.getLogger(JFreeChartEvaluator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+    
+    private static class LatexLogAxis extends LogarithmicAxis {
+        public LatexLogAxis(String label) {
+            super(label);
+            setAllowNegativesFlag(true);
+        }
     }
 }

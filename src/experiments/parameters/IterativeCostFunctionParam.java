@@ -32,6 +32,7 @@ public class IterativeCostFunctionParam extends MapParam<CostFunction> {
         map.put("dot", new DirectionCostFunction());
         map.put("match", new MatchEstimateCostFunction());
         map.put("rand", new QuadraticCostFunction(1));
+        map.put("irand", new IterQuadraticCostFunction(1));
         map.put("relStd", new RelStdDevCostFunction());
         map.put("entropy", new EntropyCostFunction());
         map.put("", null);

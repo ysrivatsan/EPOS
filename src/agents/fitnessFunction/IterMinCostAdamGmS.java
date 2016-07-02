@@ -70,9 +70,10 @@ public class IterMinCostAdamGmS extends IterMinCost {
     }
 
     @Override
-    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         Plan p = current.global.clone();
         p.subtract(current.selectedPlan);
+        p.multiply(numNodes/(numNodes-1.0));
         
         int t = iteration + 1;
         

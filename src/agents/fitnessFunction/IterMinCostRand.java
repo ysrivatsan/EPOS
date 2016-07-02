@@ -56,7 +56,7 @@ public class IterMinCostRand extends IterMinCost {
     private PrintStream out;
 
     @Override
-    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         if(agent.getPeer().getIndexNumber() == 0) {
             if(iteration == 0) {
                 //out = System.out;

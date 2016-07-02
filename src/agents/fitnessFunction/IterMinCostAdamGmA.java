@@ -71,7 +71,7 @@ public class IterMinCostAdamGmA extends IterMinCost {
     }
 
     @Override
-    public void afterIteration(AgentPlans current, Plan costSignal, int iteration) {
+    public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         Plan p = current.global.clone();
         p.subtract(current.aggregate);
         
