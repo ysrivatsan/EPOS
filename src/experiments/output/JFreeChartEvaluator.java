@@ -1,6 +1,20 @@
 /*
  * Copyright (C) 2016 Evangelos Pournaras
- *
+                     @Override
+                    public double getX() {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+
+                    @Override
+                    public double getY() {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+
+                    @Override
+                    public void setLocation(double x, double y) {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                }
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -19,6 +33,7 @@ package experiments.output;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -27,9 +42,12 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Panel;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.InputMethodListener;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,6 +60,7 @@ import java.io.PrintStream;
 import java.text.AttributedString;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,19 +72,26 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
+import org.jfree.chart.block.Arrangement;
+import org.jfree.chart.block.Block;
 import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.block.BlockContainer;
 import org.jfree.chart.block.CenterArrangement;
 import org.jfree.chart.block.ColorBlock;
 import org.jfree.chart.block.RectangleConstraint;
+import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.PlotEntity;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.*;
+import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.Size2D;
 import org.jfree.ui.TextAnchor;
+import org.jfree.ui.VerticalAlignment;
 import protopeer.measurement.Aggregate;
 
 /**
@@ -76,6 +102,9 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
     
     private static File defaultSrcDir = new File("C:\\Users\\Peter\\OneDrive\\Dokumente\\Master Studium\\Master Thesis\\MyThesis\\fig\\Plot Files");
     private static File defaultDstDir = new File("C:\\Users\\Peter\\OneDrive\\Dokumente\\Master Studium\\Master Thesis\\MyThesis\\fig");
+    
+    private ChartPanel panel = null;
+    
 
     public static void main(String[] args) throws IOException {
         JFrame f = new JFrame();
@@ -120,7 +149,111 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         }
 
         Font font = new Font("Computer Modern", Font.PLAIN, 12);
-        JFreeChart chart = new JFreeChart(null, font,  plot, false);
+        
+        // init legend
+        LegendTitle legend = new LegendTitle(plot);
+        legend.setItemFont(font);
+        legend.setItemLabelPadding(new RectangleInsets(0, 0, 0, 10));
+        legend.setFrame(new BlockBorder());
+        legend.getItemContainer().add(new ColorBlock(Color.BLUE, 20, 20));
+        legend.setPosition(RectangleEdge.BOTTOM);
+        legend.setBackgroundPaint(Color.WHITE);
+        
+        JFreeChart chart;
+        chart = new JFreeChart(null, font,  plot, false) {
+            @Override
+            public void draw(Graphics2D g2, Rectangle2D chartArea, Point2D anchor, ChartRenderingInfo info) {
+                panel.getChartRenderingInfo().setChartArea(panel.getScreenDataArea());
+                super.draw(g2, chartArea, anchor, info);
+                
+                // arrange legend and compute width and height
+                double w = 0;
+                double h = 0;
+                
+                Size2D size = legend.arrange(g2, new RectangleConstraint(0, Double.POSITIVE_INFINITY));
+                h = size.height;
+                for(Block item : (List<Block>) legend.getItemContainer().getBlocks()) {
+                    Size2D itemSize = item.arrange(g2, RectangleConstraint.NONE);
+                    w = Math.max(w, itemSize.width);
+                }
+                
+                //compute content rectangle
+                double scaleX = 1;
+                double scaleY = 1;
+                double offsetX = 0;
+                double offsetY = 0;
+                
+                Rectangle2D plotBounds;
+                if(info != null) {
+                    plotBounds = info.getPlotInfo().getPlotArea();
+                    //System.out.println(chartArea + "," + panel.getScreenDataArea() + "," + plotBounds);
+                } else {
+                    plotBounds = panel.getChartRenderingInfo().getPlotInfo().getPlotArea();
+                    //System.out.println(chartArea + "," + panel.getScreenDataArea());
+                    
+                    scaleX = panel.getScaleX();
+                    scaleY = panel.getScaleY();
+                    offsetX = 2;
+                    offsetY = 0;
+                }
+                
+                // get unscaled content rectangle
+                Rectangle2D contentRectRaw = null;
+                for(ChartEntity entity : (Collection<ChartEntity>)panel.getChartRenderingInfo().getEntityCollection().getEntities()) {
+                    if(entity instanceof PlotEntity) {
+                        contentRectRaw = entity.getArea().getBounds2D();
+                    }
+                }
+                
+                //panel.getScaleX() returns the effective scale (input size -> output size), however the border (8px) has constant width (is not scaled!)
+                double plotXRaw = plotBounds.getX();
+                double plotYRaw = plotBounds.getY();
+                double plotWRaw = plotBounds.getWidth();
+                double plotHRaw = plotBounds.getHeight();
+                double plotW = (2*plotXRaw + plotWRaw)*scaleX - 2*plotXRaw;
+                double plotH = (2*plotYRaw + plotHRaw)*scaleY - 2*plotYRaw;
+                double newScaleX = plotW / plotWRaw;
+                double newScaleY = plotH / plotHRaw;
+                
+                double border = ((BasicStroke)plot.getRangeGridlineStroke()).getLineWidth()/2;
+                
+                System.out.println(plotBounds + "," + contentRectRaw);
+                /*double contentX = plotBounds.getX()-border;
+                double contentY = plotBounds.getY()-border;
+                */
+                
+                double ox = 0;
+                double oy = 0;
+                if(plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT) {
+                    ox = offsetX;
+                    oy = offsetY;
+                }
+                boolean leftAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT;
+                boolean rightAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_RIGHT;
+                double contentX = contentRectRaw.getX() - (leftAxis?offsetX:0) - border;
+                double contentY = contentRectRaw.getY() - (leftAxis?offsetY:0) - border;
+                double contentW = contentRectRaw.getWidth()*newScaleX + (rightAxis?offsetX:0) + 2*border;
+                double contentH = contentRectRaw.getHeight()*newScaleY + (rightAxis?offsetY:0) + 2*border;
+                
+                // compute legend position
+                double x = contentX + contentW - w;
+                double y = contentY;
+                
+                //System.out.println(x + "/" + y + ", " + w + "/" + h);
+                legend.draw(g2, new Rectangle2D.Double(x, y, w, h));
+            }
+
+            @Override
+            public void draw(Graphics2D g2, Rectangle2D area, ChartRenderingInfo info) {
+                super.draw(g2, area, info);
+            }
+
+            @Override
+            public void draw(Graphics2D g2, Rectangle2D area) {
+                super.draw(g2, area);
+            }
+            
+        };
         chart.setBackgroundPaint(Color.WHITE);
         
         chart.getXYPlot().getDomainAxis().setLabelFont(font);
@@ -128,33 +261,14 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         chart.getXYPlot().getRangeAxis().setLabelFont(font);
         chart.getXYPlot().getRangeAxis().setTickLabelFont(font);
         
-        LegendTitle legend = new LegendTitle(plot);
-        legend.setItemFont(font);
-        legend.setItemLabelPadding(new RectangleInsets(0, 0, 0, 5));
-        legend.setFrame(new BlockBorder());
-        legend.getItemContainer().add(new ColorBlock(Color.BLUE, 20, 20));
-        Panel myPanel = new Panel()/* {
-            @Override
-            public void paintAll(Graphics g) {
-                super.paintAll(g);
-                paint(g);
-            }
-
-            @Override
-            public void paint(Graphics g) {
-                super.paint(g);
-                legend.draw((Graphics2D)g, new Rectangle(100, 100, 200, 300));
-            }
-        }*/;
-        legend.setPosition(RectangleEdge.BOTTOM);
-        chart.addLegend(legend);
+        //chart.addLegend(legend);
         
         // show plot
-        ChartPanel panel = new ChartPanel(chart);
+        panel = new ChartPanel(chart);
         panel.setDefaultDirectoryForSaveAs(defaultDstDir);
-        myPanel.setLayout(new BorderLayout(0,0));
-        myPanel.add(panel);
-        frame.setContentPane(myPanel);
+        panel.setMinimumDrawHeight(1);
+        panel.setMinimumDrawWidth(1);
+        frame.setContentPane(panel);
         frame.setSize(256, 256);
         frame.setVisible(true);
 
