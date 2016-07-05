@@ -52,14 +52,14 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
 
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, Plan iterativeCost) {
         double minCost = Double.POSITIVE_INFINITY;
+        double baseBias;
         int selected = -1;
         int numOpt = 0;
 
-        Random random = null;
-        if(rampUpBias != null) {
-            random = new Random(agent.getPeer().getIndexNumber());
-        }
-
+        double sum = 0;
+        double sqrSum = 0;
+        double[] costs = new double[plans.size()];
+        
         for (int i = 0; i < plans.size(); i++) {
             Plan combinationalPlan = plans.get(i);
             Plan testAggregatePlan = new AggregatePlan(agent);
@@ -68,8 +68,17 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             testAggregatePlan.add(combinationalPlan);
 
             double cost = costFunc.calcCost(testAggregatePlan, costSignal, iterativeCost);
-            if (rampUpBias != null && !agent.isRoot()) {
-                cost *= (1 + rampUpBias * i/(double)combinationalPlan.getNumberOfStates());
+            costs[i] = cost;
+            sum += cost;
+            sqrSum += cost*cost;
+        }
+        
+        baseBias = Math.sqrt(sqrSum/plans.size() - (sum/plans.size())*(sum/plans.size()));
+        
+        for(int i = 0; i < plans.size(); i++) {
+            double cost = costs[i];
+            if (rampUpBias != null) {
+                cost = cost + baseBias * rampUpBias * i/(double)plans.size();
             }
             if (cost < minCost) {
                 minCost = cost;

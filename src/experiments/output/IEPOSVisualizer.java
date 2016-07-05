@@ -24,13 +24,17 @@ import org.apache.commons.collections15.Transformer;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
+import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.VisualizationModel;
+import edu.uci.ics.jung.visualization.util.VertexShapeFactory;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -46,11 +50,15 @@ import protopeer.network.NetworkAddress;
  */
 public class IEPOSVisualizer {
 
-    private final Dimension size = new Dimension(1920, 1080);
+    private final Dimension size = new Dimension(512, 512);
     private Forest<Node, Integer> graph;
     private int numIterations;
     private int curIteration;
     private Map<TreeNode, float[]> values;
+    
+    private double vertexSize = 2;
+    private VertexShapeFactory<Node> shapeFactory = new VertexShapeFactory<Node>();
+    private AffineTransform shapeTransform = AffineTransform.getScaleInstance(vertexSize, vertexSize);
 
     public static IEPOSVisualizer create(MeasurementLog log) {
         IEPOSVisualizer visualizer = new IEPOSVisualizer();
@@ -111,11 +119,13 @@ public class IEPOSVisualizer {
 
     private VisualizationViewer<Node, Integer> visualize(VisualizationModel<Node, Integer> model) {
         VisualizationViewer<Node, Integer> viewer = new VisualizationViewer<>(model);
-        viewer.setPreferredSize(size);
+        viewer.setPreferredSize(new Dimension(size.width, size.height+26));
         viewer.setBackground(Color.white);
         viewer.getRenderContext().setEdgeShapeTransformer(getEdgeShapeTransformer());
         viewer.getRenderContext().setEdgeArrowTransformer(getEdgeArrowTransformer());
         viewer.getRenderContext().setVertexFillPaintTransformer(getVertexFillPaintTransformer());
+        viewer.getRenderContext().setVertexShapeTransformer(getVertexShapeTransformer());
+        //viewer.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).(, vertexSize, pd);
         viewer.setGraphMouse(getGraphMouse());
         return viewer;
     }
@@ -143,6 +153,14 @@ public class IEPOSVisualizer {
     private Transformer<Node, Paint> getVertexFillPaintTransformer() {
         return (Node vertex) -> {
             return new Color(vertex.val, vertex.val, vertex.val);
+        };
+    }
+
+    private Transformer<Node, Shape> getVertexShapeTransformer() {
+        return (Node vertex) -> {
+            Shape shape = shapeFactory.getEllipse(vertex);
+            shape = shapeTransform.createTransformedShape(shape);
+            return shape;
         };
     }
 
