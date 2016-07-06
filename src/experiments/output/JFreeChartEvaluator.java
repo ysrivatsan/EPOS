@@ -61,9 +61,11 @@ import java.text.AttributedString;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -128,19 +130,29 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         boolean printLocal = configMeasurements.get(0).localMeasure != null;
-
+        
         xAxis = new NumberAxis(getXLabel());
         List<PlotInfo> plotInfos = new ArrayList<>();
+        Map<String, List<Aggregate>> globalMeasurements = new LinkedHashMap<>();
+        for(IEPOSMeasurement m : configMeasurements) {
+            globalMeasurements.put(m.label, m.globalMeasurements);
+        }
         plotInfos.add(new PlotInfo()
-                .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.globalMeasurements))))
+                .dataset(toDataset(globalMeasurements))
                 .yLabel(getYLabel(configMeasurements.stream().map(x -> x.globalMeasure))));
         if (printLocal) {
+            Map<String, List<Aggregate>> localMeasurements = new LinkedHashMap<>();
+            for(IEPOSMeasurement m : configMeasurements) {
+                localMeasurements.put(m.label, m.localMeasurements);
+            }
             plotInfos.add(new PlotInfo()
-                    .dataset(toDataset(configMeasurements.stream().collect(Collectors.toMap(x -> x.label, x -> x.localMeasurements))))
+                    .dataset(toDataset(localMeasurements))
                     .yLabel(getYLabel(configMeasurements.stream().map(x -> x.localMeasure))));
         }
         xAxis.setRange(0,plotInfos.get(0).dataset.getItemCount(0));
+        
         XYPlot plot = new XYPlot();
+        plot.setDrawingSupplier(new MyDrawingSupplier());
         plot.setDomainAxis(0, xAxis);
 
         for (int i = 0; i < plotInfos.size(); i++) {
@@ -304,6 +316,7 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
         for (Map.Entry<String, List<Aggregate>> config : configMeasurements.entrySet()) {
             YIntervalSeries series = new YIntervalSeries(config.getKey());
+            System.out.println(config.getKey());
             for (int i = 0; i < config.getValue().size(); i++) {
                 Aggregate aggregate = config.getValue().get(i);
                 double avg = aggregate.getAverage();
