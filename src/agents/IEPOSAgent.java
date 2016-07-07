@@ -216,7 +216,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
         measureLocal(current.selectedLocalPlan, costSignal, parent.selected, possiblePlans.size());
 
         if (isRoot()) {
-            measureGlobal(costSignal, costSignal);
+            measureGlobal(current.global, costSignal);
         }
 
         numNodes = parent.numNodes;

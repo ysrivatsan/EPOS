@@ -175,13 +175,16 @@ public class CohdaAgent extends Agent {
         }*/
         measureGlobal(best.global(), zero);
         //measureGlobal(current.global(), zero);
+        if(isRoot()) {
+            //System.out.println();
+        }
     }
 
     private void publish() {
         CohdaMessage msg = new CohdaMessage();
         msg.best = new KnowledgeBase(best);
         msg.current = new KnowledgeBase(current);
-
+        //System.out.print(current.size()+",");
         for (Finger neighbour : neighbours) {
             getPeer().sendMessage(neighbour.getNetworkAddress(), msg);
         }

@@ -74,11 +74,15 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         }
         
         baseBias = Math.sqrt(sqrSum/plans.size() - (sum/plans.size())*(sum/plans.size()));
+        if(!Double.isFinite(baseBias) || baseBias < 0.000001) {
+            baseBias = 1;
+        }
         
         for(int i = 0; i < plans.size(); i++) {
             double cost = costs[i];
             if (rampUpBias != null) {
-                cost = cost + baseBias * rampUpBias * i/(double)plans.size();
+                double preferenceScore = i/(double)plans.size();
+                cost = cost + rampUpBias * preferenceScore * baseBias;
             }
             if (cost < minCost) {
                 minCost = cost;
