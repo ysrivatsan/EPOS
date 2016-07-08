@@ -54,6 +54,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -112,29 +113,30 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
         boolean printLocal = configMeasurements.get(0).localMeasure != null;
         
-        xAxis = new NumberAxis(getXLabel());
         List<PlotInfo> plotInfos = new ArrayList<>();
         Map<String, List<Aggregate>> globalMeasurements = new LinkedHashMap<>();
+        Map<String, List<Double>> timeMeasurements = new LinkedHashMap<>();
         for(IEPOSMeasurement m : configMeasurements) {
             globalMeasurements.put(m.label, m.globalMeasurements);
+            timeMeasurements.put(m.label, m.timeMeasurements);
         }
         plotInfos.add(new PlotInfo()
-                .dataset(toDataset(globalMeasurements))
-                .yLabel(getYLabel(configMeasurements.stream().map(x -> x.globalMeasure))));
+                .dataset(toDataset(globalMeasurements, timeMeasurements))
+                .xLabel(configMeasurements.get(0).timeMeasure)
+                .yLabel(configMeasurements.get(0).globalMeasure));
         if (printLocal) {
             Map<String, List<Aggregate>> localMeasurements = new LinkedHashMap<>();
             for(IEPOSMeasurement m : configMeasurements) {
                 localMeasurements.put(m.label, m.localMeasurements);
             }
             plotInfos.add(new PlotInfo()
-                    .dataset(toDataset(localMeasurements))
-                    .yLabel(getYLabel(configMeasurements.stream().map(x -> x.localMeasure))));
+                    .dataset(toDataset(localMeasurements, timeMeasurements))
+                    .xLabel(configMeasurements.get(0).timeMeasure)
+                    .yLabel(configMeasurements.get(0).localMeasure));
         }
-        xAxis.setRange(0,plotInfos.get(0).dataset.getItemCount(0));
         
         XYPlot plot = new XYPlot();
         plot.setDrawingSupplier(new MyDrawingSupplier());
-        plot.setDomainAxis(0, xAxis);
 
         for (int i = 0; i < plotInfos.size(); i++) {
             PlotInfo plotInfo = plotInfos.get(i);
@@ -284,25 +286,22 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         return var + "*" + varRows + "+[" + offset + "]";
     }
 
-    private String getXLabel() {
-        return "iteration";
-    }
-
-    private String getYLabel(Stream<String> configMeasurements) {
-        return configMeasurements.collect(Collectors.toSet()).stream().reduce((a, b) -> a + "," + b).get();
-    }
-
-    private YIntervalSeriesCollection toDataset(Map<String, List<Aggregate>> configMeasurements) {
+    private YIntervalSeriesCollection toDataset(Map<String, List<Aggregate>> configMeasurements, Map<String, List<Double>> configTime) {
         YIntervalSeriesCollection dataset = new YIntervalSeriesCollection();
 
         for (Map.Entry<String, List<Aggregate>> config : configMeasurements.entrySet()) {
             YIntervalSeries series = new YIntervalSeries(config.getKey());
             System.out.println(config.getKey());
+            List<Double> time = configTime.get(config.getKey());
             for (int i = 0; i < config.getValue().size(); i++) {
                 Aggregate aggregate = config.getValue().get(i);
                 double avg = aggregate.getAverage();
                 double std = aggregate.getStdDev();
-                series.add(i + 1, avg, avg - std, avg + std);
+                if(time == null) {
+                    series.add(i + 1, avg, avg - std, avg + std);
+                } else {
+                    series.add(time.get(i), avg, avg - std, avg + std);
+                }
             }
             dataset.addSeries(series);
         }
@@ -324,45 +323,44 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         out.println("]';");
     }
 
-    private ValueAxis xAxis;
-
     private class PlotInfo {
 
         private XYDataset dataset;
-        private String yLabel;
-        private String range;
-        private ValueAxis axis;
+        private ValueAxis xAxis;
+        private ValueAxis yAxis;
 
         public PlotInfo dataset(XYDataset dataset) {
             this.dataset = dataset;
             return this;
         }
 
-        public PlotInfo yLabel(String yLabel) {
-            yLabel = yLabel.trim();
-            if(yLabel.endsWith(")")) {
-                range = yLabel.substring(yLabel.indexOf("("));
-                range = range.substring(1,range.length()-1);
-                yLabel = yLabel.substring(0,yLabel.indexOf("("));
+        public PlotInfo xLabel(String xLabelStr) {
+            if(xLabelStr == null) {
+                xLabelStr = "iteration";
             }
-            if(yLabel.startsWith("log_")) {
-                axis = new LatexLogAxis(yLabel.substring(4));
-            } else {
-                axis = new NumberAxis(yLabel);
-            }
-            this.yLabel = yLabel;
+            xAxis = toAxis(xLabelStr);
+            return this;
+        }
+        
+        public PlotInfo yLabel(String yLabelStr) {
+            yAxis = toAxis(yLabelStr);
             return this;
         }
 
         public void addToPlot(XYPlot plot, int idx) {
             DeviationRenderer renderer = new DeviationRenderer(true, false);
             
-            plot.setRangeAxis(idx, axis);
-            if(range != null) {
-                String[] fromTo = range.split("-");
-                plot.getRangeAxis().setRange(Double.parseDouble(fromTo[0]), Double.parseDouble(fromTo[1]));
+            plot.setDomainAxis(idx, xAxis);
+            if(xAxis.isAutoRange() && "iteration".equals(xAxis.getLabel())) {
+                xAxis.setRange(0, dataset.getItemCount(0));
+            } else if(xAxis.isAutoRange()) {
+                double max = Double.POSITIVE_INFINITY;
+                for(int i = 0; i < dataset.getSeriesCount(); i++) {
+                    max = Math.min(max, dataset.getXValue(i, dataset.getItemCount(i)-1));
+                }
+                xAxis.setRange(0, max);
             }
-            
+            plot.setRangeAxis(idx, yAxis);
             plot.setDataset(idx, dataset);
             plot.mapDatasetToRangeAxis(idx, idx);
             plot.setRenderer(idx, renderer);
@@ -379,6 +377,30 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
                 }
             }
         }
+    }
+    
+    private ValueAxis toAxis(String axisStr) {
+        ValueAxis axis;
+        
+        axisStr = axisStr.trim();
+        
+        if(axisStr.startsWith("log_")) {
+            axisStr = axisStr.substring(4);
+            axis = new LatexLogAxis(axisStr);
+        } else {
+            axis = new NumberAxis(axisStr);
+        }
+        
+        if(axisStr.endsWith(")")) {
+            String rangeStr = axisStr.substring(axisStr.indexOf("("));
+            rangeStr = rangeStr.substring(1,rangeStr.length()-1);
+            String[] range = rangeStr.split("-");
+            axis.setRange(Double.parseDouble(range[0]), Double.parseDouble(range[1]));
+            axisStr = axisStr.substring(0,axisStr.indexOf("("));
+            axis.setLabel(axisStr);
+        }
+        
+        return axis;
     }
 
     private void writeState(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
@@ -407,11 +429,20 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             m.label = line;
             m.globalMeasure = br.readLine();
             m.localMeasure = br.readLine();
+            line = br.readLine();
+            boolean withTime = line.length() < 50;
+            if(withTime) {
+                m.timeMeasure = line;
+                line = br.readLine();
+            }
             if("null".equals(m.localMeasure)) {
                 m.localMeasure = null;
             }
-            m.globalMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(br.readLine()));
+            m.globalMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(line));
             m.localMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(br.readLine()));
+            if(withTime) {
+                m.timeMeasurements = (List<Double>) convertFromBytes(decoder.decode(br.readLine()));
+            }
             configMeasurements.add(m);
         }
         evaluate(id, title, configMeasurements, null);

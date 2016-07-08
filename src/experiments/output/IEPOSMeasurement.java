@@ -28,6 +28,8 @@ public class IEPOSMeasurement {
     public String label;
     public String globalMeasure;
     public String localMeasure;
+    public String timeMeasure;
     public List<Aggregate> globalMeasurements;
     public List<Aggregate> localMeasurements;
+    public List<Double> timeMeasurements;
 }
