@@ -154,112 +154,15 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         legend.setPosition(RectangleEdge.BOTTOM);
         legend.setBackgroundPaint(Color.WHITE);
         
-        JFreeChart chart;
-        chart = new JFreeChart(null, font,  plot, false) {
-            @Override
-            public void draw(Graphics2D g2, Rectangle2D chartArea, Point2D anchor, ChartRenderingInfo info) {
-                panel.getChartRenderingInfo().setChartArea(panel.getScreenDataArea());
-                super.draw(g2, chartArea, anchor, info);
-                
-                // arrange legend and compute width and height
-                double w = 0;
-                double h = 0;
-                
-                Size2D size = legend.arrange(g2, new RectangleConstraint(0, Double.POSITIVE_INFINITY));
-                h = size.height;
-                for(Block item : (List<Block>) legend.getItemContainer().getBlocks()) {
-                    Size2D itemSize = item.arrange(g2, RectangleConstraint.NONE);
-                    w = Math.max(w, itemSize.width);
-                }
-                
-                //compute content rectangle
-                double scaleX = 1;
-                double scaleY = 1;
-                double offsetX = 0;
-                double offsetY = 0;
-                
-                Rectangle2D plotBounds;
-                if(info != null) {
-                    plotBounds = info.getPlotInfo().getPlotArea();
-                    //System.out.println(chartArea + "," + panel.getScreenDataArea() + "," + plotBounds);
-                } else {
-                    plotBounds = panel.getChartRenderingInfo().getPlotInfo().getPlotArea();
-                    //System.out.println(chartArea + "," + panel.getScreenDataArea());
-                    
-                    scaleX = panel.getScaleX();
-                    scaleY = panel.getScaleY();
-                    offsetX = 2;
-                    offsetY = 0;
-                }
-                
-                // get unscaled content rectangle
-                Rectangle2D contentRectRaw = null;
-                for(ChartEntity entity : (Collection<ChartEntity>)panel.getChartRenderingInfo().getEntityCollection().getEntities()) {
-                    if(entity instanceof PlotEntity) {
-                        contentRectRaw = entity.getArea().getBounds2D();
-                    }
-                }
-                
-                //panel.getScaleX() returns the effective scale (input size -> output size), however the border (8px) has constant width (is not scaled!)
-                double plotXRaw = plotBounds.getX();
-                double plotYRaw = plotBounds.getY();
-                double plotWRaw = plotBounds.getWidth();
-                double plotHRaw = plotBounds.getHeight();
-                double plotW = (2*plotXRaw + plotWRaw)*scaleX - 2*plotXRaw;
-                double plotH = (2*plotYRaw + plotHRaw)*scaleY - 2*plotYRaw;
-                double newScaleX = plotW / plotWRaw;
-                double newScaleY = plotH / plotHRaw;
-                
-                double border = ((BasicStroke)plot.getRangeGridlineStroke()).getLineWidth()/2;
-                
-                System.out.println(plotBounds + "," + contentRectRaw);
-                /*double contentX = plotBounds.getX()-border;
-                double contentY = plotBounds.getY()-border;
-                */
-                
-                double ox = 0;
-                double oy = 0;
-                if(plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT) {
-                    ox = offsetX;
-                    oy = offsetY;
-                }
-                boolean leftAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT;
-                boolean rightAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_RIGHT;
-                double contentX = contentRectRaw.getX() - (leftAxis?offsetX:0) - border;
-                double contentY = contentRectRaw.getY() - (leftAxis?offsetY:0) - border;
-                double contentW = contentRectRaw.getWidth()*newScaleX + (rightAxis?offsetX:0) + 2*border;
-                double contentH = contentRectRaw.getHeight()*newScaleY + (rightAxis?offsetY:0) + 2*border;
-                
-                // compute legend position
-                double x = contentX + contentW - w;
-                double y = contentY;
-                
-                //System.out.println(x + "/" + y + ", " + w + "/" + h);
-                legend.draw(g2, new Rectangle2D.Double(x, y, w, h));
-            }
-
-            @Override
-            public void draw(Graphics2D g2, Rectangle2D area, ChartRenderingInfo info) {
-                super.draw(g2, area, info);
-            }
-
-            @Override
-            public void draw(Graphics2D g2, Rectangle2D area) {
-                super.draw(g2, area);
-            }
-            
-        };
+        JFreeChartCustomLegend chart = new JFreeChartCustomLegend(null, font, plot, legend);
         chart.setBackgroundPaint(Color.WHITE);
-        
         chart.getXYPlot().getDomainAxis().setLabelFont(font);
         chart.getXYPlot().getDomainAxis().setTickLabelFont(font);
         chart.getXYPlot().getRangeAxis().setLabelFont(font);
         chart.getXYPlot().getRangeAxis().setTickLabelFont(font);
         
-        //chart.addLegend(legend);
-        
         // show plot
-        panel = new ChartPanel(chart);
+        panel = chart.getPanel();
         panel.setDefaultDirectoryForSaveAs(defaultDstDir);
         panel.setMinimumDrawHeight(1);
         panel.setMinimumDrawWidth(1);

@@ -23,14 +23,27 @@ import agents.plan.Plan;
  *
  * @author Peter
  */
-public abstract class IterativeCostFunction implements CostFunction {
-
-    public abstract double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index);
-
-    public abstract Plan calcGradient(Plan plan, Plan costSignal);
+public class IterIndexCostFunction extends IterativeCostFunction {
 
     @Override
-    public final double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
-        return calcCost(plan, costSignal, null, idx);
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
+        return index;
+    }
+
+    @Override
+    public Plan calcGradient(Plan plan, Plan costSignal) {
+        Plan p = plan.clone();
+        p.set(0);
+        return p;
+    }
+
+    @Override
+    public String toString() {
+        return "IIndexCost";
+    }
+
+    @Override
+    public String getMetric() {
+        return "index";
     }
 }

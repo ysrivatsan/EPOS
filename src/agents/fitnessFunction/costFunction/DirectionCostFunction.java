@@ -26,7 +26,7 @@ import agents.plan.Plan;
 public class DirectionCostFunction extends IterativeCostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
         if(iterationCost == null) {
             return costSignal.dot(plan);
         }

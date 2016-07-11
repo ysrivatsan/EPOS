@@ -87,7 +87,7 @@ public class QuadraticCostFunction extends IterativeCostFunction {
     }
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
         Plan p = plan.clone();
         p.add(costSignal);
 

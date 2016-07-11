@@ -23,6 +23,7 @@ import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,13 +44,14 @@ public class IterMinCostGmS extends IterMinCost {
         this.combinator = combinator;
     }
 
-    Plan x;
+    //Plan x;
     @Override
     public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
         Plan p = current.global.clone();
         p.subtract(current.selectedPlan);
         p.multiply(numNodes/(numNodes-1.0));
         iterativeCost = combinator.combine(iterativeCost, costFunc.calcGradient(p, costSignal), iteration);
+        //x = current.selectedPlan;
     }
 
     @Override
@@ -58,6 +60,14 @@ public class IterMinCostGmS extends IterMinCost {
 
         if (iteration > 0) {
             iterativeCost = this.iterativeCost.clone();
+            /*List<Plan> newPlans = new ArrayList<Plan>();
+            for(Plan p : plans) {
+                Plan newP = p.clone();
+                newP.subtract(x);
+                newPlans.add(p);
+            }
+            plans = newPlans;
+            */
             double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
         }

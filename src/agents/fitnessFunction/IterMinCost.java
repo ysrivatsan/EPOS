@@ -59,6 +59,10 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
         double sum = 0;
         double sqrSum = 0;
         double[] costs = new double[plans.size()];
+
+        /*if(iterativeCost == null || iterativeCost.norm() == 0) {
+            return 0;
+        }*/
         
         for (int i = 0; i < plans.size(); i++) {
             Plan combinationalPlan = plans.get(i);
@@ -67,7 +71,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = costFunc.calcCost(testAggregatePlan, costSignal, iterativeCost);
+            double cost = costFunc.calcCost(testAggregatePlan, costSignal, iterativeCost, i);
             costs[i] = cost;
             sum += cost;
             sqrSum += cost*cost;

@@ -26,7 +26,7 @@ import agents.plan.Plan;
 public class MatchEstimateCostFunction extends IterativeCostFunction {
     
     @Override
-    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost) {
+    public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
         Plan cPlan = plan.clone();
         cPlan.subtract(cPlan.avg());
         
