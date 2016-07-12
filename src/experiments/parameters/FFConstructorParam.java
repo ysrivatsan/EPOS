@@ -39,6 +39,7 @@ public class FFConstructorParam extends MapParam<Constructor> {
             map.put("MinCostAdamG", IterMinCostAdamG.class.getConstructor(IterativeCostFunction.class, Factor.class));
             map.put("MinCostAdamGmS", IterMinCostAdamGmS.class.getConstructor(IterativeCostFunction.class, Factor.class));
             map.put("MinCostAdamGmA", IterMinCostAdamGmA.class.getConstructor(IterativeCostFunction.class, Factor.class));
+            map.put("MinCostReplace", IterMinCostReplace.class.getConstructor(IterativeCostFunction.class));
             map.put("MinCostRand", IterMinCostRand.class.getConstructor(IterativeCostFunction.class, Factor.class, PlanCombinator.class));
             map.put("MaxMatchGmA", IterMaxMatchGmA.class.getConstructor(Factor.class, PlanCombinator.class));
             map.put("ProbGmA", IterProbGmA.class.getConstructor(Factor.class, PlanCombinator.class));

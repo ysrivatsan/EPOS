@@ -205,7 +205,7 @@ public class CohdaAgent extends Agent {
     void measure(MeasurementLog log, int epochNumber) {
         TreeNode node = null;
         if (!localMeasures.isEmpty()) {
-            node = new TreeNode(getPeer().getFinger(), children);
+            node = new TreeNode(0, getPeer().getFinger(), children);
         }
         for (CostFunction func : localMeasures) {
             log.log(epochNumber, step, "local-" + func.getMetric(), node, (Double) localMeasurements.get(func.getMetric()));
