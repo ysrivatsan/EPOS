@@ -26,10 +26,12 @@ import protopeer.Finger;
  * @author Peter
  */
 public class TreeNode {
+    public final int expId;
     public final Finger id;
     public final List<Finger> children;
     
-    public TreeNode(Finger id, List<Finger> children) {
+    public TreeNode(int expId, Finger id, List<Finger> children) {
+        this.expId = expId;
         this.id = id;
         this.children = children;
     }
@@ -37,7 +39,8 @@ public class TreeNode {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 47 * hash + Objects.hashCode(this.id);
+        hash = 97 * hash + this.expId;
+        hash = 97 * hash + Objects.hashCode(this.id);
         return hash;
     }
 
@@ -53,7 +56,13 @@ public class TreeNode {
             return false;
         }
         final TreeNode other = (TreeNode) obj;
+        if (this.expId != other.expId) {
+            return false;
+        }
         if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        if (!Objects.equals(this.children, other.children)) {
             return false;
         }
         return true;

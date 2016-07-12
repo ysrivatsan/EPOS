@@ -85,6 +85,9 @@ public class IEPOSVisualizer {
 
         for (Object agentObj : log.getTagsOfType(TreeNode.class)) {
             TreeNode agent = (TreeNode) agentObj;
+            if(agent.expId != 0) {
+                continue;
+            }
             
             Node node = new Node();
             node.agent = agent;

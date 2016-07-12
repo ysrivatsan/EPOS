@@ -22,6 +22,8 @@ import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.costFunction.VarCostFunction;
 import agents.plan.Plan;
 import java.io.PrintStream;
+import java.util.Set;
+import java.util.TreeSet;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -70,8 +72,11 @@ public class MovieLogger extends AgentLogger {
     public void print(MeasurementLog log) {
         PrintStream out = System.out;
         boolean first = true;
+        
+        Set<Object> sortedEntries = new TreeSet<>((x,y) -> Integer.compare(((Entry)x).iteration, ((Entry)y).iteration));
+        sortedEntries.addAll(log.getTagsOfType(Entry.class));
 
-        for (Object entryObj : log.getTagsOfType(Entry.class)) {
+        for (Object entryObj : sortedEntries) {
             Entry entry = (Entry) entryObj;
             
             if(first) {
@@ -94,5 +99,30 @@ public class MovieLogger extends AgentLogger {
         public Plan costSignal;
         public Plan global;
         public Plan iterativeCost;
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 97 * hash + this.iteration;
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Entry other = (Entry) obj;
+            if (this.iteration != other.iteration) {
+                return false;
+            }
+            return true;
+        }
     }
 }

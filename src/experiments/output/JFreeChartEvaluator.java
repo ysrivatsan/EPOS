@@ -150,8 +150,6 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         legend.setItemFont(font);
         legend.setItemLabelPadding(new RectangleInsets(0, 0, 0, 10));
         legend.setFrame(new BlockBorder());
-        legend.getItemContainer().add(new ColorBlock(Color.BLUE, 20, 20));
-        legend.setPosition(RectangleEdge.BOTTOM);
         legend.setBackgroundPaint(Color.WHITE);
         
         JFreeChartCustomLegend chart = new JFreeChartCustomLegend(null, font, plot, legend);

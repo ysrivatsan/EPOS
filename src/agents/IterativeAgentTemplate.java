@@ -145,7 +145,7 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
     void measure(MeasurementLog log, int epochNumber) {
         TreeNode node = null;
         if(!localMeasures.isEmpty()) {
-            node = new TreeNode(getPeer().getFinger(), children);
+            node = new TreeNode(experimentId, getPeer().getFinger(), children);
         }
         for(CostFunction func : localMeasures) {
             log.log(epochNumber, iteration, "local-" + func.getMetric(), node, (Double) localMeasurements.get(func.getMetric()));

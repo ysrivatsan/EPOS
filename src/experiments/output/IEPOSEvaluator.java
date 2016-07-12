@@ -22,6 +22,7 @@ import agents.TreeNode;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,23 +83,38 @@ public abstract class IEPOSEvaluator {
         }
         
         List<Aggregate> list = new ArrayList<>();
+        OUTER:
         for(int i = 0; true; i++) {
-            Aggregate aggregate = null;
+            //Aggregate aggregate = null;
+            Map<Integer, Aggregate> localCost = new HashMap<>();
             for(Object agent : agents) {
                 Aggregate value = log.getAggregate(i, tag, agent);
                 if(value.getNumValues() == 0) {
                     continue;
                 }
-                if(aggregate == null) {
+                TreeNode node = (TreeNode) agent;
+                if(!localCost.containsKey(node.expId)) {
+                    localCost.put(node.expId, value);
+                } else {
+                    localCost.get(node.expId).mergeWith(value);
+                }
+                /*if(aggregate == null) {
                     aggregate = value;
                 } else {
                     aggregate.mergeWith(value);
-                }
+                }*/
             }
-            if(aggregate == null) {
+            if(localCost.isEmpty()) {
+            //if(aggregate == null) {
                 break;
             }
-            list.add(aggregate);
+            
+            MeasurementLog tmp = new MeasurementLog();
+            for(Aggregate lc : localCost.values()) {
+                tmp.log(0, "bla", lc.getAverage());
+            }
+            list.add(tmp.getAggregate("bla"));
+            //list.add(aggregate);
         }
         return list;
     }
