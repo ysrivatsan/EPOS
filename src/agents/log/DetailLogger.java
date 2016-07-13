@@ -70,7 +70,7 @@ public class DetailLogger extends AgentLogger {
     @Override
     public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
         if (iterativeCost == null) {
-            iterativeCost = global.clone();
+            iterativeCost = measure.calcGradient(global, costSignal);
         } else {
             iterativeCost = iterativeCost.clone();
             iterativeCost.add(measure.calcGradient(global, costSignal));
