@@ -38,7 +38,7 @@ public class MinCost extends FitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
-        return costFunc.calcCost(plan, costSignal, 0, 0);
+        return costFunc.calcCost(plan, costSignal, 0, 0, true);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class MinCost extends FitnessFunction {
             testAggregatePlan.add(aggregate);
             testAggregatePlan.add(combinationalPlan);
 
-            double cost = costFunc.calcCost(testAggregatePlan, costSignal, i, plans.size());
+            double cost = costFunc.calcCost(testAggregatePlan, costSignal, i, plans.size(), true);
             if (cost < minCost) {
                 minCost = cost;
                 selected = i;

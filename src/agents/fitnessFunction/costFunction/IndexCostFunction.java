@@ -26,7 +26,7 @@ import agents.plan.Plan;
 public class IndexCostFunction implements CostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int index, int numPlans) {
+    public double calcCost(Plan plan, Plan costSignal, int index, int numPlans, boolean changed) {
         return index / (double) numPlans;
     }
 

@@ -30,7 +30,7 @@ public abstract class IterativeCostFunction implements CostFunction {
     public abstract Plan calcGradient(Plan plan, Plan costSignal);
 
     @Override
-    public final double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
+    public final double calcCost(Plan plan, Plan costSignal, int idx, int numPlans, boolean changed) {
         return calcCost(plan, costSignal, null, idx);
     }
 }

@@ -227,14 +227,14 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     void measureGlobal(Plan plan, Plan costSignal) {
         measurements.clear();
         for(CostFunction func : measures) {
-            measurements.put(func.getMetric(), func.calcCost(plan, costSignal, 0, 0));
+            measurements.put(func.getMetric(), func.calcCost(plan, costSignal, 0, 0, true));
         }
     }
     
-    void measureLocal(Plan plan, Plan costSignal, int selected, int numPlans) {
+    void measureLocal(Plan plan, Plan costSignal, int selected, int numPlans, boolean changed) {
         localMeasurements.clear();
         for(CostFunction func : localMeasures) {
-            localMeasurements.put(func.getMetric(), func.calcCost(plan, costSignal, selected, numPlans));
+            localMeasurements.put(func.getMetric(), func.calcCost(plan, costSignal, selected, numPlans, changed));
         }
     }
     

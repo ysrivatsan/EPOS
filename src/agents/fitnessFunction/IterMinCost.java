@@ -42,7 +42,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
 
     @Override
     public double getRobustness(Plan plan, Plan costSignal, AgentPlans historic) {
-        return costFunc.calcCost(plan, costSignal, 0, 0);
+        return costFunc.calcCost(plan, costSignal, 0, 0, true);
     }
 
     @Override
@@ -52,7 +52,7 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
 
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, Plan iterativeCost) {
         double minCost = Double.POSITIVE_INFINITY;
-        double baseBias;
+        double std;
         int selected = -1;
         int numOpt = 0;
 
@@ -77,16 +77,17 @@ public abstract class IterMinCost extends IterativeFitnessFunction {
             sqrSum += cost*cost;
         }
         
-        baseBias = Math.sqrt(sqrSum/plans.size() - (sum/plans.size())*(sum/plans.size()));
-        if(!Double.isFinite(baseBias) || baseBias < 0.000001) {
-            baseBias = 1;
+        std = Math.sqrt(sqrSum/plans.size() - (sum/plans.size())*(sum/plans.size()));
+        if(!Double.isFinite(std) || std < 0.000001) {
+            std = 1;
         }
         
         for(int i = 0; i < plans.size(); i++) {
             double cost = costs[i];
             if (rampUpBias != null) {
-                double preferenceScore = i/(double)plans.size();
-                cost = cost + rampUpBias * preferenceScore * baseBias;
+                double score = i/(double)plans.size();
+                //double score = Math.pow(plans.get(i).getDiscomfort(),1);
+                cost = cost + rampUpBias * score * std;
             }
             if (cost < minCost) {
                 minCost = cost;

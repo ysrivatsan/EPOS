@@ -175,7 +175,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             if (rampUpRate != null && !isRoot()) {
                 Random r = new Random(getPeer().getIndexNumber());
                 int numPlans = (int) Math.floor(iteration * rampUpRate + 2 + r.nextDouble() * 2 - 1);
-                subSelectablePlans = combinationalPlans.subList(0, Math.min(numPlans, possiblePlans.size()));
+                subSelectablePlans = combinationalPlans.subList(0, Math.min(numPlans, combinationalPlans.size()));
                 subCombinationalSelections = subCombinationalSelections.subList(0, Math.min(numPlans, combinationalPlans.size()));;
             }
             int selectedCombination = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
@@ -193,7 +193,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
         int selected = fitnessFunctionRoot.select(this, current.aggregate, possiblePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedLocalPlan = possiblePlans.get(selected);
-        measureLocal(current.selectedLocalPlan, costSignal, selected, possiblePlans.size());
+        measureLocal(current.selectedLocalPlan, costSignal, selected, possiblePlans.size(), current.selectedLocalPlan != previous.selectedLocalPlan);
         current.global.set(current.aggregate);
         current.global.add(current.selectedLocalPlan);
 
@@ -211,10 +211,10 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             current.selectedPlan = previous.selectedPlan;
             aggregator.discardChanges();
         } else {
-            current.selectedLocalPlan.set(possiblePlans.get(parent.selected));
+            current.selectedLocalPlan = possiblePlans.get(parent.selected);
         }
-        measureLocal(current.selectedLocalPlan, costSignal, parent.selected, possiblePlans.size());
-
+        measureLocal(current.selectedLocalPlan, costSignal, parent.selected, possiblePlans.size(), current.selectedLocalPlan != previous.selectedLocalPlan);
+        
         if (isRoot()) {
             measureGlobal(current.global, costSignal);
         }
@@ -225,7 +225,14 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
         fitnessFunction.afterIteration(current, costSignal, iteration, numNodes);
         if (isRoot()) {
+            Plan a = current.aggregate;
+            Plan s = current.selectedPlan;
+            current.aggregate = a.clone();
+            current.aggregate.add(current.selectedLocalPlan);
+            current.selectedPlan = current.selectedLocalPlan;
             fitnessFunctionRoot.afterIteration(current, costSignal, iteration, numNodes);
+            current.aggregate = a;
+            current.selectedPlan = s;
         }
         previous = current;
 

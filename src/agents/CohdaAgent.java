@@ -164,7 +164,7 @@ public class CohdaAgent extends Agent {
         }
         current.updateLocal(selectedPlan);
 
-        measureLocal(selectedPlan, zero, selected, possiblePlans.size());
+        measureLocal(selectedPlan, zero, selected, possiblePlans.size(), true);
 
         if (betterThanBest(current)) {
             best = new KnowledgeBase(current);

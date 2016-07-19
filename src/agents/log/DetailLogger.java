@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -70,15 +71,15 @@ public class DetailLogger extends AgentLogger {
     @Override
     public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
         if (iterativeCost == null) {
-            iterativeCost = measure.calcGradient(global, costSignal);
+            iterativeCost = global.clone();
         } else {
             iterativeCost = iterativeCost.clone();
-            iterativeCost.add(measure.calcGradient(global, costSignal));
+            iterativeCost.add(global);
         }
 
         RootEntry entry = new RootEntry();
         entry.iteration = iteration;
-        entry.cost = measure.calcCost(global, costSignal, 0, 0);
+        entry.cost = measure.calcCost(global, costSignal, 0, 0, true);
         entry.global = global;
         entry.iterativeCost = iterativeCost;
         
@@ -111,9 +112,16 @@ public class DetailLogger extends AgentLogger {
         }
 
         try (PrintStream outRoot = new PrintStream(dir + "/root.txt")) {
-            for (Object entryObj : log.getTagsOfType(RootEntry.class)) {
+            TreeSet<Object> entryObjs = new TreeSet<>((a,b) -> Integer.compare(((RootEntry) a).iteration,((RootEntry) b).iteration));
+            entryObjs.addAll(log.getTagsOfType(RootEntry.class));
+            
+            Plan prevIterCost = ((RootEntry)entryObjs.first()).global.clone();
+            prevIterCost.set(0);
+            
+            for (Object entryObj : entryObjs) {
                 RootEntry entry = (RootEntry) entryObj;
-                outRoot.println(entry.iteration + ": " + entry.cost + "," + entry.global + "," + entry.iterativeCost);
+                outRoot.println(entry.iteration + ": " + entry.cost + "," + entry.global + "," + prevIterCost);
+                prevIterCost = entry.iterativeCost;
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);

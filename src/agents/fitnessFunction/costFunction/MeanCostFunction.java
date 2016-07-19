@@ -27,7 +27,7 @@ import agents.plan.Plan;
 public class MeanCostFunction implements CostFunction {
 
     @Override
-    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans) {
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans, boolean changed) {
         return plan.avg();
     }
 

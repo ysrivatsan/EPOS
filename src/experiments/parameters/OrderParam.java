@@ -48,7 +48,7 @@ public class OrderParam implements Param<Comparator<Plan>> {
     public Comparator<Plan> get(String param) {
         if(costParam.isValid(param)) {
             CostFunction func = costParam.get(param);
-            return (a,b) -> Double.compare(func.calcCost(a, null, 0, 0), func.calcCost(b, null, 0, 0));
+            return (a,b) -> Double.compare(func.calcCost(a, null, 0, 0, true), func.calcCost(b, null, 0, 0, true));
         } else {
             return (a,b) -> {
                 for(int i = 0; i < a.getNumberOfStates(); i++) {
