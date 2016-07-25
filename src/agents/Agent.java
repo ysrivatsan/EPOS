@@ -34,7 +34,7 @@ import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
-import agents.log.AgentLogger;
+import experiments.log.AgentLogger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;

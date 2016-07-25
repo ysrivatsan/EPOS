@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package agents.log;
+package experiments.log;
 
 import agents.Agent;
 import agents.fitnessFunction.costFunction.CostFunction;
@@ -76,9 +76,13 @@ public class GraphLogger extends AgentLogger {
     private int curIteration;
     private Map<TreeNode, float[]> values;
     
-    private double vertexSize = 2;
+    private final double vertexSize127 = 2;
+    private final double vertexSize255 = 1;
+    private final double vertexSize511 = 1;
+    private final double vertexSize1023 = 1;
+    private double vertexSize = vertexSize127;
     private VertexShapeFactory<Node> shapeFactory = new VertexShapeFactory<Node>();
-    private AffineTransform shapeTransform = AffineTransform.getScaleInstance(vertexSize, vertexSize);
+    private AffineTransform shapeTransform = null;
     
     public GraphLogger(CostFunction costFunction) {
         this.costFunction = costFunction;
@@ -113,14 +117,25 @@ public class GraphLogger extends AgentLogger {
 
     @Override
     public void print(MeasurementLog log) {
-        GraphLogger visualizer = new GraphLogger(costFunction);
+        int numAgents = log.getTagsOfType(TreeNode.class).size();
+        if(numAgents <= 127) {
+            vertexSize = vertexSize127;
+        } else if(numAgents <= 255) {
+            vertexSize = vertexSize255;
+        } else if(numAgents <= 511) {
+            vertexSize = vertexSize511;
+        } else if(numAgents <= 1023) {
+            vertexSize = vertexSize1023;
+        } else {
+            vertexSize = vertexSize1023;
+        }
+        shapeTransform = AffineTransform.getScaleInstance(vertexSize, vertexSize);
 
-        Forest<Node, Integer> graph = new DelegateForest<>();
-        visualizer.graph = graph;
-        visualizer.numIterations = log.getMaxEpochNumber();;
+        graph = new DelegateForest<>();
+        numIterations = log.getMaxEpochNumber();;
 
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
-        Map<TreeNode, float[]> values = new HashMap<>();
+        values = new HashMap<>();
         
         for (Object agentObj : log.getTagsOfType(TreeNode.class)) {
             TreeNode agent = (TreeNode) agentObj;
@@ -134,11 +149,11 @@ public class GraphLogger extends AgentLogger {
             idx2Node.put(agent.id.getNetworkAddress(), node);
             graph.addVertex(node);
 
-            float[] agentValues = new float[visualizer.numIterations];
-            for (int i = 0; i < visualizer.numIterations; i++) {
+            float[] agentValues = new float[numIterations];
+            for (int i = 0; i < numIterations; i++) {
                 double localError = log.getAggregate(i, agent).getAverage();
                 if (Double.isNaN(localError)) {
-                    visualizer.numIterations = i;
+                    numIterations = i;
                     break;
                 }
                 agentValues[i] = 1.0f - (float) localError;
@@ -146,7 +161,7 @@ public class GraphLogger extends AgentLogger {
 
             values.put(agent, agentValues);
         }
-
+        
         int edge = 0;
         for (Node node : graph.getVertices()) {
             for (Finger f : node.agent.children) {
@@ -155,8 +170,7 @@ public class GraphLogger extends AgentLogger {
             }
         }
 
-        visualizer.values = values;
-        visualizer.showGraph();
+        showGraph();
     }
 
     private VisualizationViewer<Node, Integer> visualize(VisualizationModel<Node, Integer> model) {

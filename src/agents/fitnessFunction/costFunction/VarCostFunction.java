@@ -27,13 +27,15 @@ public class VarCostFunction extends IterativeCostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
-        Plan p = plan.clone();
-        p.add(costSignal);
+        if(costSignal.normSqr() != 0.0) {
+            plan = plan.clone();
+            plan.add(costSignal);
+        }
         
         if(iterationCost == null) {
-            return p.variance();
+            return plan.variance();
         }
-        return p.variance() + iterationCost.dot(p);
+        return plan.variance() + iterationCost.dot(plan);
     }
 
     @Override

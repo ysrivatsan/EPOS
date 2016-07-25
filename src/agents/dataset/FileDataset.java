@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
@@ -45,7 +47,9 @@ public class FileDataset implements Dataset {
     private int seed;
     private int planSize = -1;
     private final Comparator<Plan> order;
-    
+
+    private Map<Integer, FileAgentDataset> cache = new HashMap<>();
+
     public FileDataset(String location, String config) {
         this(location, config, null);
     }
@@ -67,20 +71,26 @@ public class FileDataset implements Dataset {
     public List<AgentDataset> getAgentDataSources(int maxAgents) {
         TreeMap<Double, Integer> indices = new TreeMap<>();
         Random rand = new Random(seed);
-        for(int i = 0; i < agentDataDirs.length; i++) {
+        for (int i = 0; i < agentDataDirs.length; i++) {
             indices.put(rand.nextDouble(), i);
         }
         Set<Integer> selected = new TreeSet<>();
-        for(Integer i : indices.values()) {
+        for (Integer i : indices.values()) {
             selected.add(i);
-            if(selected.size() == maxAgents) {
+            if (selected.size() == maxAgents) {
                 break;
             }
         }
-        
+
         List<AgentDataset> agents = new ArrayList<>();
         for (int i : selected) {
-            agents.add(new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize(), order));
+            if (cache.containsKey(i)) {
+                agents.add(cache.get(i));
+            } else {
+                FileAgentDataset fad = new FileAgentDataset(location, config, agentDataDirs[i].getName(), format, getPlanSize(), order);
+                agents.add(fad);
+                cache.put(i, fad);
+            }
         }
         return agents;
     }

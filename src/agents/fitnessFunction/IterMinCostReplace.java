@@ -17,13 +17,11 @@
  */
 package agents.fitnessFunction;
 
-import agents.fitnessFunction.iterative.PlanCombinator;
-import agents.fitnessFunction.iterative.Factor;
 import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
-import java.util.ArrayList;
+import agents.plan.GlobalPlan;
 import java.util.List;
 
 /**
@@ -40,29 +38,20 @@ public class IterMinCostReplace extends IterMinCost {
     Plan gma;
     @Override
     public void afterIteration(AgentPlans current, Plan costSignal, int iteration, int numNodes) {
-        gma = current.global.clone();
+        gma.set(current.global);
         gma.subtract(current.aggregate);
     }
 
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
-        Plan zeroPlan = aggregate.clone();
-        zeroPlan.set(0);
-        
         if(iteration == 0) {
-            gma = zeroPlan;
+            gma = new GlobalPlan(agent);
         }
         
-        List<Plan> newPlans = new ArrayList<>();
-        for(Plan p : plans) {
-            Plan x = gma.clone();
-            x.add(p);
-            x.add(aggregate);
-            newPlans.add(x);
-        }
-        plans = newPlans;
-
-        return select(agent, zeroPlan, plans, costSignal, (Plan) null);
+        Plan mod = gma.clone();
+        mod.add(aggregate);
+        
+        return select(agent, mod, plans, costSignal, (Plan) null);
     }
 
     @Override

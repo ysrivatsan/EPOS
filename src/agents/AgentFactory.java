@@ -25,7 +25,7 @@ import java.io.File;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
 import agents.fitnessFunction.IterativeFitnessFunction;
-import agents.log.AgentLogger;
+import experiments.log.AgentLogger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

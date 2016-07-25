@@ -42,6 +42,7 @@ public class FileAgentDataset extends OrderedAgentDataset {
     private String format;
     private String planDir;
     private int planSize;
+    private List<Plan> cache;
 
     public FileAgentDataset(String planLocation, String config, String id, String format, int planSize) {
         this(planLocation, config, id, format, planSize, null);
@@ -58,6 +59,10 @@ public class FileAgentDataset extends OrderedAgentDataset {
 
     @Override
     List<Plan> getUnorderedPlans(DateTime phase) {
+        if(cache != null) {
+            return cache;
+        }
+        
         List<Plan> plans = new ArrayList<>();
 
         File planFile = new File(planDir + File.separator + phase.toString("yyyy-MM-dd") + format);
@@ -71,6 +76,7 @@ public class FileAgentDataset extends OrderedAgentDataset {
             e.printStackTrace();
         }
 
+        cache = plans;
         return plans;
     }
 

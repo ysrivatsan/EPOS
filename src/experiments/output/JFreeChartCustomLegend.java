@@ -32,10 +32,11 @@ import org.jfree.chart.block.Block;
 import org.jfree.chart.block.RectangleConstraint;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.PlotEntity;
-import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.LegendTitle;
+import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.Size2D;
+import org.jfree.ui.VerticalAlignment;
 
 /**
  *
@@ -62,6 +63,10 @@ public class JFreeChartCustomLegend extends JFreeChart {
     public void draw(Graphics2D g2, Rectangle2D chartArea, Point2D anchor, ChartRenderingInfo info) {
         panel.getChartRenderingInfo().setChartArea(panel.getScreenDataArea());
         super.draw(g2, chartArea, anchor, info);
+        
+        if(plot.getSeriesCount() <= 1) {
+            return;
+        }
 
         // arrange legend and compute width and height
         double w = 0;
@@ -125,19 +130,33 @@ public class JFreeChartCustomLegend extends JFreeChart {
             ox = offsetX;
             oy = offsetY;
         }
-        boolean leftAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT;
-        boolean rightAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_RIGHT;
+        boolean leftAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_LEFT || plot.getRangeAxisLocation() == AxisLocation.BOTTOM_OR_LEFT;
+        boolean rightAxis = plot.getRangeAxisCount() > 1 || plot.getRangeAxisLocation() == AxisLocation.TOP_OR_RIGHT || plot.getRangeAxisLocation() == AxisLocation.BOTTOM_OR_RIGHT;
         double contentX = contentRectRaw.getX() - (leftAxis ? offsetX : 0) - border;
-        double contentY = contentRectRaw.getY() - (leftAxis ? offsetY : 0) - border;
-        double contentW = contentRectRaw.getWidth() * newScaleX + (rightAxis ? offsetX : 0) + 2 * border;
-        double contentH = contentRectRaw.getHeight() * newScaleY + (rightAxis ? offsetY : 0) + 2 * border;
+        double contentY = contentRectRaw.getY() - border;
+        double contentW = contentRectRaw.getWidth() * newScaleX + (leftAxis ? offsetX : 0) + (rightAxis ? offsetX : 0) + 2 * border;
+        double contentH = contentRectRaw.getHeight() * newScaleY + 2 * border;
 
         // compute legend position
-        double x = contentX + contentW - w;
-        double y = contentY;
+        double x;
+        double y;
+        if(legend.getHorizontalAlignment() == HorizontalAlignment.LEFT) {
+            x = contentX;
+        } else {
+            x = contentX + contentW - w;
+        }
+        if(legend.getVerticalAlignment() == VerticalAlignment.BOTTOM) {
+            y = contentY + contentH - h;
+        } else {
+            y = contentY;
+        }
 
         //System.out.println(x + "/" + y + ", " + w + "/" + h);
         legend.draw(g2, new Rectangle2D.Double(x, y, w, h));
+        
+        // check that content area is discovered correctly (save as SVG and view in Inkscape)
+        // the legend should cover the content area completely (+border)
+        //legend.draw(g2, new Rectangle2D.Double(contentX, contentY, contentW, contentH));
     }
 
     @Override

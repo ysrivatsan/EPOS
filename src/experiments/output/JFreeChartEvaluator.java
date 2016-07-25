@@ -34,10 +34,7 @@ package experiments.output;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,33 +46,23 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
-import org.jfree.chart.block.Block;
 import org.jfree.chart.block.BlockBorder;
-import org.jfree.chart.block.ColorBlock;
-import org.jfree.chart.block.RectangleConstraint;
-import org.jfree.chart.entity.ChartEntity;
-import org.jfree.chart.entity.PlotEntity;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.*;
-import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
-import org.jfree.ui.Size2D;
 import protopeer.measurement.Aggregate;
 
 /**
@@ -102,7 +89,7 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
     }
 
     @Override
-    void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
+    public void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
         Locale.setDefault(Locale.US);
         if (out != null) {
             writeState(id, title, configMeasurements, out);

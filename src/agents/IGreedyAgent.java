@@ -32,7 +32,7 @@ import messages.IGreedyDown;
 import messages.IGreedyUp;
 import org.joda.time.DateTime;
 import agents.dataset.AgentDataset;
-import agents.log.AgentLogger;
+import experiments.log.AgentLogger;
 import java.io.PrintStream;
 import java.util.Random;
 import java.util.stream.Collectors;

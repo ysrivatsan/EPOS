@@ -20,7 +20,7 @@ package agents;
 import agents.dataset.AgentDataset;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
-import agents.log.AgentLogger;
+import experiments.log.AgentLogger;
 import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;

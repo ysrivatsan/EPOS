@@ -34,7 +34,7 @@ import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
 import protopeer.network.NetworkAddress;
 import agents.dataset.AgentDataset;
-import agents.log.AgentLogger;
+import experiments.log.AgentLogger;
 import java.util.Arrays;
 import java.util.Collections;
 
