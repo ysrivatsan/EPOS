@@ -60,14 +60,6 @@ public class IterMinCostGmS extends IterMinCost {
 
         if (iteration > 0) {
             iterativeCost = this.iterativeCost.clone();
-            /*List<Plan> newPlans = new ArrayList<Plan>();
-            for(Plan p : plans) {
-                Plan newP = p.clone();
-                newP.subtract(x);
-                newPlans.add(p);
-            }
-            plans = newPlans;
-            */
             double f = factor.calcFactor(iterativeCost, plans, numNodes, numNodesSubtree, layer, avgChildren);
             iterativeCost.multiply(f);
         }

@@ -26,6 +26,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -120,7 +121,13 @@ public class DetailLogger extends AgentLogger {
             
             for (Object entryObj : entryObjs) {
                 RootEntry entry = (RootEntry) entryObj;
-                outRoot.println(entry.iteration + ": " + entry.cost + "," + entry.global + "," + prevIterCost);
+            
+                if(prevIterCost.max() != 0.0) {
+                    double avg = prevIterCost.avg()+0.00001;
+                    prevIterCost.multiply(88/avg);
+                    //prevIterCost.multiply(1/Math.max(1,Math.pow(10,Math.floor(Math.log10(prevIterCost.max()))-1)));
+                }
+                outRoot.println(entry.iteration + ": " + String.format(Locale.US,"%.3g",entry.cost) + "," + entry.global.toString("%.0f") + "," + prevIterCost.toString("%.0f"));
                 prevIterCost = entry.iterativeCost;
             }
         } catch (FileNotFoundException ex) {

@@ -145,8 +145,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         }
         int selectedPlan = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
         current.selectedLocalPlan = subSelectablePlans.get(selectedPlan);
-        
-        //measureLocal(current.selectedLocalPlan, costSignal, selectedPlan, possiblePlans.size());
 
         current.selectedPlan = current.selectedLocalPlan;
         current.aggregate.set(childAggregate);

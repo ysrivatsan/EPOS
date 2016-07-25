@@ -451,4 +451,18 @@ public class Plan implements Serializable, Cloneable {
         out.append(']');
         return out.toString();
     }
+
+    public String toString(String format) {
+        StringBuilder out = new StringBuilder();
+        out.append('[');
+        if (values.length > 0) {
+            out.append(String.format(Locale.US, format, values[0]));
+        }
+        for (int i = 1; i < values.length; i++) {
+            out.append(',');
+            out.append(String.format(Locale.US, format, values[i]));
+        }
+        out.append(']');
+        return out.toString();
+    }
 }

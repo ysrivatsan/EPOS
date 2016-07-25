@@ -27,7 +27,7 @@ public class ChangedCostFunction implements CostFunction {
 
     @Override
     public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans, boolean changed) {
-        return changed?0:1;
+        return changed?1:0;
     }
 
     @Override
