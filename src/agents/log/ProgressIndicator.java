@@ -17,6 +17,7 @@
  */
 package agents.log;
 
+import agents.Agent;
 import agents.plan.Plan;
 import protopeer.measurement.MeasurementLog;
 
@@ -35,18 +36,18 @@ public class ProgressIndicator extends AgentLogger {
     }
 
     @Override
-    public void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan) {
+    public void log(MeasurementLog log, int epoch, Agent agent) {
     }
 
     @Override
-    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
-        if (iteration % 10 == 9) {
+    public void logRoot(MeasurementLog log, int epoch, Agent agent, Plan global) {
+        if (agent.getIteration() % 10 == 9) {
             System.out.print("%");
         }
-        if (iteration % 100 == 99) {
+        if (agent.getIteration() % 100 == 99) {
             System.out.print(" ");
         }
-        if (iteration + 1 == numIterations) {
+        if (agent.getIteration() + 1 == agent.getNumIterations()) {
             System.out.println("");
         }
     }

@@ -50,6 +50,7 @@ import util.Util;
 import agents.dataset.Dataset;
 import agents.log.AgentLogger;
 import agents.log.DetailLogger;
+import agents.log.GraphLogger;
 import agents.log.MovieLogger;
 import agents.log.ProgressIndicator;
 import experiments.parameters.AgentFactoryParam;
@@ -68,7 +69,6 @@ import experiments.parameters.OptPosDoubleParam;
 import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
-import experiments.output.IEPOSVisualizer;
 import experiments.output.JFreeChartEvaluator;
 import java.util.LinkedHashMap;
 import protopeer.Experiment;
@@ -89,7 +89,6 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
     private static String currentConfig = null;
     private static ConfigurableExperiment launcher;
     private static String outFile = null;
-    private static boolean showGraph = false;
 
     private static LazyMap lazyInit = new LazyMap();
 
@@ -146,7 +145,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("architecture.rankGenerator", x -> launcher.architecture.rankGenerator = x, new RankGeneratorParam());
         initializer.put("architecture.maxChildren", x -> launcher.architecture.maxChildren = x, new PosIntParam());
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
-        initializer.put("showGraph", x -> showGraph = x, new BooleanParam());
+        initializer.put("showGraph", x -> launcher.agentFactory.addLogger("graph", new GraphLogger(x)), new CostFunctionParam(), 1);
         initializer.put("inMemory", x -> launcher.agentFactory.inMemory = launcher.inMemoryLog = x, new BooleanParam(), 1);
         initializer.put("outputMovie", x -> launcher.agentFactory.addLogger("movie", x ? new MovieLogger() : null), new BooleanParam(), 1);
         initializer.put("outputDetail", x -> launcher.agentFactory.addLogger("detail", x ? new DetailLogger() : null), new BooleanParam(), 1);
@@ -266,11 +265,6 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     launcher.title = title;
                     launcher.label = Util.merge(innerName);
                     launcher.run();
-
-                    if (showGraph) {
-                        IEPOSVisualizer visualizer = IEPOSVisualizer.create(launcher.getMeasurementLog());
-                        visualizer.showGraph();
-                    }
 
                     experiments.put(launcher.peersLog, launcher.getMeasurementLog());
 

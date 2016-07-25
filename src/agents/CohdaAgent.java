@@ -20,6 +20,7 @@ package agents;
 import agents.dataset.AgentDataset;
 import agents.fitnessFunction.FitnessFunction;
 import agents.fitnessFunction.costFunction.CostFunction;
+import agents.log.AgentLogger;
 import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import agents.plan.Plan;
@@ -53,12 +54,37 @@ public class CohdaAgent extends Agent {
     private List<Finger> neighbours = new ArrayList<>();
 
     private Plan zero;
+    
+    @Override
+    public int getIteration() {
+        return step;
+    }
+    
+    @Override
+    public int getNumIterations() {
+        return numSteps;
+    }
+    
+    @Override
+    public int getSelectedPlanIdx() {
+        return possiblePlans.indexOf(best.getLocal());
+    }
+
+    @Override
+    public Plan getGlobalResponse() {
+        return best.global();
+    }
+
+    @Override
+    public Plan getCostSignal() {
+        return new GlobalPlan(this);
+    }
 
     public static class Factory extends AgentFactory {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new CohdaAgent(id, dataSource, treeStamp, outFolder, initialPhase, getMeasures(), getLocalMeasures(), inMemory, fitnessFunction, numIterations);
+            return new CohdaAgent(id, dataSource, treeStamp, outFolder, initialPhase, getMeasures(), getLocalMeasures(), getLoggers(), inMemory, fitnessFunction, numIterations);
         }
 
         @Override
@@ -67,8 +93,8 @@ public class CohdaAgent extends Agent {
         }
     }
 
-    public CohdaAgent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures, boolean inMemory, FitnessFunction fitnessFunction, int numSteps) {
-        super(experimentId, dataSource, treeStamp, outFolder, initialPhase, measures, localMeasures, inMemory);
+    public CohdaAgent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures, List<AgentLogger> loggers, boolean inMemory, FitnessFunction fitnessFunction, int numSteps) {
+        super(experimentId, dataSource, treeStamp, outFolder, initialPhase, measures, localMeasures, loggers, inMemory);
         this.fitnessFunction = fitnessFunction;
         this.numSteps = numSteps;
         this.step = numSteps;
@@ -198,22 +224,6 @@ public class CohdaAgent extends Agent {
             return selected == 1;
         } else {
             return false;
-        }
-    }
-
-    @Override
-    void measure(MeasurementLog log, int epochNumber) {
-        TreeNode node = null;
-        if (!localMeasures.isEmpty()) {
-            node = new TreeNode(0, getPeer().getFinger(), children);
-        }
-        for (CostFunction func : localMeasures) {
-            log.log(epochNumber, step, "local-" + func.getMetric(), node, (Double) localMeasurements.get(func.getMetric()));
-        }
-        if (isRoot()) {
-            for (CostFunction func : measures) {
-                log.log(epochNumber, step, "global-" + func.getMetric(), (Double) measurements.get(func.getMetric()));
-            }
         }
     }
 

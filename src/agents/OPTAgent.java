@@ -34,6 +34,7 @@ import protopeer.measurement.MeasurementLog;
 import protopeer.network.Message;
 import protopeer.network.NetworkAddress;
 import agents.dataset.AgentDataset;
+import agents.log.AgentLogger;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -50,19 +51,34 @@ public class OPTAgent extends Agent {
 
     private int activeChild = -1;
     
-    private Plan globalPlan;
+    private Plan globalResponse;
     private Plan selectedPlan;
+
+    @Override
+    public Plan getGlobalResponse() {
+        return globalResponse;
+    }
+
+    @Override
+    public Plan getCostSignal() {
+        return costSignal;
+    }
+
+    @Override
+    public int getSelectedPlanIdx() {
+        return possiblePlans.indexOf(selectedPlan);
+    }
 
     public static class Factory extends AgentFactory {
 
         @Override
         public Agent create(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize) {
-            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, getMeasures(), inMemory);
+            return new OPTAgent(id, dataSource, treeStamp, initialPhase, outFolder, costSignal, fitnessFunction, getMeasures(), getLoggers(), inMemory);
         }
     }
 
-    public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures, boolean inMemory) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>(), inMemory);
+    public OPTAgent(int id, AgentDataset dataSource, String treeStamp, DateTime initialPhase, File outFolder, Plan costSignal, FitnessFunction fitnessFunction, List<CostFunction> measures, List<AgentLogger> loggers, boolean inMemory) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>(), loggers, inMemory);
         this.costSignal = costSignal;
         this.fitnessFunction = fitnessFunction;
     }
@@ -122,24 +138,24 @@ public class OPTAgent extends Agent {
                 getPeer().sendMessage(parent.getNetworkAddress(), msg);
             } else {
                 List<Plan> combinationalPlans = new ArrayList<>(msg.aggregatedPossiblePlans.keySet());
-                this.globalPlan = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, costSignal, null));
-                Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalPlan);
+                this.globalResponse = combinationalPlans.get(fitnessFunction.select(this, new AggregatePlan(this), combinationalPlans, costSignal, null));
+                Map<NetworkAddress, Integer> selection = msg.aggregatedPossiblePlans.get(globalResponse);
                 int selectedPlanIdx = selection.get(getPeer().getNetworkAddress());
                 this.selectedPlan = possiblePlans.get(selectedPlanIdx);
 
                 OPTOptimal m = new OPTOptimal();
-                m.globalPlan = globalPlan;
+                m.globalPlan = globalResponse;
                 m.selection = selection;
                 for (Finger c : children) {
                     getPeer().sendMessage(c.getNetworkAddress(), m);
                 }
 
-                robustness = fitnessFunction.getRobustness(globalPlan, costSignal, null);
+                robustness = fitnessFunction.getRobustness(globalResponse, costSignal, null);
                 //System.out.println(globalPlan.getNumberOfStates() + "," + currentPhase.toString("yyyy-MM-dd") +","+ robustness + ": " + globalPlan);
             }
         } else if (message instanceof OPTOptimal) {
             OPTOptimal msg = (OPTOptimal) message;
-            globalPlan = msg.globalPlan;
+            globalResponse = msg.globalPlan;
             selectedPlan = possiblePlans.get(msg.selection.get(getPeer().getNetworkAddress()));
             for (Finger c : children) {
                 getPeer().sendMessage(c.getNetworkAddress(), msg);

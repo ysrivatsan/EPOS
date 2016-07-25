@@ -17,6 +17,7 @@
  */
 package agents.log;
 
+import agents.Agent;
 import agents.plan.Plan;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,9 +33,9 @@ public abstract class AgentLogger implements Cloneable {
 
     public abstract void initRoot(Plan costSignal);
 
-    public abstract void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan);
+    public abstract void log(MeasurementLog log, int epoch, Agent agent);
 
-    public abstract void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations);
+    public abstract void logRoot(MeasurementLog log, int epoch, Agent agent, Plan global);
 
     public abstract void print(MeasurementLog log);
 

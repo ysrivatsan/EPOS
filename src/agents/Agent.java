@@ -34,6 +34,7 @@ import protopeer.time.Timer;
 import protopeer.time.TimerListener;
 import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
+import agents.log.AgentLogger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -60,10 +61,11 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     final List<Plan> possiblePlans = new ArrayList<>();
     
     private MeasurementFileDumper measurementDumper;
-    final List<CostFunction> measures;
-    final List<CostFunction> localMeasures;
-    final Map<String, Object> measurements = new HashMap<>();
-    final Map<String, Object> localMeasurements = new HashMap<>();
+    private final List<CostFunction> measures;
+    private final List<CostFunction> localMeasures;
+    private final Map<String, Object> measurements = new HashMap<>();
+    private final Map<String, Object> localMeasurements = new HashMap<>();
+    private List<AgentLogger> loggers = new ArrayList<>();
     private boolean inMemory;
     
     private final String config;
@@ -72,7 +74,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         ROOT, LEAF, IN_TREE, DISCONNECTED
     }
 
-    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures, boolean inMemory) {
+    public Agent(int experimentId, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, List<CostFunction> measures, List<CostFunction> localMeasures, List<AgentLogger> loggers, boolean inMemory) {
         this.experimentId = experimentId;
         this.dataSource = dataSource;
         this.treeStamp = treeStamp;
@@ -81,6 +83,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.measures = measures;
         this.localMeasures = localMeasures;
         this.phases = dataSource.getPhases();
+        this.loggers = loggers;
         this.inMemory = inMemory;
         
         this.config = dataSource.getConfig() + "-" + treeStamp;
@@ -118,12 +121,23 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                     }
                     phaseIndex++;
                     
+                    initPhase();
                     runPhase();
                     runActiveState();
                 }
             }
         });
         loadAgentTimer.schedule(Time.inMilliseconds(1000));
+    }
+    
+    private void initPhase() {
+        // init loggers
+        for (AgentLogger logger : loggers) {
+            logger.init(getPeer().getIndexNumber());
+            if (isRoot()) {
+                logger.initRoot(getCostSignal());
+            }
+        }
     }
     
     abstract void runPhase();
@@ -172,6 +186,29 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     public boolean isDisconnected() {
         return topologicalState == TopologicalState.DISCONNECTED;
     }
+    
+    public int getIteration() {
+        return 0;
+    }
+    
+    public int getNumIterations() {
+        return 1;
+    }
+    
+    public final List<Plan> getPossiblePlans() {
+        return possiblePlans;
+    }
+    
+    public final Plan getSelectedPlan() {
+        return possiblePlans.get(getSelectedPlanIdx());
+    }
+    
+    public abstract int getSelectedPlanIdx();
+    
+    public abstract Plan getGlobalResponse();
+    
+    public abstract Plan getCostSignal();
+    
 
     private void computeTopologicalState() {
         if (parent == null && !children.isEmpty()) {
@@ -238,7 +275,29 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         }
     }
     
-    abstract void measure(MeasurementLog log, int epochNumber);
+    void measure(MeasurementLog log, int epochNumber) {
+        Experiment exp = null;
+        if(!localMeasures.isEmpty()) {
+            //node = new TreeNode(experimentId, getPeer().getFinger(), children);
+            exp = new Experiment();
+            exp.experimentId = experimentId;
+        }
+        for(CostFunction func : localMeasures) {
+            log.log(epochNumber, getIteration(), "local-" + func.getMetric(), exp, (Double) localMeasurements.get(func.getMetric()));
+        }
+        if(isRoot()) {
+            for(CostFunction func : measures) {
+                log.log(epochNumber, getIteration(), "global-" + func.getMetric(), (Double) measurements.get(func.getMetric()));
+            }
+        }
+        
+        for (AgentLogger logger : loggers) {
+            logger.log(log, epochNumber, this);
+            if (isRoot()) {
+                logger.logRoot(log, epochNumber, this, getGlobalResponse());
+            }
+        }
+    }
 
     public void initPlan(Plan plan) {
         plan.init(dataSource.getPlanSize());
@@ -251,6 +310,35 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     public void broadcast(Message msg) {
         for(Finger c : children) {
             getPeer().sendMessage(c.getNetworkAddress(), msg);
+        }
+    }
+    
+    public class Experiment {
+        public int experimentId;
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 17 * hash + this.experimentId;
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Experiment other = (Experiment) obj;
+            if (this.experimentId != other.experimentId) {
+                return false;
+            }
+            return true;
         }
     }
 }

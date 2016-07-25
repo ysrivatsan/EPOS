@@ -58,6 +58,21 @@ public class EPOSAgent extends Agent {
     private List<Integer> selectedCombination;
     private Plan childAggregatePlan;
 
+    @Override
+    public int getSelectedPlanIdx() {
+        return possiblePlans.indexOf(current.selectedLocalPlan);
+    }
+
+    @Override
+    public Plan getGlobalResponse() {
+        return current.global;
+    }
+
+    @Override
+    public Plan getCostSignal() {
+        return costSignal;
+    }
+
     public static class Factory extends AgentFactory {
 
         @Override
@@ -67,7 +82,7 @@ public class EPOSAgent extends Agent {
     }
 
     public EPOSAgent(int id, AgentDataset dataSource, String treeStamp, FitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, File outFolder) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>(), false);
+        super(id, dataSource, treeStamp, outFolder, initialPhase, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
         this.fitnessFunction = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;

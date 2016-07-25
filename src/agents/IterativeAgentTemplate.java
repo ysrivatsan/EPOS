@@ -34,6 +34,7 @@ import protopeer.util.quantities.Time;
 import agents.dataset.AgentDataset;
 import agents.log.AgentLogger;
 import agents.log.MovieLogger;
+import agents.plan.Plan;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -46,11 +47,21 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
     int iteration;
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
+    
 
-    public IterativeAgentTemplate(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure, List<CostFunction> localMeasure, boolean inMemory) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, measure, localMeasure, inMemory);
+    public IterativeAgentTemplate(int id, AgentDataset dataSource, String treeStamp, File outFolder, DateTime initialPhase, int numIterations, List<CostFunction> measure, List<CostFunction> localMeasure, List<AgentLogger> loggers, boolean inMemory) {
+        super(id, dataSource, treeStamp, outFolder, initialPhase, measure, localMeasure, loggers, inMemory);
         this.numIterations = numIterations;
         this.iteration = numIterations;
+    }
+    
+    
+    public int getIteration() {
+        return iteration;
+    }
+    
+    public int getNumIterations() {
+        return numIterations;
     }
     
     @Override
@@ -140,20 +151,4 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
     abstract DOWN atRoot(UP rootMsg);
 
     abstract List<DOWN> down(DOWN parent);
-    
-    @Override
-    void measure(MeasurementLog log, int epochNumber) {
-        TreeNode node = null;
-        if(!localMeasures.isEmpty()) {
-            node = new TreeNode(experimentId, getPeer().getFinger(), children);
-        }
-        for(CostFunction func : localMeasures) {
-            log.log(epochNumber, iteration, "local-" + func.getMetric(), node, (Double) localMeasurements.get(func.getMetric()));
-        }
-        if(isRoot()) {
-            for(CostFunction func : measures) {
-                log.log(epochNumber, iteration, "global-" + func.getMetric(), (Double) measurements.get(func.getMetric()));
-            }
-        }
-    }
 }

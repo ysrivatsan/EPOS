@@ -1,55 +1,75 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2016 Evangelos Pournaras
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments.output;
+package agents.log;
 
-import agents.TreeNode;
+import agents.Agent;
+import agents.fitnessFunction.costFunction.CostFunction;
+import agents.plan.GlobalPlan;
+import agents.plan.Plan;
+import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
+import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
+import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
+import edu.uci.ics.jung.visualization.VisualizationModel;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
+import edu.uci.ics.jung.visualization.util.VertexShapeFactory;
+import experiments.output.ImageFile;
+import experiments.output.PngFile;
+import experiments.output.SvgFile;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Paint;
-import java.awt.Shape;
-import java.io.File;
-import javax.swing.JFrame;
-import org.apache.commons.collections15.Transformer;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.DelegateForest;
-import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
-import edu.uci.ics.jung.visualization.Layer;
-import edu.uci.ics.jung.visualization.VisualizationModel;
-import edu.uci.ics.jung.visualization.util.VertexShapeFactory;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
+import java.awt.Paint;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.filechooser.FileFilter;
+import org.apache.commons.collections15.Transformer;
 import protopeer.Finger;
 import protopeer.measurement.MeasurementLog;
 import protopeer.network.NetworkAddress;
 
 /**
  *
- * @author Evangelos
+ * @author Peter
  */
-public class IEPOSVisualizer {
-
+public class GraphLogger extends AgentLogger {
+    private final CostFunction costFunction;
+    private final Map<Finger, Integer> selectedPlanIdxPerAgent = new HashMap<>();
+    
     private final Dimension size = new Dimension(512, 512);
     private Forest<Node, Integer> graph;
     private int numIterations;
@@ -59,9 +79,41 @@ public class IEPOSVisualizer {
     private double vertexSize = 2;
     private VertexShapeFactory<Node> shapeFactory = new VertexShapeFactory<Node>();
     private AffineTransform shapeTransform = AffineTransform.getScaleInstance(vertexSize, vertexSize);
+    
+    public GraphLogger(CostFunction costFunction) {
+        this.costFunction = costFunction;
+    }
 
-    public static IEPOSVisualizer create(MeasurementLog log) {
-        IEPOSVisualizer visualizer = new IEPOSVisualizer();
+    @Override
+    public void init(int agentId) {
+        selectedPlanIdxPerAgent.clear();
+    }
+
+    @Override
+    public void initRoot(Plan costSignal) {
+    }
+
+    @Override
+    public void log(MeasurementLog log, int epoch, Agent agent) {
+        Plan costSignal = new GlobalPlan(agent);
+        
+        int prevIdx = selectedPlanIdxPerAgent.getOrDefault(agent.getPeer().getFinger(), -1);
+        int idx = agent.getSelectedPlanIdx();
+        selectedPlanIdxPerAgent.put(agent.getPeer().getFinger(), idx);
+        
+        TreeNode node = new TreeNode(agent.experimentId, agent.getPeer().getFinger(), agent.getChildren());
+        double cost = costFunction.calcCost(agent.getSelectedPlan(), costSignal, idx, agent.getPossiblePlans().size(), idx != prevIdx);
+        
+        log.log(epoch, agent.getIteration(), node, cost);
+    }
+
+    @Override
+    public void logRoot(MeasurementLog log, int epoch, Agent agent, Plan global) {
+    }
+
+    @Override
+    public void print(MeasurementLog log) {
+        GraphLogger visualizer = new GraphLogger(costFunction);
 
         Forest<Node, Integer> graph = new DelegateForest<>();
         visualizer.graph = graph;
@@ -70,19 +122,6 @@ public class IEPOSVisualizer {
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
         Map<TreeNode, float[]> values = new HashMap<>();
         
-        String measureTag = null;
-        for(Object tagObj : log.getTagsOfType(String.class)) {
-            String tag = (String) tagObj;
-            if(tag.startsWith("local")) {
-                measureTag = tag;
-                break;
-            }
-        }
-        
-        if(measureTag == null) {
-            throw new IllegalArgumentException("no local measurements available");
-        }
-
         for (Object agentObj : log.getTagsOfType(TreeNode.class)) {
             TreeNode agent = (TreeNode) agentObj;
             if(agent.expId != 0) {
@@ -97,7 +136,7 @@ public class IEPOSVisualizer {
 
             float[] agentValues = new float[visualizer.numIterations];
             for (int i = 0; i < visualizer.numIterations; i++) {
-                double localError = log.getAggregate(i, measureTag, agent).getAverage();
+                double localError = log.getAggregate(i, agent).getAverage();
                 if (Double.isNaN(localError)) {
                     visualizer.numIterations = i;
                     break;
@@ -117,7 +156,7 @@ public class IEPOSVisualizer {
         }
 
         visualizer.values = values;
-        return visualizer;
+        visualizer.showGraph();
     }
 
     private VisualizationViewer<Node, Integer> visualize(VisualizationModel<Node, Integer> model) {
@@ -302,5 +341,49 @@ public class IEPOSVisualizer {
             return true;
         }
 
+    }
+    
+    private class TreeNode {
+        public final int expId;
+        public final Finger id;
+        public final List<Finger> children;
+
+        public TreeNode(int expId, Finger id, List<Finger> children) {
+            this.expId = expId;
+            this.id = id;
+            this.children = children;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 97 * hash + this.expId;
+            hash = 97 * hash + Objects.hashCode(this.id);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final TreeNode other = (TreeNode) obj;
+            if (this.expId != other.expId) {
+                return false;
+            }
+            if (!Objects.equals(this.id, other.id)) {
+                return false;
+            }
+            if (!Objects.equals(this.children, other.children)) {
+                return false;
+            }
+            return true;
+        }
     }
 }

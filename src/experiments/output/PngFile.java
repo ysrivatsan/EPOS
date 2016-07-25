@@ -49,7 +49,7 @@ public class PngFile extends ImageFile {
         try {
             ImageIO.write(img, "png", getFile());
         } catch (IOException ex) {
-            Logger.getLogger(IEPOSVisualizer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PngFile.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

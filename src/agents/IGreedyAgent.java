@@ -65,8 +65,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     private List<Integer> selectedCombination = new ArrayList<>();
     private Aggregator aggregator;
 
-    private List<AgentLogger> loggers = new ArrayList<>();
-
     public static class Factory extends AgentFactory {
 
         @Override
@@ -81,12 +79,11 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     }
 
     public IGreedyAgent(int id, AgentDataset dataSource, String treeStamp, File outFolder, IterativeFitnessFunction fitnessFunction, DateTime initialPhase, DateTime previousPhase, Plan costSignal, int historySize, int numIterations, Aggregator aggregator, List<AgentLogger> loggers, List<CostFunction> measures, List<CostFunction> localMeasures, Double rampUpRate, boolean inMemory) {
-        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures, inMemory);
+        super(id, dataSource, treeStamp, outFolder, initialPhase, numIterations, measures, localMeasures, loggers, inMemory);
         this.fitnessFunctionPrototype = fitnessFunction;
         this.historySize = historySize;
         this.costSignal = costSignal;
         this.aggregator = aggregator;
-        this.loggers = loggers;
         this.rampUpRate = rampUpRate;
     }
 
@@ -105,14 +102,6 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         numNodes = -1;
         fitnessFunction = fitnessFunctionPrototype.clone();
         aggregator.initPhase();
-
-        // init loggers
-        for (AgentLogger logger : loggers) {
-            logger.init(getPeer().getIndexNumber());
-            if (isRoot()) {
-                logger.initRoot(costSignal);
-            }
-        }
     }
 
     @Override
@@ -126,6 +115,22 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = children.size();
         layer = 0;
     }
+    
+    @Override
+    public int getSelectedPlanIdx() {
+        return possiblePlans.indexOf(current.selectedLocalPlan);
+    }
+    
+    @Override
+    public Plan getGlobalResponse() {
+        return current.global;
+    }
+    
+    @Override
+    public Plan getCostSignal() {
+        return costSignal;
+    }
+
 
     @Override
     public IGreedyUp up(List<IGreedyUp> msgs) {
@@ -198,17 +203,5 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             msgs.add(msg);
         }
         return msgs;
-    }
-
-    @Override
-    void measure(MeasurementLog log, int epochNumber) {
-        super.measure(log, epochNumber);
-
-        for (AgentLogger logger : loggers) {
-            logger.log(log, epochNumber, iteration, current.selectedLocalPlan);
-            if (isRoot()) {
-                logger.logRoot(log, epochNumber, iteration, current.global, numIterations);
-            }
-        }
     }
 }

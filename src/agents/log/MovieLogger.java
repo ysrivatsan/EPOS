@@ -17,6 +17,7 @@
  */
 package agents.log;
 
+import agents.Agent;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.costFunction.VarCostFunction;
@@ -47,11 +48,11 @@ public class MovieLogger extends AgentLogger {
     }
 
     @Override
-    public void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan) {
+    public void log(MeasurementLog log, int epoch, Agent agent) {
     }
 
     @Override
-    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
+    public void logRoot(MeasurementLog log, int epoch, Agent agent, Plan global) {
         if (iterativeCost == null) {
             iterativeCost = measure.calcGradient(global, costSignal);
         } else {
@@ -60,8 +61,8 @@ public class MovieLogger extends AgentLogger {
         }
 
         Entry entry = new Entry();
-        entry.iteration = iteration;
-        entry.costSignal = iteration == 0 ? costSignal : null;
+        entry.iteration = agent.getIteration();
+        entry.costSignal = agent.getIteration() == 0 ? costSignal : null;
         entry.global = global;
         entry.iterativeCost = iterativeCost;
         

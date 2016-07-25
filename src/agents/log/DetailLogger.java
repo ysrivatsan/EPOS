@@ -17,6 +17,7 @@
  */
 package agents.log;
 
+import agents.Agent;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
 import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.plan.Plan;
@@ -60,17 +61,17 @@ public class DetailLogger extends AgentLogger {
     }
 
     @Override
-    public void log(MeasurementLog log, int epoch, int iteration, Plan selectedLocalPlan) {
+    public void log(MeasurementLog log, int epoch, Agent agent) {
         Entry entry = new Entry();
         entry.agentId = agentId;
-        entry.iteration = iteration;
-        entry.selectedLocalPlan = selectedLocalPlan;
+        entry.iteration = agent.getIteration();
+        entry.selectedLocalPlan = agent.getSelectedPlan();
         
         log.log(epoch, agentId, entry, 0.0);
     }
 
     @Override
-    public void logRoot(MeasurementLog log, int epoch, int iteration, Plan global, int numIterations) {
+    public void logRoot(MeasurementLog log, int epoch, Agent agent, Plan global) {
         if (iterativeCost == null) {
             iterativeCost = global.clone();
         } else {
@@ -79,7 +80,7 @@ public class DetailLogger extends AgentLogger {
         }
 
         RootEntry entry = new RootEntry();
-        entry.iteration = iteration;
+        entry.iteration = agent.getIteration();
         entry.cost = measure.calcCost(global, costSignal, 0, 0, true);
         entry.global = global;
         entry.iterativeCost = iterativeCost;

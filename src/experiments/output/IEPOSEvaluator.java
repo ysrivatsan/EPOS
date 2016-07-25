@@ -18,7 +18,6 @@
 package experiments.output;
 
 import agents.Agent;
-import agents.TreeNode;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,9 +63,9 @@ public abstract class IEPOSEvaluator {
                 }
             }
             
-            Set<Object> agents = log.getTagsOfType(TreeNode.class);
+            Set<Object> expIds = log.getTagsOfType(Agent.Experiment.class);
             
-            configMeasurement.localMeasurements = getMeasurements(log, localTag, agents);
+            configMeasurement.localMeasurements = getMeasurements(log, localTag, expIds);
             configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
             
             configMeasurements.add(configMeasurement);
@@ -77,7 +76,7 @@ public abstract class IEPOSEvaluator {
     
     abstract void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out);
     
-    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, Iterable<Object> agents) {
+    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, Iterable<Object> expIds) {
         if(tag == null) {
             return null;
         }
@@ -87,25 +86,19 @@ public abstract class IEPOSEvaluator {
         for(int i = 0; true; i++) {
             //Aggregate aggregate = null;
             Map<Integer, Aggregate> localCost = new HashMap<>();
-            for(Object agent : agents) {
-                Aggregate value = log.getAggregate(i, tag, agent);
+            for(Object expIdObj : expIds) {
+                Aggregate value = log.getAggregate(i, tag, expIdObj);
                 if(value.getNumValues() == 0) {
                     continue;
                 }
-                TreeNode node = (TreeNode) agent;
-                if(!localCost.containsKey(node.expId)) {
-                    localCost.put(node.expId, value);
+                Agent.Experiment expId = (Agent.Experiment) expIdObj;
+                if(!localCost.containsKey(expId.experimentId)) {
+                    localCost.put(expId.experimentId, value);
                 } else {
-                    localCost.get(node.expId).mergeWith(value);
+                    localCost.get(expId.experimentId).mergeWith(value);
                 }
-                /*if(aggregate == null) {
-                    aggregate = value;
-                } else {
-                    aggregate.mergeWith(value);
-                }*/
             }
             if(localCost.isEmpty()) {
-            //if(aggregate == null) {
                 break;
             }
             
@@ -114,7 +107,6 @@ public abstract class IEPOSEvaluator {
                 tmp.log(0, "bla", lc.getAverage());
             }
             list.add(tmp.getAggregate("bla"));
-            //list.add(aggregate);
         }
         return list;
     }
