@@ -1,20 +1,5 @@
 /*
- * Copyright (C) 2016 Evangelos Pournaras
-                     @Override
-                    public double getX() {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-
-                    @Override
-                    public double getY() {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-
-                    @Override
-                    public void setLocation(double x, double y) {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                }
+ * Copyright (C) 2016 Peter Pilgerstorfer
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -36,22 +21,15 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -76,7 +54,6 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
     
     private ChartPanel panel = null;
     
-
     public static void main(String[] args) throws IOException {
         JFrame f = new JFrame();
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -92,7 +69,7 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
     public void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
         Locale.setDefault(Locale.US);
         if (out != null) {
-            writeState(id, title, configMeasurements, out);
+            Util.writeState(id, title, configMeasurements, out);
         }
 
         JFrame frame = new JFrame(title);
@@ -291,70 +268,9 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         return axis;
     }
 
-    private void writeState(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out) {
-        Base64.Encoder encoder = Base64.getEncoder();
-
-        out.println(id);
-        out.println(title);
-        for (IEPOSMeasurement m : configMeasurements) {
-            out.println(m.label);
-            out.println(m.globalMeasure);
-            out.println(m.localMeasure);
-            out.println(encoder.encodeToString(convertToBytes(m.globalMeasurements)));
-            out.println(encoder.encodeToString(convertToBytes(m.localMeasurements)));
-        }
-    }
-
     private void readAndExecuteState(BufferedReader br) throws IOException {
-        Base64.Decoder decoder = Base64.getDecoder();
-
-        int id = Integer.parseInt(br.readLine());
-        String title = br.readLine();
-        List<IEPOSMeasurement> configMeasurements = new ArrayList<>();
-        String line;
-        while ((line = br.readLine()) != null) {
-            IEPOSMeasurement m = new IEPOSMeasurement();
-            m.label = line;
-            m.globalMeasure = br.readLine();
-            m.localMeasure = br.readLine();
-            line = br.readLine();
-            boolean withTime = line.length() < 50;
-            if(withTime) {
-                m.timeMeasure = line;
-                line = br.readLine();
-            }
-            if("null".equals(m.localMeasure)) {
-                m.localMeasure = null;
-            }
-            m.globalMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(line));
-            m.localMeasurements = (List<Aggregate>) convertFromBytes(decoder.decode(br.readLine()));
-            if(withTime) {
-                m.timeMeasurements = (List<Double>) convertFromBytes(decoder.decode(br.readLine()));
-            }
-            configMeasurements.add(m);
-        }
-        evaluate(id, title, configMeasurements, null);
-    }
-
-    private byte[] convertToBytes(Object object) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream out = new ObjectOutputStream(bos)) {
-            out.writeObject(object);
-            return bos.toByteArray();
-        } catch (IOException ex) {
-            Logger.getLogger(JFreeChartEvaluator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
-
-    private Object convertFromBytes(byte[] bytes) {
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-                ObjectInputStream in = new ObjectInputStream(bis)) {
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(JFreeChartEvaluator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+        Util.PlotInfo pi = Util.readStates(br);
+        evaluate(pi.id, pi.title, pi.measurements, null);
     }
     
     private static class LatexLogAxis extends LogarithmicAxis {

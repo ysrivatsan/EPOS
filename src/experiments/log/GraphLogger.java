@@ -67,15 +67,16 @@ import protopeer.network.NetworkAddress;
  * @author Peter
  */
 public class GraphLogger extends AgentLogger {
+
     private final CostFunction costFunction;
     private final Map<Finger, Integer> selectedPlanIdxPerAgent = new HashMap<>();
-    
+
     private final Dimension size = new Dimension(512, 512);
     private Forest<Node, Integer> graph;
     private int numIterations;
     private int curIteration;
     private Map<TreeNode, float[]> values;
-    
+
     private final double vertexSize127 = 2;
     private final double vertexSize255 = 1;
     private final double vertexSize511 = 1;
@@ -83,7 +84,7 @@ public class GraphLogger extends AgentLogger {
     private double vertexSize = vertexSize127;
     private VertexShapeFactory<Node> shapeFactory = new VertexShapeFactory<Node>();
     private AffineTransform shapeTransform = null;
-    
+
     public GraphLogger(CostFunction costFunction) {
         this.costFunction = costFunction;
     }
@@ -100,14 +101,14 @@ public class GraphLogger extends AgentLogger {
     @Override
     public void log(MeasurementLog log, int epoch, Agent agent) {
         Plan costSignal = new GlobalPlan(agent);
-        
+
         int prevIdx = selectedPlanIdxPerAgent.getOrDefault(agent.getPeer().getFinger(), -1);
         int idx = agent.getSelectedPlanIdx();
         selectedPlanIdxPerAgent.put(agent.getPeer().getFinger(), idx);
-        
+
         TreeNode node = new TreeNode(agent.experimentId, agent.getPeer().getFinger(), agent.getChildren());
         double cost = costFunction.calcCost(agent.getSelectedPlan(), costSignal, idx, agent.getPossiblePlans().size(), idx != prevIdx);
-        
+
         log.log(epoch, agent.getIteration(), node, cost);
     }
 
@@ -118,13 +119,13 @@ public class GraphLogger extends AgentLogger {
     @Override
     public void print(MeasurementLog log) {
         int numAgents = log.getTagsOfType(TreeNode.class).size();
-        if(numAgents <= 127) {
+        if (numAgents <= 127) {
             vertexSize = vertexSize127;
-        } else if(numAgents <= 255) {
+        } else if (numAgents <= 255) {
             vertexSize = vertexSize255;
-        } else if(numAgents <= 511) {
+        } else if (numAgents <= 511) {
             vertexSize = vertexSize511;
-        } else if(numAgents <= 1023) {
+        } else if (numAgents <= 1023) {
             vertexSize = vertexSize1023;
         } else {
             vertexSize = vertexSize1023;
@@ -132,17 +133,22 @@ public class GraphLogger extends AgentLogger {
         shapeTransform = AffineTransform.getScaleInstance(vertexSize, vertexSize);
 
         graph = new DelegateForest<>();
-        numIterations = log.getMaxEpochNumber();;
+        numIterations = log.getMaxEpochNumber();
 
         Map<NetworkAddress, Node> idx2Node = new HashMap<>();
         values = new HashMap<>();
-        
+
+        float[] minValues = new float[numIterations];
+        float[] maxValues = new float[numIterations];
+        for(int i = 0; i < numIterations; i++) {
+            minValues[i] = 1;
+        }
         for (Object agentObj : log.getTagsOfType(TreeNode.class)) {
             TreeNode agent = (TreeNode) agentObj;
-            if(agent.expId != 0) {
+            if (agent.expId != 0) {
                 continue;
             }
-            
+
             Node node = new Node();
             node.agent = agent;
 
@@ -157,11 +163,19 @@ public class GraphLogger extends AgentLogger {
                     break;
                 }
                 agentValues[i] = 1.0f - (float) localError;
+                minValues[i] = Math.min(minValues[i],agentValues[i]);
+                maxValues[i] = Math.max(maxValues[i],agentValues[i]);
             }
 
             values.put(agent, agentValues);
         }
-        
+        for (Map.Entry<TreeNode, float[]> entry : values.entrySet()) {
+            float[] agentValues = entry.getValue();
+            for (int i = 0; i < numIterations; i++) {
+                agentValues[i] = (agentValues[i]-minValues[i]) / (maxValues[i]-minValues[i]);
+            }
+        }
+
         int edge = 0;
         for (Node node : graph.getVertices()) {
             for (Finger f : node.agent.children) {
@@ -175,7 +189,7 @@ public class GraphLogger extends AgentLogger {
 
     private VisualizationViewer<Node, Integer> visualize(VisualizationModel<Node, Integer> model) {
         VisualizationViewer<Node, Integer> viewer = new VisualizationViewer<>(model);
-        viewer.setPreferredSize(new Dimension(size.width, size.height+26));
+        viewer.setPreferredSize(new Dimension(size.width, size.height + 26));
         viewer.setBackground(Color.white);
         viewer.getRenderContext().setEdgeShapeTransformer(getEdgeShapeTransformer());
         viewer.getRenderContext().setEdgeArrowTransformer(getEdgeArrowTransformer());
@@ -232,7 +246,7 @@ public class GraphLogger extends AgentLogger {
 
         curIteration = 0;
         initIteration(curIteration);
-        frame.setTitle("IEPOS - iteration " + (curIteration+1));
+        frame.setTitle("IEPOS - iteration " + (curIteration + 1));
         VisualizationModel<Node, Integer> model = new DefaultVisualizationModel(getLayout(graph));
         VisualizationViewer<Node, Integer> viewer = visualize(model);
 
@@ -260,7 +274,7 @@ public class GraphLogger extends AgentLogger {
                         refresh = true;
                     }
                 }
-                frame.setTitle("IEPOS - iteration " + (curIteration+1));
+                frame.setTitle("IEPOS - iteration " + (curIteration + 1));
 
                 if (refresh) {
                     initIteration(curIteration);
@@ -307,14 +321,14 @@ public class GraphLogger extends AgentLogger {
             int returnVal = fileChooser.showSaveDialog(frame);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                
+
                 ImageFile img = null;
-                if(file.getName().endsWith(".png")) {
+                if (file.getName().endsWith(".png")) {
                     img = new PngFile(file, viewer.getWidth(), viewer.getHeight());
-                } else if(file.getName().endsWith(".svg")) {
+                } else if (file.getName().endsWith(".svg")) {
                     img = new SvgFile(file, viewer.getWidth(), viewer.getHeight());
                 }
-                
+
                 viewer.setDoubleBuffered(false);
                 viewer.getRootPane().paintComponents(img.createGraphics());
                 viewer.setDoubleBuffered(true);
@@ -356,8 +370,9 @@ public class GraphLogger extends AgentLogger {
         }
 
     }
-    
+
     private class TreeNode {
+
         public final int expId;
         public final Finger id;
         public final List<Finger> children;

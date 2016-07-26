@@ -20,13 +20,11 @@ package experiments.output;
 import agents.Agent;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 import protopeer.measurement.Aggregate;
 import protopeer.measurement.MeasurementLog;
 
@@ -35,91 +33,119 @@ import protopeer.measurement.MeasurementLog;
  * @author Peter
  */
 public abstract class IEPOSEvaluator {
-    
+
     public final void evaluateLogs(int id, Map<String, MeasurementLog> experiments, PrintStream out) {
         List<IEPOSMeasurement> configMeasurements = new ArrayList<>();
         String title = "#" + id;
-        
-        for(String experiment : experiments.keySet()) {
+
+        for (String experiment : experiments.keySet()) {
             IEPOSMeasurement configMeasurement = new IEPOSMeasurement();
             configMeasurement.label = experiment;
-            
+
             MeasurementLog log = experiments.get(experiment);
-            
+
             String localTag = null;
             String globalTag = null;
-            for(Object tag : log.getTagsOfType(String.class)) {
+            for (Object tag : log.getTagsOfType(String.class)) {
                 String s = (String) tag;
-                if(s.startsWith("local")) {
+                if (s.startsWith("local")) {
                     configMeasurement.localMeasure = s.split("-", 2)[1];
                     localTag = s;
-                } else if(s.startsWith("global")) {
+                } else if (s.startsWith("global")) {
                     configMeasurement.globalMeasure = s.substring(7);
                     globalTag = s;
-                } else if(s.startsWith("title")) {
+                } else if (s.startsWith("title")) {
                     title = s.substring(6);
-                } else if(s.startsWith("label")) {
+                } else if (s.startsWith("label")) {
                     configMeasurement.label = s.substring(6);
                 }
             }
-            
+
             Set<Object> expIds = log.getTagsOfType(Agent.Experiment.class);
-            
-            configMeasurement.localMeasurements = getMeasurements(log, localTag, expIds);
+
             configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
+            configMeasurement.localMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> a.getAverage());
+            configMeasurement.fairnessMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> a.getStdDev() / (a.getAverage()));
+            //configMeasurement.localMeasurements = configMeasurement.fairnessMeasurements;
             
+            final List<Double> prevSum = new ArrayList<>();
+            final List<Integer> optIter = new ArrayList<>();
+            final int[] prevI = new int[]{-1};
+            final int[] idx = new int[]{0};
+            configMeasurement.iterationMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> {
+                if(i == prevI[0]) {
+                    idx[0]++;
+                } else {
+                    idx[0] = 0;
+                }
+                prevI[0] = i;
+                if(prevSum.size() <= idx[0]) {
+                    prevSum.add(Double.NaN);
+                    optIter.add(Integer.MAX_VALUE);
+                }
+                
+                double sum = a.getSum();
+                if (prevSum.get(idx[0]) != sum) {
+                    optIter.set(idx[0], Integer.MAX_VALUE);
+                    prevSum.set(idx[0], sum);
+                } else {
+                    optIter.set(idx[0], Math.min(optIter.get(idx[0]), i));
+                }
+                return (double) optIter.get(idx[0]);
+            });
+
             configMeasurements.add(configMeasurement);
         }
-        
+
         evaluate(id, title, configMeasurements, out);
     }
-    
+
     abstract void evaluate(int id, String title, List<IEPOSMeasurement> configMeasurements, PrintStream out);
-    
-    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, Iterable<Object> expIds) {
-        if(tag == null) {
+
+    private List<Aggregate> getMeasurements(MeasurementLog log, String tag, Iterable<Object> expIds, BiFunction<Integer, Aggregate, Double> func) {
+        if (tag == null) {
             return null;
         }
-        
+
         List<Aggregate> list = new ArrayList<>();
         OUTER:
-        for(int i = 0; true; i++) {
+        for (int i = 0; true; i++) {
             //Aggregate aggregate = null;
             Map<Integer, Aggregate> localCost = new HashMap<>();
-            for(Object expIdObj : expIds) {
+            for (Object expIdObj : expIds) {
                 Aggregate value = log.getAggregate(i, tag, expIdObj);
-                if(value.getNumValues() == 0) {
+                if (value.getNumValues() == 0) {
                     continue;
                 }
                 Agent.Experiment expId = (Agent.Experiment) expIdObj;
-                if(!localCost.containsKey(expId.experimentId)) {
+                if (!localCost.containsKey(expId.experimentId)) {
                     localCost.put(expId.experimentId, value);
                 } else {
                     localCost.get(expId.experimentId).mergeWith(value);
                 }
             }
-            if(localCost.isEmpty()) {
+            if (localCost.isEmpty()) {
                 break;
             }
-            
+
             MeasurementLog tmp = new MeasurementLog();
-            for(Aggregate lc : localCost.values()) {
-                tmp.log(0, "bla", lc.getAverage());
+            for (Aggregate lc : localCost.values()) {
+                tmp.log(0, "bla", func.apply(i, lc));
             }
             list.add(tmp.getAggregate("bla"));
         }
         return list;
     }
-    
+
     private List<Aggregate> getMeasurements(MeasurementLog log, String tag) {
-        if(tag == null) {
+        if (tag == null) {
             return null;
         }
-        
+
         List<Aggregate> list = new ArrayList<>();
-        for(int i = 0; true; i++) {
+        for (int i = 0; true; i++) {
             Aggregate value = log.getAggregate(i, tag);
-            if(value.getNumValues() == 0) {
+            if (value.getNumValues() == 0) {
                 break;
             }
             list.add(value);

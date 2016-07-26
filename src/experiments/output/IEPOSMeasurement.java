@@ -31,5 +31,7 @@ public class IEPOSMeasurement {
     public String timeMeasure;
     public List<Aggregate> globalMeasurements;
     public List<Aggregate> localMeasurements;
+    public List<Aggregate> fairnessMeasurements;
+    public List<Aggregate> iterationMeasurements;
     public List<Double> timeMeasurements;
 }
