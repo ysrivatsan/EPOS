@@ -21,6 +21,7 @@ import agents.Agent;
 import agents.plan.Plan;
 import agents.AgentPlans;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
+import agents.plan.AggregatePlan;
 import agents.plan.GlobalPlan;
 import java.util.List;
 
@@ -29,10 +30,12 @@ import java.util.List;
  *
  * @author Peter
  */
-public class IterMinCostReplace extends IterMinCost {
+public class IterMinCostReplaceGrad extends IterMinCost {
+    
     Plan gma;
+    Plan zero;
 
-    public IterMinCostReplace(IterativeCostFunction costFunc) {
+    public IterMinCostReplaceGrad(IterativeCostFunction costFunc) {
         super(costFunc);
     }
 
@@ -42,20 +45,25 @@ public class IterMinCostReplace extends IterMinCost {
         gma.subtract(current.aggregate);
     }
 
+
     @Override
     public int select(Agent agent, Plan aggregate, List<Plan> plans, Plan costSignal, int numNodes, int numNodesSubtree, int layer, double avgChildren, int iteration) {
         if(iteration == 0) {
             gma = new GlobalPlan(agent);
+            zero = new AggregatePlan(agent);
+            
+            return select(agent, aggregate, plans, costSignal, (Plan) null);
+        } else {
+            Plan mod = gma.clone();
+            mod.add(aggregate);
+            mod.multiply(numNodes/(numNodes-1.0));
+            
+            return select(agent, zero, plans, costSignal, mod);
         }
-        
-        Plan mod = gma.clone();
-        mod.add(aggregate);
-        
-        return select(agent, mod, plans, costSignal, (Plan) null);
     }
 
     @Override
     public String toString() {
-        return "IterMinCostReplace " + costFunc.toString();
+        return "IterMinCostReplaceGrad" + costFunc;
     }
 }
