@@ -179,20 +179,10 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         avgNumChildren = parent.sumChildren / Math.max(0.1, (double) parent.hops);
         
         measureLocal(current.selectedLocalPlan, costSignal, possiblePlans.indexOf(current.selectedLocalPlan), possiblePlans.size(), current.selectedPlan != previous.selectedPlan);
-        /*if(isRoot()) {
-            System.out.println();
-            if(current.selectedPlan != previous.selectedPlan) {
-                System.out.print("1");
-            } else {
-                System.out.print("0");
-            }
-        } else {
-            if(current.selectedPlan != previous.selectedPlan) {
-                System.out.print("+1");
-            }
-        }*/
 
-        measureGlobal(current.global, costSignal);
+        if(isRoot()) {
+            measureGlobal(current.global, costSignal);
+        }
         fitnessFunction.afterIteration(current, costSignal, iteration, numNodes);
         previous = current;
 
