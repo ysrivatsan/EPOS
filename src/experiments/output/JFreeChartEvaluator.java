@@ -83,6 +83,9 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         for(IEPOSMeasurement m : configMeasurements) {
             globalMeasurements.put(m.label, m.globalMeasurements);
             timeMeasurements.put(m.label, m.timeMeasurements);
+            if(m.iterationMeasurements != null && m.iterationMeasurements.size() > 0) {
+                System.out.println(m.label + ": " + m.iterationMeasurements.get(m.iterationMeasurements.size()-1));
+            }
         }
         plotInfos.add(new PlotInfo()
                 .dataset(toDataset(globalMeasurements, timeMeasurements))
@@ -158,6 +161,11 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             YIntervalSeries series = new YIntervalSeries(config.getKey());
             System.out.println(config.getKey());
             List<Double> time = configTime.get(config.getKey());
+            if(!config.getValue().isEmpty()) {
+                Aggregate c1 = config.getValue().get(0);
+                Aggregate ct = config.getValue().get(config.getValue().size()-1);
+                System.out.println("E^(1)=" + c1.getAverage() + "+-" + c1.getStdDev() + ", E^(t)=" + ct.getAverage() + "+-" + ct.getStdDev());
+            }
             for (int i = 0; i < config.getValue().size(); i++) {
                 Aggregate aggregate = config.getValue().get(i);
                 double avg = aggregate.getAverage();

@@ -27,13 +27,15 @@ public class StdDevCostFunction extends IterativeCostFunction{
 
     @Override
     public double calcCost(Plan plan, Plan costSignal, Plan iterationCost, int index) {
-        Plan p = plan.clone();
-        p.add(costSignal);
+        if(costSignal.normSqr() != 0.0) {
+            plan = plan.clone();
+            plan.add(costSignal);
+        }
         
         if(iterationCost == null) {
-            return Math.sqrt(p.variance());
+            return Math.sqrt(plan.variance());
         }
-        return Math.sqrt(p.variance()) + iterationCost.dot(p);
+        return Math.sqrt(plan.variance()) + iterationCost.dot(plan);
     }
 
     @Override
