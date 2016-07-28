@@ -84,7 +84,8 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             globalMeasurements.put(m.label, m.globalMeasurements);
             timeMeasurements.put(m.label, m.timeMeasurements);
             if(m.iterationMeasurements != null && m.iterationMeasurements.size() > 0) {
-                System.out.println(m.label + ": " + m.iterationMeasurements.get(m.iterationMeasurements.size()-1));
+                Aggregate a = m.iterationMeasurements.get(m.iterationMeasurements.size()-1);
+                System.out.println(m.label + ": " + a.getAverage() + "+-" + a.getStdDev());
             }
         }
         plotInfos.add(new PlotInfo()

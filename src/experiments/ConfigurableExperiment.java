@@ -54,6 +54,7 @@ import experiments.log.DistributionLogger;
 import experiments.log.GraphLogger;
 import experiments.log.MovieLogger;
 import experiments.log.ProgressIndicator;
+import experiments.log.TerminationLogger;
 import experiments.parameters.AgentFactoryParam;
 import experiments.parameters.BooleanParam;
 import experiments.parameters.CostSignalParam;
@@ -151,6 +152,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("outputMovie", x -> launcher.agentFactory.addLogger("movie", x ? new MovieLogger() : null), new BooleanParam(), 1);
         initializer.put("outputDetail", x -> launcher.agentFactory.addLogger("detail", x ? new DetailLogger() : null), new BooleanParam(), 1);
         initializer.put("outputDistribution", x -> launcher.agentFactory.addLogger("dist", x ? new DistributionLogger() : null), new BooleanParam(), 1);
+        initializer.put("outputTermination", x -> launcher.agentFactory.addLogger("term", x ? new TerminationLogger() : null), new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
         initializer.put("measure", x -> launcher.agentFactory.measure = x, new CostFunctionParam(), 1);
         initializer.put("localMeasure", x -> launcher.agentFactory.localMeasure = x, new CostFunctionParam(), 1);

@@ -278,7 +278,6 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     void measure(MeasurementLog log, int epochNumber) {
         Experiment exp = null;
         if(!localMeasures.isEmpty()) {
-            //node = new TreeNode(experimentId, getPeer().getFinger(), children);
             exp = new Experiment();
             exp.experimentId = experimentId;
         }
