@@ -19,12 +19,15 @@ package experiments.log;
 
 import agents.Agent;
 import agents.fitnessFunction.costFunction.IterativeCostFunction;
-import agents.fitnessFunction.costFunction.StdDevCostFunction;
 import agents.fitnessFunction.costFunction.VarCostFunction;
 import agents.plan.Plan;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import protopeer.measurement.MeasurementLog;
 
 /**
@@ -33,10 +36,16 @@ import protopeer.measurement.MeasurementLog;
  */
 public class MovieLogger extends AgentLogger {
 
+    private String dir;
+
     private Plan costSignal;
     private Plan iterativeCost;
 
     private IterativeCostFunction measure = new VarCostFunction();
+
+    public MovieLogger(String dir) {
+        this.dir = "output-data/" + dir;
+    }
 
     @Override
     public void init(int agentId) {
@@ -65,32 +74,57 @@ public class MovieLogger extends AgentLogger {
         entry.costSignal = agent.getIteration() == 0 ? costSignal : null;
         entry.global = global;
         entry.iterativeCost = iterativeCost;
-        
+
         log.log(epoch, entry, 0.0);
+    }
+    
+    private String str2filename(String str) {
+        return str.replace(' ', '_').replace('-','m').replace('.', '_');
     }
 
     @Override
     public void print(MeasurementLog log) {
-        PrintStream out = System.out;
-        boolean first = true;
+        // label of the current execution is stored in the log as String tag: "label=..."
+        String filename = this.dir;
+        Set<Object> info = (Set<Object>) log.getTagsOfType(String.class);
+        String title = "";
+        String label = "";
+        for(Object o : info) {
+            String str = (String)o;
+            if(str.startsWith("label=")) {
+                label =  str2filename(str.substring(6,Math.min(str.length(), 36)));
+            }
+            if(str.startsWith("title=")) {
+                title =  str2filename(str.substring(6,Math.min(str.length(), 33)));
+            }
+        }
+        filename += "/movie_" + title + "_" + label + ".m";
         
-        Set<Object> sortedEntries = new TreeSet<>((x,y) -> Integer.compare(((Entry)x).iteration, ((Entry)y).iteration));
-        sortedEntries.addAll(log.getTagsOfType(Entry.class));
+        new File(filename).getParentFile().mkdir();
+        
+        try (PrintStream out = new PrintStream(filename)) {
+            boolean first = true;
 
-        for (Object entryObj : sortedEntries) {
-            Entry entry = (Entry) entryObj;
-            
-            if(first) {
-                out.println("D=zeros(" + entry.global.getNumberOfStates() + ",0);");
-                out.println("T=zeros(" + entry.iterativeCost.getNumberOfStates() + ",0);");
-                first = false;
-            }
+            Set<Object> sortedEntries = new TreeSet<>((x, y) -> Integer.compare(((Entry) x).iteration, ((Entry) y).iteration));
+            sortedEntries.addAll(log.getTagsOfType(Entry.class));
 
-            if (entry.iteration == 0) {
-                out.println("C=" + entry.costSignal + "';");
+            for (Object entryObj : sortedEntries) {
+                Entry entry = (Entry) entryObj;
+
+                if (first) {
+                    out.println("D=zeros(" + entry.global.getNumberOfStates() + ",0);");
+                    out.println("T=zeros(" + entry.iterativeCost.getNumberOfStates() + ",0);");
+                    first = false;
+                }
+
+                if (entry.iteration == 0) {
+                    out.println("C=" + entry.costSignal + "';");
+                }
+                out.println("D(:," + (entry.iteration + 1) + ")=" + entry.global + "';");
+                out.println("T(:," + (entry.iteration + 1) + ")=" + entry.iterativeCost + "';");
             }
-            out.println("D(:," + (entry.iteration + 1) + ")=" + entry.global + "';");
-            out.println("T(:," + (entry.iteration + 1) + ")=" + entry.iterativeCost + "';");
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MovieLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

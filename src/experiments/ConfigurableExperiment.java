@@ -72,6 +72,7 @@ import experiments.parameters.PosIntParam;
 import experiments.parameters.RankGeneratorParam;
 import experiments.parameters.StringParam;
 import experiments.output.JFreeChartEvaluator;
+import experiments.parameters.OptDoubleParam;
 import java.util.LinkedHashMap;
 import protopeer.Experiment;
 
@@ -149,8 +150,8 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("agentFactory", x -> launcher.agentFactory = x, new AgentFactoryParam());
         initializer.put("showGraph", x -> launcher.agentFactory.addLogger("graph", new GraphLogger(x)), new CostFunctionParam(), 1);
         initializer.put("inMemory", x -> launcher.agentFactory.inMemory = launcher.inMemoryLog = x, new BooleanParam(), 1);
-        initializer.put("outputMovie", x -> launcher.agentFactory.addLogger("movie", x ? new MovieLogger() : null), new BooleanParam(), 1);
-        initializer.put("outputDetail", x -> launcher.agentFactory.addLogger("detail", x ? new DetailLogger() : null), new BooleanParam(), 1);
+        initializer.put("outputMovie", x -> launcher.agentFactory.addLogger("movie", new MovieLogger(x)), new StringParam(), 1);
+        initializer.put("outputDetail", x -> launcher.agentFactory.addLogger("detail", new DetailLogger(x)), new StringParam(), 1);
         initializer.put("outputDistribution", x -> launcher.agentFactory.addLogger("dist", x ? new DistributionLogger() : null), new BooleanParam(), 1);
         initializer.put("outputTermination", x -> launcher.agentFactory.addLogger("term", x ? new TerminationLogger() : null), new BooleanParam(), 1);
         initializer.put("numIterations", x -> launcher.agentFactory.numIterations = x, new PosIntParam(), 1);
@@ -158,7 +159,7 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
         initializer.put("localMeasure", x -> launcher.agentFactory.localMeasure = x, new CostFunctionParam(), 1);
         initializer.put("aggregator", x -> launcher.agentFactory.aggregator = x, new AggregatorParam(), 1);
         initializer.put("rampUpRate", x -> launcher.agentFactory.rampUpRate = x, new OptPosDoubleParam(), 1);
-        initializer.put("rampUpBias", x -> ((IterMinCost) launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptPosDoubleParam(), 1);
+        initializer.put("rampUpBias", x -> ((IterMinCost) launcher.agentFactory.fitnessFunction).rampUpBias = x, new OptDoubleParam(), 1);
         initializer.put("fitnessFunction", x -> currentConfig = x, new StringParam());
 
         lazyInit.put("runDuration", e -> launcher.runDuration = 3 + launcher.agentFactory.numIterations, 2);
@@ -208,6 +209,9 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
             d.setter.accept(d.values.iterator().next());
         }
 
+        if(outFile != null) {
+            new File(outFile).getParentFile().mkdirs();
+        }
         try (PrintStream out = outFile == null ? System.out : new PrintStream(outFile)) {
             int plotNumber = 0;
             IEPOSEvaluator evaluator;
