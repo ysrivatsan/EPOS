@@ -49,12 +49,16 @@ public class TerminationLogger extends AgentLogger {
         if(agent.getIteration() == 0) {
             index = Integer.MAX_VALUE;
         }
-        if(prevGlobal != null && prevGlobal.variance() - global.variance() <= 0.00001) {
-            index = Math.min(index, agent.getIteration());
-        } else {
-            index = Integer.MAX_VALUE;
+        if(prevGlobal == null) {
+            prevGlobal = global;
         }
-        prevGlobal = global;
+        if(prevGlobal != null && global.variance() < prevGlobal.variance()) {
+            index = agent.getIteration()+1;//Math.min(index, agent.getIteration());
+            prevGlobal = global;
+        } else {
+            //index = Integer.MAX_VALUE;
+        }
+        //prevGlobal = global;
         
         if(agent.getIteration() == agent.getNumIterations()-1) {
             log.log(epoch, token, index);

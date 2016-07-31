@@ -57,6 +57,7 @@ public class IterMinCostReplaceGrad extends IterMinCost {
             Plan mod = gma.clone();
             mod.add(aggregate);
             mod.multiply(numNodes/(numNodes-1.0));
+            mod = costFunc.calcGradient(mod, costSignal);
             
             return select(agent, zero, plans, costSignal, mod);
         }
