@@ -19,6 +19,7 @@ package experiments.parameters;
 
 import agents.Agent;
 import agents.network.*;
+import java.util.Random;
 import java.util.function.BiFunction;
 
 /**
@@ -28,7 +29,7 @@ import java.util.function.BiFunction;
 public class RankGeneratorParam extends MapParam<BiFunction<Integer, Agent, Double>> {
 
     public RankGeneratorParam() {
-        map.put("RandomRank", (idx, agent) -> Math.random());
+        map.put("RandomRank", (idx, agent) -> agent.getRandom().nextDouble());
         map.put("IndexRank", (idx, agent) -> (double) idx);
         map.put("StdRank", new StdRankGenerator());
         map.put("NumPlanRank", new NumPlanRankGenerator());

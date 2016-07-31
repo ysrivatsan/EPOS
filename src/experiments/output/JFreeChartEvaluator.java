@@ -164,7 +164,11 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             List<Double> time = configTime.get(config.getKey());
             if(!config.getValue().isEmpty()) {
                 Aggregate c1 = config.getValue().get(0);
+                Aggregate ctm1 = config.getValue().get(config.getValue().size()-2);
                 Aggregate ct = config.getValue().get(config.getValue().size()-1);
+                if(ctm1.getAverage() < ct.getAverage()) {
+                    ct = ctm1;
+                }
                 System.out.println("E^(1)=" + c1.getAverage() + "+-" + c1.getStdDev() + ", E^(t)=" + ct.getAverage() + "+-" + ct.getStdDev());
             }
             for (int i = 0; i < config.getValue().size(); i++) {

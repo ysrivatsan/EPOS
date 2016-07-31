@@ -38,6 +38,7 @@ import experiments.log.AgentLogger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 /**
  *
@@ -68,6 +69,8 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private List<AgentLogger> loggers = new ArrayList<>();
     private boolean inMemory;
     
+    private Random random;
+    
     private final String config;
     
     private static enum TopologicalState {
@@ -85,6 +88,7 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         this.phases = dataSource.getPhases();
         this.loggers = loggers;
         this.inMemory = inMemory;
+        this.random = new Random(experimentId);
         
         this.config = dataSource.getConfig() + "-" + treeStamp;
     }
@@ -208,6 +212,10 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     public abstract Plan getGlobalResponse();
     
     public abstract Plan getCostSignal();
+    
+    public final Random getRandom() {
+        return random;
+    }
     
 
     private void computeTopologicalState() {

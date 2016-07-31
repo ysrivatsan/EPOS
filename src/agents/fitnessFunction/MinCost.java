@@ -66,7 +66,7 @@ public class MinCost extends FitnessFunction {
                 numOpt = 1;
             } else if (cost == minCost) {
                 numOpt++;
-                if (Math.random() <= 1.0 / numOpt) {
+                if (agent.getRandom().nextDouble() <= 1.0 / numOpt) {
                     selected = i;
                 }
             }
