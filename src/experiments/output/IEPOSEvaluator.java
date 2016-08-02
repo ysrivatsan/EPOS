@@ -20,6 +20,7 @@ package experiments.output;
 import agents.Agent;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,8 @@ public abstract class IEPOSEvaluator {
                     title = s.substring(6);
                 } else if (s.startsWith("label")) {
                     configMeasurement.label = s.substring(6);
+                } else if (s.startsWith("iterations")) {
+                    configMeasurement.iterationMeasurements = Arrays.asList(log.getAggregate(s));
                 }
             }
 
@@ -68,7 +71,7 @@ public abstract class IEPOSEvaluator {
             configMeasurement.fairnessMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> a.getStdDev() / (a.getAverage()));
             //configMeasurement.localMeasurements = configMeasurement.fairnessMeasurements;
             
-            final List<Double> prevSum = new ArrayList<>();
+            /*final List<Double> prevSum = new ArrayList<>();
             final List<Integer> optIter = new ArrayList<>();
             final int[] prevI = new int[]{-1};
             final int[] idx = new int[]{0};
@@ -92,7 +95,7 @@ public abstract class IEPOSEvaluator {
                     optIter.set(idx[0], Math.min(optIter.get(idx[0]), i));
                 }
                 return (double) optIter.get(idx[0]);
-            });
+            });*/
 
             configMeasurements.add(configMeasurement);
         }

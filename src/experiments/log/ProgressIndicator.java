@@ -48,7 +48,10 @@ public class ProgressIndicator extends AgentLogger {
             System.out.print(" ");
         }
         if (agent.getIteration() + 1 == agent.getNumIterations()) {
-            System.out.println("");
+            System.out.print(";");
+            if(agent.experimentId % 10 == 9) {
+                System.out.println();
+            }
         }
     }
 

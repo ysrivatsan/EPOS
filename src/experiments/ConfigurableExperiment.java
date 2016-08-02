@@ -274,11 +274,12 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
                     launcher.label = Util.merge(innerName);
                     launcher.run();
 
-                    experiments.put(launcher.peersLog, launcher.getMeasurementLog());
-
+                    MeasurementLog log = launcher.getMeasurementLog();
                     for(AgentLogger logger : launcher.agentFactory.getLoggers()) {
-                        logger.print(launcher.getMeasurementLog());
+                        logger.print(log);
                     }
+
+                    experiments.put(launcher.peersLog, log);
                 }
 
                 // plot result
@@ -303,7 +304,9 @@ public class ConfigurableExperiment extends ExperimentLauncher implements Clonea
 
     @Override
     public IEPOSExperiment createExperiment(int num) {
-        System.out.println("%Experiment " + getName(num) + ":");
+        if(num == 0) {
+            System.out.println("%Experiment " + getName(num) + ":");
+        }
 
         dataset.init(num);
 

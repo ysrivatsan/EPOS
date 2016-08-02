@@ -61,15 +61,17 @@ public class TerminationLogger extends AgentLogger {
         //prevGlobal = global;
         
         if(agent.getIteration() == agent.getNumIterations()-1) {
-            log.log(epoch, token, index);
+            log.log(epoch, "iterations", index);
         }
     }
 
     @Override
     public void print(MeasurementLog log) {
-        for(Object t : log.getTagsOfType(Token.class)) {
-            Aggregate a = log.getAggregate(t);
-            System.out.print("Termination after " + a.getAverage() + "+-" + a.getStdDev() + " iterations, " + a.getMin() + "/" + a.getMax());
+        for(Object t : log.getTagsOfType(String.class)) {
+            if(t.equals("iterations")) {
+                Aggregate a = log.getAggregate(t);
+                System.out.print("Termination after " + a.getAverage() + "+-" + a.getStdDev() + " iterations, " + a.getMin() + "/" + a.getMax());
+            }
         }
         System.out.println();
     }
