@@ -164,10 +164,12 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             List<Double> time = configTime.get(config.getKey());
             if(!config.getValue().isEmpty()) {
                 Aggregate c1 = config.getValue().get(0);
-                Aggregate ctm1 = config.getValue().get(config.getValue().size()-2);
                 Aggregate ct = config.getValue().get(config.getValue().size()-1);
-                if(ctm1.getAverage() < ct.getAverage()) {
-                    ct = ctm1;
+                if(config.getValue().size()>=2) {
+                    Aggregate ctm1 = config.getValue().get(config.getValue().size()-2);
+                    if(ctm1.getAverage() < ct.getAverage()) {
+                        ct = ctm1;
+                    }
                 }
                 System.out.println("E^(1)=" + c1.getAverage() + "+-" + c1.getStdDev() + ", E^(t)=" + ct.getAverage() + "+-" + ct.getStdDev());
             }
@@ -227,6 +229,14 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
         public void addToPlot(XYPlot plot, int idx) {
             DeviationRenderer renderer = new DeviationRenderer(true, false);
+            for(int series = 0; series < dataset.getSeriesCount(); series++) {
+                int numItems = dataset.getItemCount(series);
+                if(numItems == 1) {
+                    renderer.setSeriesLinesVisible(series, false);
+                    renderer.setSeriesShapesVisible(series, true);
+                    renderer.setSeriesShapesFilled(series, false);
+                }
+            }
             
             plot.setDomainAxis(idx, xAxis);
             if(xAxis.isAutoRange() && "iteration".equals(xAxis.getLabel())) {
