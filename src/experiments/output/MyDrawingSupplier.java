@@ -32,8 +32,9 @@ import org.jfree.chart.plot.DefaultDrawingSupplier;
  */
 public class MyDrawingSupplier extends DefaultDrawingSupplier {
     
+    //private static Paint[] paints = {new Color(237,125,49), new Color(91,155,213), new Color(255,192,0), new Color(165,165,165)};
     private static Paint[] paints = {Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN};
-    private static Stroke[] strokes = {new BasicStroke()};
+    private static Stroke[] strokes = {new BasicStroke(), new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1, new float[]{4.0f,4.0f}, 1)};
     private static Shape[] shapes = {new Ellipse2D.Double()};
     
     public MyDrawingSupplier() {

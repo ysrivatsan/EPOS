@@ -74,6 +74,7 @@ public class Util {
             if(withTime) {
                 m.timeMeasurements = (List<Double>) convertFromBytes(decoder.decode(br.readLine()));
             }
+            out.measurements.add(m);
             
             line = br.readLine();
             if(line != null) {
@@ -97,8 +98,6 @@ public class Util {
             } else {
                 continue;
             }
-            
-            out.measurements.add(m);
         }
 
         return out;
