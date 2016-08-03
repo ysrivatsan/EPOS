@@ -37,7 +37,7 @@ public class MyDrawingSupplier extends DefaultDrawingSupplier {
     
     //private static Paint[] paints = {new Color(237,125,49), new Color(91,155,213), new Color(255,192,0), new Color(165,165,165)};
     //private static Paint[] paints = {Color.RED, new Color(64,64,255), new Color(128,255,128), new Color(0,0,0)};
-    private static Paint[] paints = {Color.RED, Color.BLUE, Color.GREEN, Color.BLACK};
+    private static Paint[] paints = {Color.RED, Color.GREEN, Color.BLUE, Color.BLACK};
     private static Stroke[] strokes = {solid};
     private static Shape[] shapes = {new Ellipse2D.Double()};
     
