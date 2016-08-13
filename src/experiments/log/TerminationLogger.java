@@ -50,6 +50,7 @@ public class TerminationLogger extends AgentLogger {
             index = Integer.MAX_VALUE;
         }
         if(prevGlobal == null) {
+            index = agent.getIteration()+1;
             prevGlobal = global;
         }
         if(prevGlobal != null && global.variance() < prevGlobal.variance()) {
