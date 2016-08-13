@@ -148,6 +148,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             // init combinations
             int numCombinations = 1;
             for (IEPOSUp msg : msgs) {
+                logTransmitted(1+msg.possiblePlans.size());
                 numNodesSubtree += msg.numNodes;
                 numCombinations *= msg.possiblePlans.size();
             }
@@ -182,6 +183,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
                 subCombinationalSelections = subCombinationalSelections.subList(0, Math.min(numPlans, combinationalPlans.size()));;
             }
             int selectedCombination = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+            logComputation(subSelectablePlans.size());
             this.selectedCombination = subCombinationalSelections.get(selectedCombination);
 
             current.selectedPlan = subSelectablePlans.get(selectedCombination);
@@ -189,12 +191,14 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             current.aggregate.add(current.selectedPlan);
         }
 
+        logTransmitted(1+possiblePlans.size());
         return new IEPOSUp(numNodesSubtree, possiblePlans, current.aggregate);
     }
 
     @Override
     public IEPOSDown atRoot(IEPOSUp rootMsg) {
         int selected = fitnessFunctionRoot.select(this, current.aggregate, possiblePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        logComputation(possiblePlans.size());
         current.selectedLocalPlan = possiblePlans.get(selected);
         measureLocal(current.selectedLocalPlan, costSignal, selected, possiblePlans.size(), current.selectedLocalPlan != previous.selectedLocalPlan);
         current.global.set(current.aggregate);
@@ -207,6 +211,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
     @Override
     public List<IEPOSDown> down(IEPOSDown parent) {
+        // logTransmitted(1); // global response distribution is ignored
         current.global.set(parent.globalPlan);
         if (parent.discard) {
             current.aggregate = previous.aggregate;
@@ -244,6 +249,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             int selected = selectedCombination.get(i);
             IEPOSDown msg = new IEPOSDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size(), selected);
             msg.discard = !aggregator.getSelected().get(i);
+            // logTransmitted(1); // global response distribution is ignored
             msgs.add(msg);
         }
         return msgs;
