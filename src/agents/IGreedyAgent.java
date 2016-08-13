@@ -138,6 +138,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         Plan childAggregate = aggregator.calcAggregate(this, childAggregates, previous.global, costSignal, fitnessFunction);
 
         for (IGreedyUp msg : msgs) {
+            logTransmitted(1);
             numNodesSubtree += msg.numNodes;
         }
 
@@ -149,12 +150,14 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
             subSelectablePlans = possiblePlans.subList(0, Math.min(numPlans, possiblePlans.size()));
         }
         int selectedPlan = fitnessFunction.select(this, childAggregate, subSelectablePlans, costSignal, numNodes, numNodesSubtree, layer, avgNumChildren, iteration);
+        logComputation(subSelectablePlans.size());
         current.selectedLocalPlan = subSelectablePlans.get(selectedPlan);
 
         current.selectedPlan = current.selectedLocalPlan;
         current.aggregate.set(childAggregate);
         current.aggregate.add(current.selectedLocalPlan);
-
+        
+        logTransmitted(1);
         return new IGreedyUp(numNodesSubtree, current.aggregate);
     }
 
@@ -167,6 +170,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
     @Override
     public List<IGreedyDown> down(IGreedyDown parent) {
+        logTransmitted(1);
         current.global.set(parent.globalPlan);
         if (parent.discard) {
             current.aggregate = previous.aggregate;
@@ -188,6 +192,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         List<IGreedyDown> msgs = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
+            logTransmitted(1);
             IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
             msg.discard = !aggregator.getSelected().get(i);
             msgs.add(msg);

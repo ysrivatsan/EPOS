@@ -164,10 +164,12 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
             List<Double> time = configTime.get(config.getKey());
             if(!config.getValue().isEmpty()) {
                 Aggregate c1 = config.getValue().get(0);
-                Aggregate ctm1 = config.getValue().get(config.getValue().size()-2);
                 Aggregate ct = config.getValue().get(config.getValue().size()-1);
-                if(ctm1.getAverage() < ct.getAverage()) {
-                    ct = ctm1;
+                if(config.getValue().size()>=2) {
+                    Aggregate ctm1 = config.getValue().get(config.getValue().size()-2);
+                    if(ctm1.getAverage() < ct.getAverage()) {
+                        ct = ctm1;
+                    }
                 }
                 System.out.println("E^(1)=" + c1.getAverage() + "+-" + c1.getStdDev() + ", E^(t)=" + ct.getAverage() + "+-" + ct.getStdDev());
             }
@@ -203,11 +205,11 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
 
     private class PlotInfo {
 
-        private XYDataset dataset;
+        private YIntervalSeriesCollection dataset;
         private ValueAxis xAxis;
         private ValueAxis yAxis;
 
-        public PlotInfo dataset(XYDataset dataset) {
+        public PlotInfo dataset(YIntervalSeriesCollection dataset) {
             this.dataset = dataset;
             return this;
         }
@@ -226,7 +228,28 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         }
 
         public void addToPlot(XYPlot plot, int idx) {
-            DeviationRenderer renderer = new DeviationRenderer(true, false);
+            YIntervalSeriesCollection continuousDS = new YIntervalSeriesCollection();
+            YIntervalSeriesCollection discreteDS = new YIntervalSeriesCollection();
+            for(int series = 0; series < dataset.getSeriesCount(); series++) {
+                YIntervalSeries s = dataset.getSeries(series);
+                if(s.getItemCount()>1) {
+                    continuousDS.addSeries(s);
+                } else {
+                    discreteDS.addSeries(s);
+                }
+            }
+            
+            DeviationRenderer continuousRenderer = new DeviationRenderer(true, false);
+            /*for(int series = 0; series < dataset.getSeriesCount(); series++) {
+                int numItems = dataset.getItemCount(series);
+                if(numItems == 1) {
+                    continuousRenderer.setSeriesLinesVisible(series, false);
+                    continuousRenderer.setSeriesShapesVisible(series, true);
+                    continuousRenderer.setSeriesShapesFilled(series, false);
+                }
+            }*/
+            XYErrorRenderer discreteRenderer = new XYErrorRenderer();
+            
             
             plot.setDomainAxis(idx, xAxis);
             if(xAxis.isAutoRange() && "iteration".equals(xAxis.getLabel())) {
@@ -239,19 +262,24 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
                 xAxis.setRange(0, max);
             }
             plot.setRangeAxis(idx, yAxis);
-            plot.setDataset(idx, dataset);
+            plot.setDataset(idx, continuousDS);
             plot.mapDatasetToRangeAxis(idx, idx);
-            plot.setRenderer(idx, renderer);
+            plot.setRenderer(idx, continuousRenderer);
+            if(discreteDS.getSeriesCount() > 0) {
+                plot.setDataset(idx+1, discreteDS);
+                plot.mapDatasetToRangeAxis(idx+1, idx);
+                plot.setRenderer(idx+1, discreteRenderer);
+            }
 
-            renderer.setAlpha(0.2f);
+            continuousRenderer.setAlpha(0.2f);
             for (int i = 0; i < plot.getSeriesCount(); i++) {
-                Paint paint = ((DeviationRenderer) plot.getRenderer(0)).lookupSeriesPaint(i);
-                renderer.setSeriesPaint(i, paint);
-                renderer.setSeriesFillPaint(i, paint);
+                Paint paint = ((DeviationRenderer) continuousRenderer).lookupSeriesPaint(i);
+                continuousRenderer.setSeriesPaint(i, paint);
+                continuousRenderer.setSeriesFillPaint(i, paint);
                 if (idx > 0) {
-                    renderer.setSeriesStroke(i, new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{2, 4}, 0));
-                    renderer.setAlpha(0.1f);
-                    renderer.setSeriesVisibleInLegend(i, false);
+                    continuousRenderer.setSeriesStroke(i, new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{2, 4}, 0));
+                    continuousRenderer.setAlpha(0.1f);
+                    continuousRenderer.setSeriesVisibleInLegend(i, false);
                 }
             }
         }

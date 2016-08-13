@@ -54,17 +54,17 @@ public class CohdaAgent extends Agent {
     private List<Finger> neighbours = new ArrayList<>();
 
     private Plan zero;
-    
+
     @Override
     public int getIteration() {
         return step;
     }
-    
+
     @Override
     public int getNumIterations() {
         return numSteps;
     }
-    
+
     @Override
     public int getSelectedPlanIdx() {
         return possiblePlans.indexOf(best.getLocal());
@@ -157,6 +157,7 @@ public class CohdaAgent extends Agent {
     public void handleIncomingMessage(Message message) {
         if (message instanceof CohdaMessage) {
             CohdaMessage msg = (CohdaMessage) message;
+            logTransmitted(msg.best.size() + msg.current.size());
             update(msg);
         }
     }
@@ -182,6 +183,7 @@ public class CohdaAgent extends Agent {
         Plan aggregate = current.aggregate();
 
         int selected = fitnessFunction.select(this, aggregate, possiblePlans, zero, null);
+        logComputation(possiblePlans.size());
         Plan selectedPlan = possiblePlans.get(selected);
 
         if (selectedPlan.equals(current.getLocal()) && current.size() <= best.size()) {
@@ -201,7 +203,7 @@ public class CohdaAgent extends Agent {
         }*/
         measureGlobal(best.global(), zero);
         //measureGlobal(current.global(), zero);
-        if(isRoot()) {
+        if (isRoot()) {
             //System.out.println();
         }
     }
@@ -212,6 +214,7 @@ public class CohdaAgent extends Agent {
         msg.current = new KnowledgeBase(current);
         //System.out.print(current.size()+",");
         for (Finger neighbour : neighbours) {
+            logTransmitted(msg.best.size() + msg.current.size());
             getPeer().sendMessage(neighbour.getNetworkAddress(), msg);
         }
     }
@@ -251,7 +254,6 @@ public class CohdaAgent extends Agent {
             /*if(isRoot()) {
                 System.out.print(weights.keySet() + " + " + other.weights.keySet());
             }*/
-            
             global = null;
 
             for (NetworkAddress agent : other.weights.keySet()) {
@@ -263,11 +265,10 @@ public class CohdaAgent extends Agent {
                     changed = true;
                 }
             }
-            
+
             /*if(isRoot()) {
                 System.out.println(" = " + weights.keySet());
             }*/
-
             return changed;
         }
 

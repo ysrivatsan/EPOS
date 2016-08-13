@@ -68,6 +68,8 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private final Map<String, Object> localMeasurements = new HashMap<>();
     private List<AgentLogger> loggers = new ArrayList<>();
     private boolean inMemory;
+    private int numComputations;
+    private int numTransmitted;
     
     private Random random;
     
@@ -142,6 +144,8 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
                 logger.initRoot(getCostSignal());
             }
         }
+        numComputations = 0;
+        numTransmitted = 0;
     }
     
     abstract void runPhase();
@@ -215,6 +219,21 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     public final Random getRandom() {
         return random;
+    }
+    
+    public int getNumComputations() {
+        return numComputations;
+    }
+    
+    public int getNumTransmitted() {
+        return numTransmitted;
+    }
+    
+    void logComputation(int amount) {
+         numComputations += amount;
+    }
+    void logTransmitted(int amount) {
+         numTransmitted += amount;
     }
     
 
