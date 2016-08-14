@@ -136,7 +136,10 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
     public IGreedyUp up(List<IGreedyUp> msgs) {
         List<Plan> childAggregates = msgs.stream().map(msg -> msg.aggregate).collect(Collectors.toList());
         Plan childAggregate = aggregator.calcAggregate(this, childAggregates, previous.global, costSignal, fitnessFunction);
-
+        if(iteration > 0) {
+            logComputation((int)Math.pow(2, childAggregates.size()));
+        }
+        
         for (IGreedyUp msg : msgs) {
             logTransmitted(1);
             logCumTransmitted(1);

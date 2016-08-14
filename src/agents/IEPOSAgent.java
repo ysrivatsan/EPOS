@@ -144,7 +144,10 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
 
             List<Plan> childAggregates = msgs.stream().map(msg -> msg.aggregate).collect(Collectors.toList());
             Plan childAggregate = aggregator.calcAggregate(this, childAggregates, previous.global, costSignal, fitnessFunction);
-
+            if(iteration > 0) {
+                logComputation((int)Math.pow(2, childAggregates.size()));
+            }
+            
             // init combinations
             int numCombinations = 1;
             for (IEPOSUp msg : msgs) {
