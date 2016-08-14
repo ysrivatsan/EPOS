@@ -70,6 +70,10 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     private boolean inMemory;
     private int numComputations;
     private int numTransmitted;
+    private int cumComputations;
+    private int cumTransmitted;
+    private int dComputations;
+    private int dTransmitted;
     
     private Random random;
     
@@ -146,6 +150,10 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
         }
         numComputations = 0;
         numTransmitted = 0;
+        //cumComputations = 0;
+        //cumTransmitted = 0;
+        dComputations = 0;
+        dTransmitted = 0;
     }
     
     abstract void runPhase();
@@ -231,9 +239,40 @@ public abstract class Agent extends BasePeerlet implements TreeApplicationInterf
     
     void logComputation(int amount) {
          numComputations += amount;
+         dComputations += amount;
     }
+    
     void logTransmitted(int amount) {
          numTransmitted += amount;
+    }
+    
+    void logCumTransmitted(int amount) {
+         dTransmitted += amount;
+    }
+    
+    void fixComputations() {
+        cumComputations += dComputations;
+        dComputations = 0;
+    }
+    
+    void fixTransmitted() {
+        cumTransmitted += dTransmitted;
+        dTransmitted = 0;
+    }
+    
+    public int getCumComputations() {
+        return cumComputations;
+    }
+    
+    public int getCumTransmitted() {
+        return cumTransmitted;
+    }
+    
+    void setCumComputation(int val) {
+         cumComputations = val;
+    }
+    void setCumTransmitted(int val) {
+         cumTransmitted = val;
     }
     
 

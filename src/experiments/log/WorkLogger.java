@@ -41,6 +41,8 @@ public class WorkLogger extends AgentLogger {
         Token token = new Token(agent.experimentId, agent.getIteration());
         log.log(epoch, "numComputations", token, agent.getNumComputations());
         log.log(epoch, "numTransmitted", token, agent.getNumTransmitted());
+        log.log(epoch, "cumComputations", token, agent.getCumComputations());
+        log.log(epoch, "cumTransmitted", token, agent.getCumTransmitted());
     }
 
     @Override
@@ -55,20 +57,30 @@ public class WorkLogger extends AgentLogger {
             Token token = (Token) tokenObj;
             Aggregate comp = log.getAggregate("numComputations", tokenObj);
             Aggregate trans = log.getAggregate("numTransmitted", tokenObj);
+            Aggregate ccomp = log.getAggregate("cumComputations", tokenObj);
+            Aggregate ctrans = log.getAggregate("cumTransmitted", tokenObj);
             log2.log(0, "avgComp", token.iteration, comp.getAverage());
             log2.log(0, "maxComp", token.iteration, comp.getMax());
             log2.log(0, "avgTrans", token.iteration, trans.getAverage());
             log2.log(0, "maxTrans", token.iteration, trans.getMax());
+            log2.log(0, "avgCComp", token.iteration, ccomp.getAverage());
+            log2.log(0, "maxCComp", token.iteration, ccomp.getMax());
+            log2.log(0, "avgCTrans", token.iteration, ctrans.getAverage());
+            log2.log(0, "maxCTrans", token.iteration, ctrans.getMax());
             num = Math.max(num, token.iteration);
         }
         internalPrint(log2, "avgComp", num+1);
+        internalPrint(log2, "avgCComp", num+1);
         internalPrint(log2, "maxComp", num+1);
+        internalPrint(log2, "maxCComp", num+1);
         internalPrint(log2, "avgTrans", num+1);
+        internalPrint(log2, "avgCTrans", num+1);
         internalPrint(log2, "maxTrans", num+1);
+        internalPrint(log2, "maxCTrans", num+1);
     }
     
     private void internalPrint(MeasurementLog log, String tag, int numIter) {
-        System.out.print(tag + "=new double[]{");
+        System.out.print("double[] " + tag + "=new double[]{");
         for (int i = 0; i < numIter; i++) {
             System.out.print((i>0?",":"")+log.getAggregate(tag,i).getAverage());
         }

@@ -26,4 +26,6 @@ import protopeer.network.Message;
  */
 public class UpMessage extends Message {
     public Finger child;
+    public int cumComp;
+    public int cumTrans;
 }

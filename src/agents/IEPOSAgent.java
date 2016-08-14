@@ -149,6 +149,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             int numCombinations = 1;
             for (IEPOSUp msg : msgs) {
                 logTransmitted(1+msg.possiblePlans.size());
+                logCumTransmitted(1+msg.possiblePlans.size());
                 numNodesSubtree += msg.numNodes;
                 numCombinations *= msg.possiblePlans.size();
             }
@@ -250,6 +251,7 @@ public class IEPOSAgent extends IterativeAgentTemplate<IEPOSUp, IEPOSDown> {
             IEPOSDown msg = new IEPOSDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size(), selected);
             msg.discard = !aggregator.getSelected().get(i);
             // logTransmitted(1); // global response distribution is ignored
+            // logCumTransmitted(1); // global response distribution is ignored
             msgs.add(msg);
         }
         return msgs;

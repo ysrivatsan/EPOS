@@ -105,10 +105,15 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
         if (message instanceof UpMessage) {
             UP msg = (UP) message;
             messageBuffer.put(msg.child, msg);
+            setCumComputation(Math.max(getCumComputations(), msg.cumComp));
+            setCumTransmitted(Math.max(getCumTransmitted(), msg.cumTrans));
             if (children.size() <= messageBuffer.size()) {
                 goUp();
             }
         } else if (message instanceof DownMessage) {
+            DOWN msg = (DOWN) message;
+            setCumComputation(Math.max(getCumComputations(), msg.cumComp));
+            setCumTransmitted(Math.max(getCumTransmitted(), msg.cumTrans));
             goDown((DOWN) message);
         }
     }
@@ -125,6 +130,11 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
         messageBuffer.clear();
 
         UP msg = up(orderedMsgs);
+        
+        fixComputations();
+        fixTransmitted();
+        msg.cumComp = getCumComputations();
+        msg.cumTrans = getCumTransmitted();
 
         msg.child = getPeer().getFinger();
         if (isRoot()) {
@@ -136,7 +146,11 @@ public abstract class IterativeAgentTemplate<UP extends UpMessage, DOWN extends 
 
     private void goDown(DOWN parentMsg) {
         List<DOWN> msgs = down(parentMsg);
+        fixComputations();
+        fixTransmitted();
         for (int i = 0; i < msgs.size(); i++) {
+            msgs.get(i).cumComp = getCumComputations();
+            msgs.get(i).cumTrans = getCumTransmitted();
             getPeer().sendMessage(children.get(i).getNetworkAddress(), msgs.get(i));
         }
         //runIteration();

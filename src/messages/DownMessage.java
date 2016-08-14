@@ -24,4 +24,6 @@ import protopeer.network.Message;
  * @author Peter
  */
 public class DownMessage extends Message {
+    public int cumComp;
+    public int cumTrans;
 }

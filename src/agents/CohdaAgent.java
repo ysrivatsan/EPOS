@@ -50,6 +50,7 @@ public class CohdaAgent extends Agent {
     private KnowledgeBase best;
     private KnowledgeBase current;
     private FitnessFunction fitnessFunction;
+    private boolean somethingChanged;
 
     private List<Finger> neighbours = new ArrayList<>();
 
@@ -128,7 +129,9 @@ public class CohdaAgent extends Agent {
 
         if (step < numSteps) {
             initStep();
-            publish();
+            if(somethingChanged) {
+                publish();
+            }
         }
     }
 
@@ -142,6 +145,7 @@ public class CohdaAgent extends Agent {
         current = new KnowledgeBase();
         best = new KnowledgeBase();
         age = 0;
+        somethingChanged = true;
 
         readPlans();
         update(null);
@@ -157,13 +161,16 @@ public class CohdaAgent extends Agent {
     public void handleIncomingMessage(Message message) {
         if (message instanceof CohdaMessage) {
             CohdaMessage msg = (CohdaMessage) message;
+            setCumComputation(Math.max(getCumComputations(), msg.cumComp));
+            setCumTransmitted(Math.max(getCumTransmitted(), msg.cumTrans));
             logTransmitted(msg.best.size() + msg.current.size());
+            logCumTransmitted(msg.best.size() + msg.current.size());
             update(msg);
         }
     }
 
     private void update(CohdaMessage msg) {
-        boolean somethingChanged = false;
+        somethingChanged = false;
         if (msg == null) {
             somethingChanged = true;
         } else {
@@ -173,7 +180,6 @@ public class CohdaAgent extends Agent {
                 somethingChanged = true;
             }
         }
-
         if (somethingChanged) {
             choose();
         }
@@ -209,22 +215,36 @@ public class CohdaAgent extends Agent {
     }
 
     private void publish() {
+        logTransmitted(neighbours.size() * (best.size() + current.size()));
+        logCumTransmitted(neighbours.size() * (best.size() + current.size()));
+        fixComputations();
+        fixTransmitted();
+
         CohdaMessage msg = new CohdaMessage();
         msg.best = new KnowledgeBase(best);
         msg.current = new KnowledgeBase(current);
+        msg.cumComp = getCumComputations();
+        msg.cumTrans = getCumTransmitted();
         //System.out.print(current.size()+",");
         for (Finger neighbour : neighbours) {
-            logTransmitted(msg.best.size() + msg.current.size());
             getPeer().sendMessage(neighbour.getNetworkAddress(), msg);
         }
+    }
+
+    @Override
+    void measure(MeasurementLog log, int epochNumber) {
+        fixComputations();
+        fixTransmitted();
+        super.measure(log, epochNumber);
     }
 
     private boolean betterThanBest(KnowledgeBase other) {
         if (best.size() < other.size()) {
             return true;
         } else if (best.size() == other.size()) {
-            int selected = fitnessFunction.select(this, zero, Arrays.asList(best.global(), other.global()), zero, null);
-            return selected == 1;
+            return fitnessFunction.calcCost(best.global(), zero, 0, 0, true) > fitnessFunction.calcCost(other.global(), zero, 0, 0, true);
+            //int selected = fitnessFunction.select(this, zero, Arrays.asList(best.global(), other.global()), zero, null);
+            //return selected == 1;
         } else {
             return false;
         }
@@ -334,5 +354,7 @@ public class CohdaAgent extends Agent {
 
         public KnowledgeBase best;
         public KnowledgeBase current;
+        public int cumComp;
+        public int cumTrans;
     }
 }

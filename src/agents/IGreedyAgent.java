@@ -139,6 +139,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
 
         for (IGreedyUp msg : msgs) {
             logTransmitted(1);
+            logCumTransmitted(1);
             numNodesSubtree += msg.numNodes;
         }
 
@@ -193,6 +194,7 @@ public class IGreedyAgent extends IterativeAgentTemplate<IGreedyUp, IGreedyDown>
         List<IGreedyDown> msgs = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
             logTransmitted(1);
+            logCumTransmitted(1);
             IGreedyDown msg = new IGreedyDown(parent.globalPlan, parent.numNodes, parent.hops + 1, parent.sumChildren + children.size());
             msg.discard = !aggregator.getSelected().get(i);
             msgs.add(msg);
