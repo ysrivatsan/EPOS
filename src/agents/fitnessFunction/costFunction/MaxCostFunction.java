@@ -15,23 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package experiments.parameters;
+package agents.fitnessFunction.costFunction;
 
-import agents.fitnessFunction.costFunction.*;
+import agents.plan.Plan;
 
 /**
  *
  * @author Peter
  */
-public class CostFunctionParam extends MapParam<CostFunction> {
+public class MaxCostFunction implements CostFunction {
 
-    public CostFunctionParam() {
-        super(new IterativeCostFunctionParam());
-        map.put("index", new IndexCostFunction());
-        map.put("mean", new MeanCostFunction());
-        map.put("max", new MaxCostFunction());
-        map.put("discomfort", new DiscomfortCostFunction());
-        map.put("changed", new ChangedCostFunction());
-        map.put("", null);
+    @Override
+    public double calcCost(Plan plan, Plan costSignal, int idx, int numPlans, boolean changed) {
+        return plan.max();
+    }
+    
+    @Override
+    public String toString() {
+        return "MaxCost";
+    }
+
+    @Override
+    public String getMetric() {
+        return "max";
     }
 }

@@ -55,7 +55,7 @@ public class FileDataset implements Dataset {
     private Map<Integer, FileAgentDataset> cache = new HashMap<>();
 
     public static void main(String[] args) {
-        String ds = "3";
+        String ds = "4";
         FileDataset fd = new FileDataset("C:\\Users\\Peter\\Documents\\EPOS\\input-data\\Archive", ds + ".3");
         List<AgentDataset> ads = fd.getAgentDataSources(1000);
         File dir = new File(fd.location + "\\" + ds);
