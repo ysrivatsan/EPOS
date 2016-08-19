@@ -20,7 +20,10 @@ package agents.dataset;
 import agents.plan.Plan;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.joda.time.DateTime;
 
 /**
  *
@@ -49,6 +53,38 @@ public class FileDataset implements Dataset {
     private final Comparator<Plan> order;
 
     private Map<Integer, FileAgentDataset> cache = new HashMap<>();
+
+    public static void main(String[] args) {
+        String ds = "3";
+        FileDataset fd = new FileDataset("C:\\Users\\Peter\\Documents\\EPOS\\input-data\\Archive", ds + ".3");
+        List<AgentDataset> ads = fd.getAgentDataSources(1000);
+        File dir = new File(fd.location + "\\" + ds);
+        dir.mkdir();
+        int j = 0;
+        for (AgentDataset ad : ads) {
+            File adir = new File(dir, "ag" + j);
+            adir.mkdir();
+            j++;
+            for (DateTime t : ad.getPhases()) {
+                List<Plan> plans = ad.getPlans(t);
+                Plan plan = plans.get(0);
+                int size = plan.getNumberOfStates();
+                int num = 6;
+                try (PrintStream out = new PrintStream(new File(adir, "2014-07-23.plans"))) {
+                    for (int offset = -num; offset <= num; offset++) {
+                        int comfort = 1 - Math.abs(offset);
+                        out.print(comfort + ":" + plan.getValue(num + offset));
+                        for (int i = num + 1; i < size - num; i++) {
+                            out.print("," + plan.getValue(i + offset));
+                        }
+                        out.println();
+                    }
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(FileDataset.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
 
     public FileDataset(String location, String config) {
         this(location, config, null);

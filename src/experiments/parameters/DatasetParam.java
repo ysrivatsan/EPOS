@@ -43,7 +43,7 @@ public class DatasetParam implements Param<Dataset> {
                 params = Arrays.copyOf(params, params.length-1);
             }
             
-            if (x.matches("^E[157](\\.[135])?$")) {
+            if (x.matches("^E[12345678](\\.[135])?$")) {
                 return params.length == 1;
             } else if (x.startsWith("B")) {
                 if(params.length == 1) {
