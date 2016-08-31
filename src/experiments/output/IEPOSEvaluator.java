@@ -69,34 +69,6 @@ public abstract class IEPOSEvaluator {
             configMeasurement.globalMeasurements = getMeasurements(log, globalTag);
             configMeasurement.localMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> a.getAverage());
             configMeasurement.fairnessMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> a.getStdDev() / (a.getAverage()));
-            //configMeasurement.localMeasurements = configMeasurement.fairnessMeasurements;
-            
-            /*final List<Double> prevSum = new ArrayList<>();
-            final List<Integer> optIter = new ArrayList<>();
-            final int[] prevI = new int[]{-1};
-            final int[] idx = new int[]{0};
-            configMeasurement.iterationMeasurements = getMeasurements(log, localTag, expIds, (i, a) -> {
-                if(i == prevI[0]) {
-                    idx[0]++;
-                } else {
-                    idx[0] = 0;
-                }
-                prevI[0] = i;
-                if(prevSum.size() <= idx[0]) {
-                    prevSum.add(Double.NaN);
-                    optIter.add(Integer.MAX_VALUE);
-                }
-                
-                double sum = a.getSum();
-                if (prevSum.get(idx[0]) != sum) {
-                    optIter.set(idx[0], Integer.MAX_VALUE);
-                    prevSum.set(idx[0], sum);
-                } else {
-                    optIter.set(idx[0], Math.min(optIter.get(idx[0]), i));
-                }
-                return (double) optIter.get(idx[0]);
-            });*/
-
             configMeasurements.add(configMeasurement);
         }
 

@@ -172,7 +172,7 @@ public class GraphLogger extends AgentLogger {
         for (Map.Entry<TreeNode, float[]> entry : values.entrySet()) {
             float[] agentValues = entry.getValue();
             for (int i = 0; i < numIterations; i++) {
-                agentValues[i] = (agentValues[i]-minValues[i]) / (maxValues[i]-minValues[i]);
+                agentValues[i] = (agentValues[i]-minValues[i]+0.00001f) / (maxValues[i]-minValues[i]+0.00001f);
             }
         }
 

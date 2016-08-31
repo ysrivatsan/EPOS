@@ -68,12 +68,12 @@ public class CohdaAgent extends Agent {
 
     @Override
     public int getSelectedPlanIdx() {
-        return possiblePlans.indexOf(best.getLocal());
+        return possiblePlans.indexOf(best.getLocal(this));
     }
 
     @Override
     public Plan getGlobalResponse() {
-        return best.global();
+        return best.global(this);
     }
 
     @Override
@@ -186,17 +186,17 @@ public class CohdaAgent extends Agent {
     }
 
     private void choose() {
-        Plan aggregate = current.aggregate();
+        Plan aggregate = current.aggregate(this);
 
         int selected = fitnessFunction.select(this, aggregate, possiblePlans, zero, null);
         logComputation(possiblePlans.size());
         Plan selectedPlan = possiblePlans.get(selected);
 
-        if (selectedPlan.equals(current.getLocal()) && current.size() <= best.size()) {
+        if (selectedPlan.equals(current.getLocal(this)) && current.size() <= best.size()) {
             current = new KnowledgeBase(best);
-            selectedPlan = current.getLocal();
+            selectedPlan = current.getLocal(this);
         }
-        current.updateLocal(selectedPlan);
+        current.updateLocal(this, selectedPlan);
 
         measureLocal(selectedPlan, zero, selected, possiblePlans.size(), true);
 
@@ -207,7 +207,7 @@ public class CohdaAgent extends Agent {
         /*if(isRoot()) {
             System.out.println(best.size());
         }*/
-        measureGlobal(best.global(), zero);
+        measureGlobal(best.global(this), zero);
         //measureGlobal(current.global(), zero);
         if (isRoot()) {
             //System.out.println();
@@ -242,7 +242,7 @@ public class CohdaAgent extends Agent {
         if (best.size() < other.size()) {
             return true;
         } else if (best.size() == other.size()) {
-            return fitnessFunction.calcCost(best.global(), zero, 0, 0, true) > fitnessFunction.calcCost(other.global(), zero, 0, 0, true);
+            return fitnessFunction.calcCost(best.global(this), zero, 0, 0, true) > fitnessFunction.calcCost(other.global(this), zero, 0, 0, true);
             //int selected = fitnessFunction.select(this, zero, Arrays.asList(best.global(), other.global()), zero, null);
             //return selected == 1;
         } else {
@@ -250,7 +250,7 @@ public class CohdaAgent extends Agent {
         }
     }
 
-    private final class KnowledgeBase {
+    private static class KnowledgeBase {
 
         private Map<NetworkAddress, Weight> weights = new HashMap<>();
         private Plan global;
@@ -292,23 +292,23 @@ public class CohdaAgent extends Agent {
             return changed;
         }
 
-        public void updateLocal(Plan newPlan) {
+        public void updateLocal(CohdaAgent agent, Plan newPlan) {
             global = null;
-            NetworkAddress key = getPeer().getNetworkAddress();
+            NetworkAddress key = agent.getPeer().getNetworkAddress();
 
             Weight prevWeight = weights.get(key);
 
             Weight newWeight = new Weight();
             if (prevWeight != null) {
-                newWeight.age = CohdaAgent.this.age++;
+                newWeight.age = agent.age++;
             }
             newWeight.weight = newPlan;
 
             weights.put(key, newWeight);
         }
 
-        public Plan getLocal() {
-            Weight weight = weights.get(getPeer().getNetworkAddress());
+        public Plan getLocal(CohdaAgent agent) {
+            Weight weight = weights.get(agent.getPeer().getNetworkAddress());
             if (weight != null) {
                 return weight.weight;
             } else {
@@ -316,11 +316,11 @@ public class CohdaAgent extends Agent {
             }
         }
 
-        public Plan global() {
+        public Plan global(CohdaAgent agent) {
             if (global == null) {
                 global = weights.values().stream()
                         .map(x -> x.weight)
-                        .reduce(new GlobalPlan(CohdaAgent.this), (x, y) -> {
+                        .reduce(new GlobalPlan(agent), (x, y) -> {
                             x.add(y);
                             return x;
                         });
@@ -328,11 +328,11 @@ public class CohdaAgent extends Agent {
             return global;
         }
 
-        public Plan aggregate() {
+        public Plan aggregate(CohdaAgent agent) {
             Plan aggregate = weights.entrySet().stream()
-                    .filter(x -> !getPeer().getNetworkAddress().equals(x.getKey()))
+                    .filter(x -> !agent.getPeer().getNetworkAddress().equals(x.getKey()))
                     .map(x -> x.getValue().weight)
-                    .reduce(new AggregatePlan(CohdaAgent.this), (x, y) -> {
+                    .reduce(new AggregatePlan(agent), (x, y) -> {
                         x.add(y);
                         return x;
                     });
@@ -344,7 +344,7 @@ public class CohdaAgent extends Agent {
         }
     }
 
-    private class Weight {
+    private static class Weight {
 
         public Plan weight;
         public int age;

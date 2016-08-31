@@ -298,11 +298,11 @@ public class JFreeChartEvaluator extends IEPOSEvaluator {
         }
         
         if(axisStr.endsWith(")")) {
-            String rangeStr = axisStr.substring(axisStr.indexOf("("));
+            String rangeStr = axisStr.substring(axisStr.lastIndexOf("("));
             rangeStr = rangeStr.substring(1,rangeStr.length()-1);
             String[] range = rangeStr.split("-");
             axis.setRange(Double.parseDouble(range[0]), Double.parseDouble(range[1]));
-            axisStr = axisStr.substring(0,axisStr.indexOf("("));
+            axisStr = axisStr.substring(0,axisStr.lastIndexOf("("));
             axis.setLabel(axisStr);
         }
         
