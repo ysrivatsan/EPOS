@@ -41,6 +41,7 @@ public class SimpleExperiment {
 
         // network
         int numChildren = 2;
+        boolean boobs =false;
        
         // logging
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
