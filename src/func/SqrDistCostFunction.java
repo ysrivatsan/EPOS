@@ -42,6 +42,7 @@ public class SqrDistCostFunction extends DifferentiableCostFunction<Vector> {
     @Override
     public double calcCost(Vector vector) {
         Vector v = vector.cloneThis();
+        //System.out.println("Target = "+ target.toString());
         v.subtract(target);
         v.pow(2);
         return v.sum();

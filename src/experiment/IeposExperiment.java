@@ -41,7 +41,6 @@ public class IeposExperiment extends SimulatedExperiment {
     public static void runSimulation(int numChildren, int numIterations, int numAgents, Function<Integer, Agent> createAgent) {
         SimulatedExperiment experiment = new SimulatedExperiment() {};
         TreeArchitecture architecture = new TreeArchitecture(numChildren);
-       
         SimulatedExperiment.initEnvironment();
         experiment.init();
 
@@ -51,9 +50,9 @@ public class IeposExperiment extends SimulatedExperiment {
             public Peer createPeer(int peerIndex, Experiment e) {
                 Agent newAgent = createAgent.apply(peerIndex);
                 Peer newPeer = new Peer(peerIndex);
-
+                
                 architecture.addPeerlets(newPeer, newAgent, peerIndex, numAgents);
-
+                
                 return newPeer;
             }
         };

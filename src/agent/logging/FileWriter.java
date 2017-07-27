@@ -44,8 +44,8 @@ public class FileWriter extends AgentLogger {
 
     @Override
     public void print(MeasurementLog log) {
-        new File("output-data").mkdir();
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("output-data/" + filename))) {
+        //new File("output-data").mkdir();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
             oos.writeObject(log);
         } catch (IOException ex) {
             Logger.getLogger(FileWriter.class.getName()).log(Level.SEVERE, null, ex);

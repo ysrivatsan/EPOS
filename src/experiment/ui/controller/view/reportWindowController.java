@@ -6,6 +6,7 @@ package experiment.ui.controller.view;
 import experiment.ui.controller.MainApplication;
 //TODO
 import experiment.ExperimentGUI;
+import java.io.IOException;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -41,20 +42,20 @@ public class reportWindowController {
 	private Label iterationLabel;
 	
 	@FXML
-    private void handleNextBtnAction(ActionEvent e){
+    private void handleNextBtnAction(ActionEvent e) throws IOException{
 		if(iteration < experiment.getNumIterations()) {
 			setIteration(iteration+1);
 		}
 	}
 	
 	@FXML
-    private void handlePrevBtnAction(ActionEvent e){
+    private void handlePrevBtnAction(ActionEvent e) throws IOException{
 		if(iteration > 1) {
 			setIteration(iteration-1);
 		}
 	}
 	
-	private void setIteration(int iteration){
+	private void setIteration(int iteration) throws IOException{
 		this.iteration = iteration;
 		iterationLabel.setText("Iteration " + iteration);
 		
@@ -72,7 +73,7 @@ public class reportWindowController {
 	 * 
 	 * @param experiment
 	 */
-	public void setExperiment(ExperimentGUI experiment){
+	public void setExperiment(ExperimentGUI experiment) throws IOException{
 		this.experiment = experiment;
 		imageView1.setImage(SwingFXUtils.toFXImage(experiment.getGlobalCostPlot(2*imgSize, imgSize), new WritableImage(2*imgSize, imgSize)));
 		setIteration(1);

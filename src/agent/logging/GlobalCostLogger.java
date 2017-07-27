@@ -85,7 +85,7 @@ public class GlobalCostLogger<V extends DataType<V>> extends AgentLogger<Agent<V
         if (filename == null) {
             internalPrint(log, System.out);
         } else {
-            try (PrintStream out = new PrintStream("output-data/" + filename)) {
+            try (PrintStream out = new PrintStream(filename)) {
                 internalPrint(log, out);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(GlobalCostLogger.class.getName()).log(Level.SEVERE, null, ex);

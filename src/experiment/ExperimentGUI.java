@@ -23,6 +23,7 @@ import func.VarCostFunction;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class ExperimentGUI extends SimulatedExperiment {
        return globalCostPlot.getPlotImage(width, height);
     }
     
-    public BufferedImage getGlobalResponsePlot(int width, int height, int iteration) {
+    public BufferedImage getGlobalResponsePlot(int width, int height, int iteration) throws IOException {
        return globalResponsePlot.getPlotImage(width, height, iteration);
     }
     

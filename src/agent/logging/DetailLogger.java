@@ -24,6 +24,7 @@ import func.StdDevCostFunction;
 import agent.Agent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
     private final CostFunction globalCostFunction = new StdDevCostFunction();
 
     public DetailLogger(String dir) {
-        this.outputDir = "output-data/" + dir;
+        this.outputDir = dir;
     }
 
     @Override
@@ -67,6 +68,7 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
         Entry entry = new Entry();
         entry.agentId = agentId;
         entry.iteration = agent.getIteration();
+        entry.numIteration = agent.getNumIterations(); 
         entry.selectedPlan = agent.getSelectedPlan();
         log.log(epoch, agentId, entry, 0.0);
 
@@ -97,8 +99,8 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
         // get title and label (of the output plots) according to the log
         // title and label of the current execution is stored in the log as String tag: "label=..."
         Set<Object> info = (Set<Object>) log.getTagsOfType(String.class);
-        String title = "";
-        String label = "";
+        String title = "Min";
+        String label = "Peak";
         for (Object o : info) {
             String str = (String) o;
             if (str.startsWith("label=")) {
@@ -115,22 +117,41 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
 
         // output the selected plan at each iteration for each agent
         Map<Integer, PrintStream> outStreams = new HashMap<>();
+        Map<Integer, PrintStream> outStreams2 = new HashMap<>();
+        
         try {
             List<Entry> entries = log.getTagsOfType(Entry.class).stream().map(x -> (Entry) x).collect(Collectors.toList());
             entries.sort((a, b) -> Integer.compare(a.iteration, b.iteration));
-
+            PrintStream out3 = new PrintStream(new FileOutputStream(outputDir+"/Plan_Selections.txt",false));
             for (Entry entry : entries) {
                 PrintStream out = outStreams.get(entry.agentId);
+                PrintStream out2 = outStreams2.get(entry.agentId);
                 if (out == null) {
-                    out = new PrintStream(printDir + "/" + entry.agentId + ".txt");
+                    out = new PrintStream(printDir + "/" + "Agent_"+entry.agentId + "_all_iterations.txt");
                     outStreams.put(entry.agentId, out);
                 }
-                out.println(entry.iteration + ": " + entry.selectedPlan);
+                if (out2 == null) {
+                    out2 = new PrintStream(printDir + "/" + "Agent_"+entry.agentId + "_final_iteration_selected_plan.txt");
+                    outStreams2.put(entry.agentId, out2);
+                }
+//                Vector out2 = (Vector)entry.selectedPlan.getValue();
+//                String plan2 = out2.toString();
+                out.println(entry.iteration +":"+ entry.selectedPlan.getValue());
+                
+                if(entry.iteration == entry.numIteration-1)
+                {
+                out2.println("Index:" +entry.selectedPlan.getIndex()+"\tPlan:"+entry.selectedPlan.getValue());
+                out3.println(entry.agentId+":"+entry.selectedPlan.getIndex());
+                //System.out.println("Im here");
+                }
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             for (PrintStream out : outStreams.values()) {
+                out.close();
+            }
+            for (PrintStream out : outStreams2.values()) {
                 out.close();
             }
         }
@@ -164,6 +185,7 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
         public int agentId;
         public int iteration;
         public Plan selectedPlan;
+        public int numIteration;
     }
 
     private class RootEntry implements Serializable {

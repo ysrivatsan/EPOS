@@ -29,6 +29,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.axis.NumberAxis;
@@ -70,7 +72,7 @@ public class GlobalResponseLogger extends AgentLogger<Agent<Vector>> {
     }
 
     public GlobalResponseLogger(String dir) {
-        this.outputDir = "output-data/" + dir;
+        this.outputDir = dir;
     }
 
     @Override
@@ -103,14 +105,14 @@ public class GlobalResponseLogger extends AgentLogger<Agent<Vector>> {
     @Override
     public void print(MeasurementLog log) {
         if (outputDir == null) {
-            internalPrint(log, null);
+            internalPrint(log, null,null);
         } else {
             // get title and label (of the plots) for the current experiment
             // label of the current execution is stored in the log as String tag: "label=..."
             String filename = this.outputDir;
             Set<Object> info = (Set<Object>) log.getTagsOfType(String.class);
-            String title = "";
-            String label = "";
+            String title = "Min";
+            String label = "Peak";
             for (Object o : info) {
                 String str = (String) o;
                 if (str.startsWith("label=")) {
@@ -122,18 +124,28 @@ public class GlobalResponseLogger extends AgentLogger<Agent<Vector>> {
             }
 
             // compute output file name
-            filename += "/movie_" + title + "_" + label + ".m";
+            String dir = filename+"/"+title+ "_" + label;
+            String filename2 = dir+"/Last_iteration"+".txt";
+            filename += "/" + title + "_" + label+"/All_Iterations.txt";
             new File(filename).getParentFile().mkdir();
+            new File(dir).mkdirs();
+            
 
-            try (PrintStream out = new PrintStream(filename)) {
-                internalPrint(log, out);
+            try {
+                PrintStream out2 = new PrintStream(filename2);
+                
+                try (PrintStream out = new PrintStream(filename)) {  
+                    internalPrint(log, out, out2);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(GlobalResponseLogger.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(GlobalResponseLogger.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
-    public BufferedImage getPlotImage(int width, int height, int iteration) {
+    public BufferedImage getPlotImage(int width, int height, int iteration) throws IOException {
         BufferedImage outputImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Vector v = measurements.get(iteration);
         
@@ -149,15 +161,18 @@ public class GlobalResponseLogger extends AgentLogger<Agent<Vector>> {
         panel.setVisible(true);
         panel.paint(outputImg.getGraphics());
         panel.setVisible(false);
+        File outputfile = new File("C:/Users/syadhuna/Output/Global_Response_"+iteration+".jpg");
+        ImageIO.write(outputImg, "jpg", outputfile);
         return outputImg;
     }
 
-    private void internalPrint(MeasurementLog log, PrintStream out) {
+    private void internalPrint(MeasurementLog log, PrintStream out, PrintStream out2) {
         boolean first = true;
 
         Set<Object> sortedEntries = new TreeSet<>((x, y) -> Integer.compare(((Entry) x).iteration, ((Entry) y).iteration));
         sortedEntries.addAll(log.getTagsOfType(Entry.class));
-
+        
+        
         for (Object entryObj : sortedEntries) {
             Entry entry = (Entry) entryObj;
 
@@ -167,7 +182,10 @@ public class GlobalResponseLogger extends AgentLogger<Agent<Vector>> {
                     out.println("T=zeros(" + entry.cumulatedResponse.getNumDimensions() + ",0);");
                     first = false;
                 }
-
+                if (entry.iteration+1 == 50)
+                {
+                out2.print(entry.globalResponse);
+                }
                 out.println("D(:," + (entry.iteration + 1) + ")=" + entry.globalResponse + "';");
                 out.println("T(:," + (entry.iteration + 1) + ")=" + entry.cumulatedResponse + "';");
             }

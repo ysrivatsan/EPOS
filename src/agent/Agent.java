@@ -77,7 +77,7 @@ public abstract class Agent<V extends DataType<V>> extends BasePeerlet {
      */
     public Agent(List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends Agent> loggingProvider, long seed) {
         this(possiblePlans, globalCostFunc, localCostFunc, loggingProvider);
-        random.setSeed(seed);
+        random.setSeed(seed);        
     }
 
     V createValue() {

@@ -17,6 +17,8 @@
  */
 package data;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -246,6 +248,7 @@ public class Vector implements DataType<Vector> {
 
     @Override
     public void subtract(Vector other) {
+        
         for (int i = 0; i < values.length; i++) {
             values[i] -= other.values[i];
         }
@@ -381,7 +384,7 @@ public class Vector implements DataType<Vector> {
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder();
-        out.append('[');
+        //out.append('[');
         if (values.length > 0) {
             out.append(values[0]);
         }
@@ -389,14 +392,14 @@ public class Vector implements DataType<Vector> {
             out.append(',');
             out.append(values[i]);
         }
-        out.append(']');
+        //out.append(']');
         return out.toString();
     }
 
     @Override
     public String toString(String format) {
         StringBuilder out = new StringBuilder();
-        out.append('[');
+        //out.append('[');
         if (values.length > 0) {
             out.append(String.format(Locale.US, format, values[0]));
         }
@@ -404,7 +407,7 @@ public class Vector implements DataType<Vector> {
             out.append(',');
             out.append(String.format(Locale.US, format, values[i]));
         }
-        out.append(']');
+        //out.append(']');
         return out.toString();
     }
 

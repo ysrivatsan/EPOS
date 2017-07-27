@@ -18,7 +18,6 @@ import protopeer.network.Message;
 import protopeer.time.Timer;
 import protopeer.util.quantities.Time;
 import data.DataType;
-import java.time.Clock;
 
 /**
  * An agent that performs combinatorial optimization in a tree network over
@@ -36,7 +35,6 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
 
     int numIterations;
     int iteration;
-    int numMiniIterations;
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
 
@@ -53,10 +51,8 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
      */
     public IterativeTreeAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IterativeTreeAgent<V, UP, DOWN>> loggingProvider, long seed) {
         super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
-        
         this.numIterations = numIterations;
         this.iteration = numIterations;
-        this.numMiniIterations = 10;
     }
 
     @Override
@@ -71,10 +67,6 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
 
     @Override
     void runActiveState() {
-//        if(getPeer().getIndexNumber() == 151)
-//        {
-//        setMiniParent();
-//        }
         if (iteration < numIterations - 1) {
             Timer loadAgentTimer = getPeer().getClock().createNewTimer();
             loadAgentTimer.addTimerListener((Timer timer) -> {
@@ -90,6 +82,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
     @Override
     final void runPhase() {
         iteration = -1;
+
         initPhase();
         runIteration();
     }
@@ -117,10 +110,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
                 goUp();
             }
         } else if (message instanceof DownMessage) {
-            if (!(isMiniParent()&&iteration<=numMiniIterations)) {
             goDown((DOWN) message);
-        }
-              
         }
     }
 
@@ -153,9 +143,6 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
             numTransmitted += msg.getNumTransmitted();
             cumTransmitted += msg.getNumTransmitted();
             getPeer().sendMessage(parent.getNetworkAddress(), msg);
-        }
-        if ((isMiniParent()&&iteration<=numMiniIterations)) {
-            goDown(atRoot(msg));
         }
     }
 
