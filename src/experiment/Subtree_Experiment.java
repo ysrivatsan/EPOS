@@ -78,7 +78,6 @@ public class Subtree_Experiment {
             possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
             SimpleExperiment.exp(output_folder, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost);
             update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
-
         }
     }
 
