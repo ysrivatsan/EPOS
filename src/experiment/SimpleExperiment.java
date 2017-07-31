@@ -22,8 +22,10 @@ import func.PlanScoreCostFunction;
 import func.SqrDistCostFunction;
 import func.StdDevCostFunction;
 import func.VarCostFunction;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -47,7 +50,8 @@ public class SimpleExperiment {
 //static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\THU12-FRI12";
 //public static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
-    static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+    //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+    static String dir = "E:\\Java_Workspace\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         exp();
@@ -71,13 +75,13 @@ public class SimpleExperiment {
 
         // network
         int numChildren = 4;
-
+        
         // logging
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
-        loggingProvider.add(new CostViewer());
+        //loggingProvider.add();
         loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
         loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Change));
         loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
@@ -116,14 +120,14 @@ public class SimpleExperiment {
         loggingProvider.print();
     }
 
-    public static void exp(File output, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost) {
+    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost) throws IOException {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
         //Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir+"/Plans");
         //File output = new File(dir+"/Output");
         //int numAgents =  new File(dir+"/Plans").list().length;
-
+        File output = new File(out2);
         Random random = new Random(0);
         output.mkdir();
         Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
@@ -140,7 +144,7 @@ public class SimpleExperiment {
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
-        loggingProvider.add(new CostViewer(cost));
+        loggingProvider.add(new CostViewer(false,cost,out2));
         loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
         if (graph) {
             loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));

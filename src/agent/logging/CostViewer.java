@@ -37,6 +37,10 @@ import protopeer.measurement.MeasurementLog;
 import util.JFreeChartCustomLegend;
 import data.DataType;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 /**
  * An AgentLogger that only implements output logic. It reads the global cost
@@ -55,6 +59,8 @@ public class CostViewer<V extends DataType<V>> extends AgentLogger<Agent<V>> {
     private ChartPanel panel;
 
     private boolean showFrame;
+    private boolean writeToFile = false;
+    private String output = null;
 
     /**
      * Plots global and local cost in a new frame.
@@ -65,10 +71,17 @@ public class CostViewer<V extends DataType<V>> extends AgentLogger<Agent<V>> {
 
     /**
      * Plots global and local cost.
+     *
      * @param showFrame if true, a new frame is opened to show the plot.
      */
     public CostViewer(boolean showFrame) {
         this.showFrame = showFrame;
+    }
+
+    public CostViewer(boolean showFrame, boolean writeToFile, String output) {
+        this.showFrame = showFrame;
+        this.writeToFile = writeToFile;
+        this.output = output;
     }
 
     @Override
@@ -81,10 +94,14 @@ public class CostViewer<V extends DataType<V>> extends AgentLogger<Agent<V>> {
 
     @Override
     public void print(MeasurementLog log) {
-        print(Arrays.asList(log));
+        try {
+            print(Arrays.asList(log));
+        } catch (IOException ex) {
+            Logger.getLogger(CostViewer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
-    public void print(List<MeasurementLog> logs) {
+    public void print(List<MeasurementLog> logs) throws IOException {
         Locale.setDefault(Locale.US);
 
         MyPlot plot = new MyPlot();
@@ -106,11 +123,15 @@ public class CostViewer<V extends DataType<V>> extends AgentLogger<Agent<V>> {
         if (showFrame) {
             createAndShowFrame(logs.get(0), panel);
         }
+        if (writeToFile) {
+            BufferedImage Global_Cost_Img = getPlotImage(500, 250);
+            ImageIO.write(Global_Cost_Img, "jpg", new File(output + "/Global_Cost.jpg"));
+        }
     }
 
     public BufferedImage getPlotImage(int width, int height) {
         BufferedImage outputImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        panel.setSize(outputImg.getWidth(), outputImg.getHeight());
+        panel.setSize(width, height);
         panel.setVisible(true);
         panel.paint(outputImg.getGraphics());
         panel.setVisible(false);
