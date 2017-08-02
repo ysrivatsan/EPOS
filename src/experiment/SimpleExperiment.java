@@ -147,7 +147,7 @@ public class SimpleExperiment {
         loggingProvider.add(new CostViewer(false,cost,out2));
         if(detail)
         loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
-        if (graph) {
+        if(graph) {
             loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));
         }
         loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
