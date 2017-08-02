@@ -120,7 +120,7 @@ public class SimpleExperiment {
         loggingProvider.print();
     }
 
-    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost) throws IOException {
+    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail) throws IOException {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
@@ -145,6 +145,7 @@ public class SimpleExperiment {
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
         loggingProvider.add(new CostViewer(false,cost,out2));
+        if(detail)
         loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
         if (graph) {
             loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));

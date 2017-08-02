@@ -106,7 +106,6 @@ public class IeposAgent<V extends DataType<V>> extends IterativeTreeAgent<V, Iep
             prevSelectedPlan = createPlan();
         } else {
             this.selection_from_subtree = selection_map.getOrDefault(getPeer().getIndexNumber(), 0);
-            //if(Subtree_Experiment.node == 197)    System.out.println(getPeer().getIndexNumber()+":"+this.selection_from_subtree);
             prevSelectedPlan = possiblePlans.get(selection_from_subtree).cloneNew();
         }
     }
