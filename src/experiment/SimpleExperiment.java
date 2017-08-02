@@ -147,6 +147,8 @@ public class SimpleExperiment {
         loggingProvider.add(new CostViewer(false,cost,out2));
         if(detail)
         loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
+        else
+        loggingProvider.add(new DetailLogger(output + "/Plan_Output",true));
         if(graph) {
             loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));
         }
