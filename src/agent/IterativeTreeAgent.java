@@ -56,7 +56,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
         
         this.numIterations = numIterations;
         this.iteration = numIterations;
-        this.numMiniIterations = 10;
+        this.numMiniIterations = 0;
     }
 
     @Override

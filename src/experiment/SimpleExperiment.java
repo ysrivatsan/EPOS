@@ -119,6 +119,81 @@ public class SimpleExperiment {
         }
         loggingProvider.print();
     }
+    
+        public static void exp(boolean isMiniParent, int miniParent,int miniIterations,String out,String dir) {   
+        //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
+        // String targetFile = dir+".txt";
+        //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
+
+        Random random = new Random(0);
+        Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
+        File output = new File(out);
+        output.mkdir();
+        int numAgents = new File(dir + "/Plans").list().length;
+
+        // optimization functions
+        double lambda = 0;
+        DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
+        PlanCostFunction localCostFunc = new PlanScoreCostFunction();
+
+        // network
+        int numChildren = 2;
+        
+        // logging
+        LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
+        loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
+        loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
+        loggingProvider.add(new TerminationLogger());
+        loggingProvider.add(new CostViewer(false,true,out));
+        //loggingProvider.add();
+        loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
+        //loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Change));
+        loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
+        //loggingProvider.add(new agent.logging.DistributionLogger());
+        //loggingProvider.add(new agent.logging.FileWriter(dir+"\\Output\\simple.log"));
+        int numSimulations = 1;
+        for (int sim = 0; sim < numSimulations; sim++) {
+            final int simulationId = sim;
+
+            // algorithm
+            int numIterations = 50;
+            PlanSelector<IeposAgent<Vector>, Vector> planSelector = new IeposIndividualGradientPlanSelector();
+            Function<Integer, Agent> createAgent = agentIdx -> {
+                List<Plan<Vector>> possiblePlans = dataset.getPlans(agentIdx);
+                AgentLoggingProvider agentLP = loggingProvider.getAgentLoggingProvider(agentIdx, simulationId);
+                IeposAgent newAgent = null;
+                if(!(agentIdx == miniParent)){
+                newAgent = new IeposAgent(
+                        numIterations,
+                        possiblePlans,
+                        globalCostFunc,
+                        localCostFunc,
+                        agentLP,
+                        random.nextLong());
+                }
+                else{
+                    newAgent = new IeposAgent(
+                        numIterations,
+                        possiblePlans,
+                        globalCostFunc,
+                        localCostFunc,
+                        agentLP,
+                        random.nextLong(),isMiniParent,miniIterations);
+                }
+                newAgent.setLambda(lambda);
+                newAgent.setPlanSelector(planSelector);
+                return newAgent;
+            };
+
+            // start experiment
+            IeposExperiment.runSimulation(
+                    numChildren,
+                    numIterations,
+                    numAgents,
+                    createAgent);
+        }
+        loggingProvider.print();
+    }
 
     public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail) throws IOException {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);

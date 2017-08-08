@@ -60,7 +60,14 @@ public class IeposAgent<V extends DataType<V>> extends IterativeTreeAgent<V, Iep
         this.lambda = 0;
         this.planSelector = new IeposPlanSelector<>();
     }
-
+    public IeposAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent<V>> loggingProvider, long seed,boolean isMiniParent, int miniIterations) {
+        super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
+        this.optimization = new Optimization(random);
+        this.lambda = 0;
+        this.planSelector = new IeposPlanSelector<>();
+        this.miniParent = isMiniParent;
+        this.numMiniIterations = miniIterations;
+    }
     public IeposAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent<V>> loggingProvider, long seed, boolean selected_given, HashMap<Integer, Integer> selection_map) {
         super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
         this.optimization = new Optimization(random);
