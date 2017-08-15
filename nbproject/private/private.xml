@@ -2,16 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/E:/EPOS/src/agent/IeposAgent.java</file>
-            <file>file:/E:/EPOS/src/experiment/ExperimentGUI.java</file>
-            <file>file:/E:/EPOS/src/agent/IterativeTreeAgent.java</file>
-            <file>file:/E:/EPOS/src/agent/logging/DetailLogger.java</file>
-            <file>file:/E:/EPOS/src/experiment/Subtree_Experiment.java</file>
-            <file>file:/E:/EPOS/src/experiment/ui/controller/view/reportWindowController.java</file>
-            <file>file:/E:/EPOS/src/experiment/SimpleExperiment.java</file>
-            <file>file:/E:/EPOS/src/experiment/IeposExperiment.java</file>
-            <file>file:/E:/EPOS/src/agent/logging/CostViewer.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

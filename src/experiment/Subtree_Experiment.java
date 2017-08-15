@@ -31,9 +31,9 @@ public class Subtree_Experiment {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
 
-        String dir3 = "E:\\Java_Workspace\\EPOS-master\\EPOS-master\\datasets\\energy";
-        String dir2 = "E:\\Java_Workspace\\EPOS-master\\EPOS-master\\datasets\\gaussian";
-        String dir1 = "E:\\Java_Workspace\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+        String dir3 = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
+        String dir2 = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
+        String dir1 = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
         int numChildren = 2;
         int iteration = 5;
@@ -42,8 +42,8 @@ public class Subtree_Experiment {
         boolean cost = false;
 
         //full_subtree_start = numAgents - 1;
-        List<String> Settings_List = Arrays.asList("Holarchy");
-        List<String> datasets = Arrays.asList(dir3);
+        List<String> Settings_List = Arrays.asList("Passing");
+        List<String> datasets = Arrays.asList(dir1,dir2,dir3);
 
         for (String dir : datasets) {
             HashMap<Integer, Integer> selection_map = new HashMap<>();
@@ -103,42 +103,45 @@ public class Subtree_Experiment {
                     }
                     break;
                     case "No_Passing": {
-                        for (int val3 = full_subtree_start; val3 < numAgents - 1; val3++) {
-                            iteration = 20;
-                            half_tree_list_mod = new ArrayList<>();
-                            selection_map = new HashMap<>();
+                        int[] Iteration_list = {2, 3};
+                        for (int iter : Iteration_list) {
+                            for (int val3 = full_subtree_start; val3 < numAgents - 1; val3++) {
+                                iteration = iter;
+                                half_tree_list_mod = new ArrayList<>();
+                                selection_map = new HashMap<>();
 
-                            for (int i = 0; i < numAgents; i++) {
-                                selection_map.put(i, 0);
-                            }
-
-                            half_tree_list_mod.add(val3);
-                            half_tree_list_mod.add(numAgents - 1);
-                            Collections.sort(half_tree_list_mod);
-
-                            for (int val2 : half_tree_list_mod) {
-                                node = val2;
-                                HashMap<Integer, Integer> selection_map_tmp = new HashMap<>();
-                                String out2 = out + "_" + Setting + "_Iteration_" + iteration + "_" + val3 + "_" + node;
-
-                                if (node == numAgents - 1) {
-                                    iteration = 50;
-                                    //graph = true;
-                                    cost = true;
-                                    detail = true;
-                                    out2 = out2 + "_Completed";
-                                    selection_map_tmp = selection_map;
+                                for (int i = 0; i < numAgents; i++) {
+                                    selection_map.put(i, 0);
                                 }
 
-                                List<Integer> subtree_list = subtree_calc(node);
-                                List<List<Plan<Vector>>> possible = new ArrayList<>();
-                                HashMap<Integer, Integer> agent_id_map = new HashMap<>();
-                                possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
-                                update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
+                                half_tree_list_mod.add(val3);
+                                half_tree_list_mod.add(numAgents - 1);
+                                Collections.sort(half_tree_list_mod);
+
+                                for (int val2 : half_tree_list_mod) {
+                                    node = val2;
+                                    HashMap<Integer, Integer> selection_map_tmp = new HashMap<>();
+                                    String out2 = out + "_" + Setting + "_Iteration_" + iteration + "_" + val3 + "_" + node;
+
+                                    if (node == numAgents - 1) {
+                                        iteration = 50;
+                                        //graph = true;
+                                        cost = true;
+                                        detail = true;
+                                        out2 = out2 + "_Completed";
+                                        selection_map_tmp = selection_map;
+                                    }
+
+                                    List<Integer> subtree_list = subtree_calc(node);
+                                    List<List<Plan<Vector>>> possible = new ArrayList<>();
+                                    HashMap<Integer, Integer> agent_id_map = new HashMap<>();
+                                    possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                    update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
+                                }
+                                cost = false;
+                                detail = true;
                             }
-                            cost = false;
-                            detail = true;
                         }
                     }
                     break;
@@ -427,7 +430,7 @@ public class Subtree_Experiment {
                         for (int iter : Iteration_list) {
                             List<Integer> half_tree_list = new ArrayList<>();
 //                        List<String> Settings_List_2 = Arrays.asList("Full");
-                            for (int val5 = numAgents-1; val5 < numAgents; val5++) {
+                            for (int val5 = full_subtree_start; val5 < numAgents; val5++) {
                                 half_tree_list = new ArrayList<>();
                                 half_tree_list_mod = new ArrayList<>();
                                 for (int i = 0; i < numAgents; i++) {
@@ -450,17 +453,21 @@ public class Subtree_Experiment {
 //                            }
 
                                 half_tree_list = subtree_calc(val5);
-                                
+
                                 for (int val : half_tree_list) {
-                                    if (val >= full_subtree_start && val<numAgents-1) {
+                                    if (val >= full_subtree_start) {
                                         half_tree_list_mod.add(val);
                                     }
-                                    if (!half_tree_list_mod.equals(numAgents-1)) {
-                                        half_tree_list_mod.add(numAgents - 1);
-                                    }
+
                                 }
+                                if (!half_tree_list_mod.contains(numAgents - 1)) {
+                                    half_tree_list_mod.add(numAgents - 1);
+                                }
+
                                 Collections.sort(half_tree_list_mod);
+
                                 for (int val2 : half_tree_list_mod) {
+
                                     iteration = iter;
                                     node = val2;
                                     HashMap<Integer, Integer> selection_map_tmp = new HashMap<>();
@@ -487,10 +494,19 @@ public class Subtree_Experiment {
                     }
                     break;
                     case "Passing": {
-                        for (int val = full_subtree_start; val < numAgents - 1; val++) {
-                            iteration = 20;
-                            String out2 = out + "_" + Setting + "_Iterations_" + iteration + "_" + val;
-                            SimpleExperiment.exp(true, val, iteration, out2, dir);
+                        int[] Iteration_list = {2, 3};
+                        for (int iter : Iteration_list) {
+                            for (int val = full_subtree_start; val < numAgents - 1; val++) {
+                                iteration = iter;
+                                String out2 = out + "_" + Setting + "_Iterations_" + iteration + "_" + val;
+                                SimpleExperiment.exp(true, val, iteration, out2, dir);
+                            }
+                        }
+                    }
+                    break;
+                    case "Test": {
+                        for (int i = numAgents - 2; i < numAgents; i++) {
+                            System.out.println(subtree_calc(i));
                         }
                     }
                 }
