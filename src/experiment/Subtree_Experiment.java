@@ -35,15 +35,15 @@ public class Subtree_Experiment {
         String dir2 = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
         String dir1 = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
-        int numChildren = 2;
+        int numChildren = 5;
         int iteration = 5;
         boolean graph = false;
         boolean detail = true;
         boolean cost = false;
 
         //full_subtree_start = numAgents - 1;
-        List<String> Settings_List = Arrays.asList("Passing");
-        List<String> datasets = Arrays.asList(dir1,dir2,dir3);
+        List<String> Settings_List = Arrays.asList("Passing","Holarchy","No_Passing");
+        List<String> datasets = Arrays.asList(dir3);
 
         for (String dir : datasets) {
             HashMap<Integer, Integer> selection_map = new HashMap<>();
@@ -55,7 +55,7 @@ public class Subtree_Experiment {
             graph_create(numAgents, numChildren);
             level_map = Level_Identifier(full_subtree_start, numAgents, numChildren);
             Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
-            String out = dir + "/New_Results/Output";
+            String out = dir + "/New_Results/Output_"+numChildren;
 
             for (String Setting : Settings_List) {
                 switch (Setting) {
@@ -103,7 +103,7 @@ public class Subtree_Experiment {
                     }
                     break;
                     case "No_Passing": {
-                        int[] Iteration_list = {2, 3};
+                        int[] Iteration_list = {2, 3,5,10,15,20};
                         for (int iter : Iteration_list) {
                             for (int val3 = full_subtree_start; val3 < numAgents - 1; val3++) {
                                 iteration = iter;
@@ -494,7 +494,7 @@ public class Subtree_Experiment {
                     }
                     break;
                     case "Passing": {
-                        int[] Iteration_list = {2, 3};
+                        int[] Iteration_list = {2, 3,5,10,15,20};
                         for (int iter : Iteration_list) {
                             for (int val = full_subtree_start; val < numAgents - 1; val++) {
                                 iteration = iter;
