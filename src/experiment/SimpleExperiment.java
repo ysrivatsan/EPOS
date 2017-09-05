@@ -48,10 +48,10 @@ public class SimpleExperiment {
 //static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\SUN0-SUN12";
 //static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\SUN12-MON12";
 //static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\THU12-FRI12";
-//public static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
+//static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
-    //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
-    static String dir = "E:\\Java_Workspace\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+//static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         exp();
@@ -74,7 +74,7 @@ public class SimpleExperiment {
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
 
         // network
-        int numChildren = 4;
+        int numChildren = 5;
         
         // logging
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();

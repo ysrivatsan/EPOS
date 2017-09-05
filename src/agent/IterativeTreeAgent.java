@@ -52,8 +52,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
      * @param seed the seed for the RNG used by this agent
      */
     public IterativeTreeAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IterativeTreeAgent<V, UP, DOWN>> loggingProvider, long seed) {
-        super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
-        
+        super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);   
         this.numIterations = numIterations;
         this.iteration = numIterations;
         this.numMiniIterations = 0;
