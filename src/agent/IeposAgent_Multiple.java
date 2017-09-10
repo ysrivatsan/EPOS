@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import data.DataType;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This agent performs the I-EPOS algorithm for combinatorial optimization.
@@ -38,9 +36,6 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
     Optimization optimization;
     double lambda; // parameter for lambda-PREF local cost minimization
     private PlanSelector<IeposAgent_Multiple<V>, V> planSelector;
-    boolean selected_given;
-    int selection_from_subtree;
-    Map<Integer, Integer> selection_map = new HashMap<>();
 
     /**
      * Creates a new IeposAgent. Using the same RNG seed will result in the same
@@ -59,22 +54,6 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
         this.optimization = new Optimization(random);
         this.lambda = 0;
         this.planSelector = new IeposPlanSelector_2<>();
-    }
-    public IeposAgent_Multiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent_Multiple<V>> loggingProvider, long seed,boolean isMiniParent, int miniIterations) {
-        super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
-        this.optimization = new Optimization(random);
-        this.lambda = 0;
-        this.planSelector = new IeposPlanSelector_2<>();
-        this.miniParent = isMiniParent;
-        this.numMiniIterations = miniIterations;
-    }
-    public IeposAgent_Multiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent_Multiple<V>> loggingProvider, long seed, boolean selected_given, HashMap<Integer, Integer> selection_map) {
-        super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
-        this.optimization = new Optimization(random);
-        this.lambda = 0;
-        this.planSelector = new IeposPlanSelector_2<>();
-        this.selected_given = selected_given;
-        this.selection_map = selection_map;
     }
 
     /**
@@ -108,13 +87,7 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
         aggregatedResponse = createValue();
         prevAggregatedResponse = createValue();
         globalResponse = createValue();
-
-        if (!selected_given) {
-            prevSelectedPlan = createPlan();
-        } else {
-            this.selection_from_subtree = selection_map.getOrDefault(getPeer().getIndexNumber(), 0);
-            prevSelectedPlan = possiblePlans.get(selection_from_subtree).cloneNew();
-        }
+        prevSelectedPlan = createPlan();
     }
 
     @Override
@@ -159,28 +132,26 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
             for (int i = 0; i < children.size(); i++) {
                 approvals.add(true);
             }
-        } else {
-            if (children.size() > 0) {
-                List<List<V>> choicesPerAgent = new ArrayList<>();
-                for (int i = 0; i < children.size(); i++) {
-                    List<V> choices = new ArrayList<>();
-                    choices.add(prevSubtreeResponses.get(i));
-                    choices.add(subtreeResponses.get(i));
-                    choicesPerAgent.add(choices);
-                }
-                List<V> combinations = optimization.calcAllCombinations(choicesPerAgent);
+        } else if (children.size() > 0) {
+            List<List<V>> choicesPerAgent = new ArrayList<>();
+            for (int i = 0; i < children.size(); i++) {
+                List<V> choices = new ArrayList<>();
+                choices.add(prevSubtreeResponses.get(i));
+                choices.add(subtreeResponses.get(i));
+                choicesPerAgent.add(choices);
+            }
+            List<V> combinations = optimization.calcAllCombinations(choicesPerAgent);
 
-                V othersResponse = globalResponse.cloneThis();
-                for (V prevSubtreeResponce : prevSubtreeResponses) {
-                    othersResponse.subtract(prevSubtreeResponce);
-                }
-                int selectedCombination = optimization.argmin(globalCostFunc, combinations, othersResponse);
-                numComputed += combinations.size();
+            V othersResponse = globalResponse.cloneThis();
+            for (V prevSubtreeResponce : prevSubtreeResponses) {
+                othersResponse.subtract(prevSubtreeResponce);
+            }
+            int selectedCombination = optimization.argmin(globalCostFunc, combinations, othersResponse);
+            numComputed += combinations.size();
 
-                List<Integer> selections = optimization.combinationToSelections(selectedCombination, choicesPerAgent);
-                for (int selection : selections) {
-                    approvals.add(selection == 1);
-                }
+            List<Integer> selections = optimization.combinationToSelections(selectedCombination, choicesPerAgent);
+            for (int selection : selections) {
+                approvals.add(selection == 1);
             }
         }
         for (int i = 0; i < children.size(); i++) {
@@ -191,13 +162,9 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
     }
 
     void selectPlan() {
-        if (iteration == 1 && selected_given) {
-            selectedPlan = possiblePlans.get(selection_from_subtree);
-        } else {
-            int selected = planSelector.selectPlan(this);
-            numComputed += planSelector.getNumComputations(this);
-            selectedPlan = possiblePlans.get(selected);
-        }
+        int selected = planSelector.selectPlan(this);
+        numComputed += planSelector.getNumComputations(this);
+        selectedPlan = possiblePlans.get(selected);
     }
 
     private UpMessage informParent() {
