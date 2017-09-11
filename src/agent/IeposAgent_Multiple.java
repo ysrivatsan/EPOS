@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import data.DataType;
+import data.Vector;
+import experiment.Simple_Multiple_Exp;
+import func.DifferentiableCostFunction;
 
 /**
  * This agent performs the I-EPOS algorithm for combinatorial optimization.
@@ -31,7 +34,7 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
     private final List<V> subtreeResponses = new ArrayList<>();
     private final List<V> prevSubtreeResponses = new ArrayList<>();
     private final List<Boolean> approvals = new ArrayList<>();
-
+    List<Simple_Multiple_Exp.Option> options;
     // misc
     Optimization optimization;
     double lambda; // parameter for lambda-PREF local cost minimization
@@ -54,6 +57,14 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
         this.optimization = new Optimization(random);
         this.lambda = 0;
         this.planSelector = new IeposPlanSelector_2<>();
+    }
+
+    public IeposAgent_Multiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent_Multiple<V>> loggingProvider, long seed ,List<Simple_Multiple_Exp.Option> Options) {
+        super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
+        this.optimization = new Optimization(random);
+        this.lambda = 0;
+        this.planSelector = new IeposPlanSelector_2<>(); //To change body of generated methods, choose Tools | Templates.
+        this.options = Options;
     }
 
     /**
