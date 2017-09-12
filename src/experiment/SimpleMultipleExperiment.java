@@ -36,22 +36,13 @@ import java.util.Queue;
  *
  * @author Peter
  */
-public class Simple_Multiple_Exp {
+public class SimpleMultipleExperiment {
 
     static Queue<Integer> q = new LinkedList<>();
     static Map<Integer, LinkedList<Integer>> g = new HashMap<>();
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
-//static String participants = "2779";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\FRI12-SAT12";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Tesla\\170320_EV_2779_"+participants+"_1234_Tesla\\MON12-TUE12";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\SAT12-SUN0";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\SUN0-SUN12";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\SUN12-MON12";
-//static String dir = "C:\\Users\\syadhuna\\Data\\170320_EV_2779_XXXX_1234_Mixed\\170320_EV_2779_"+participants+"_1234_Mixed\\THU12-FRI12";
-//static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
-//static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
-//static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+
     static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -66,17 +57,45 @@ public class Simple_Multiple_Exp {
         DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
         // Options
-
-        List<Integer> children = new ArrayList();
-        Option opt1 = new Option("Passing", 100, subtree_calc(100));
-        Option opt2 = new Option();
-        List<Option> Options = Arrays.asList(opt1, opt2);
-
+        int miniIterationPassing = 5 ;
+        int miniIterationNoPassing = 5;
+        Experiment exp3 = new Experiment("Passing", 100, subtree_calc(100),miniIterationPassing);
+        Experiment exp2 = new Experiment("NOPassing", 100, subtree_calc(100),miniIterationNoPassing);
+        Experiment exp1 = new Experiment();
+        List<Experiment> Experiments = Arrays.asList(exp1, exp2, exp3);
+        
+//        int Num_of_exp = Options.size();
+//        List<Boolean> Parent_in_Passing = new ArrayList<>();
+//        List<Boolean> Child_in_Passing = new ArrayList<>();
+//        List<Boolean> Parent_in_NOPassing = new ArrayList<>();
+//        List<Boolean> Child_in_NOPassing = new ArrayList<>();
+//        Collections.fill(Parent_in_NOPassing, Boolean.FALSE);
+//        Collections.fill(Parent_in_Passing, Boolean.FALSE);
+//        Collections.fill(Child_in_NOPassing, Boolean.FALSE);
+//        Collections.fill(Child_in_Passing, Boolean.FALSE);
+//        for (int i = 0; i < numAgents; i++) {
+//            for (Option option : Options) {
+//                if (option.Experiment.startsWith("NO")) {
+//                    if (option.root == i) {
+//                        Parent_in_NOPassing.set(i, true);
+//                    } else if (option.Children.contains(i)) {
+//                        Child_in_NOPassing.set(i, true);
+//                    }
+//                } else if (option.Experiment.contains("Simple")) {
+//                } else {
+//                    if (option.root == i) {
+//                        Parent_in_Passing.set(i, true);
+//                    } else if (option.Children.contains(i)) {
+//                        Child_in_Passing.set(i, true);
+//                    }
+//                }
+//            }
+//        }
         // network
         int numChildren = 5;
 
         // logging
-        LoggingProvider<IeposAgent_Multiple<Vector>> loggingProvider = new LoggingProvider<>();
+        LoggingProvider<IeposAgentMultiple<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
@@ -92,18 +111,18 @@ public class Simple_Multiple_Exp {
 
             // algorithm
             int numIterations = 50;
-            PlanSelector<IeposAgent_Multiple<Vector>, Vector> planSelector = new IeposIndividualGradientPlanSelector_Multiple();
+            PlanSelector<IeposAgentMultiple<Vector>, Vector> planSelector = new IeposIndividualGradientPlanSelectorMultiple();
             Function<Integer, Agent> createAgent = agentIdx -> {
                 List<Plan<Vector>> possiblePlans = dataset.getPlans(agentIdx);
                 AgentLoggingProvider agentLP = loggingProvider.getAgentLoggingProvider(agentIdx, simulationId);
 
-                IeposAgent_Multiple newAgent = new IeposAgent_Multiple(
+                IeposAgentMultiple newAgent = new IeposAgentMultiple(
                         numIterations,
                         possiblePlans,
                         globalCostFunc,
                         localCostFunc,
                         agentLP,
-                        random.nextLong(),Options);
+                        random.nextLong(),Experiments);
                 newAgent.setLambda(lambda);
                 newAgent.setPlanSelector(planSelector);
                 return newAgent;
@@ -119,21 +138,23 @@ public class Simple_Multiple_Exp {
         loggingProvider.print();
     }
 
-    public static class Option {
+    public static class Experiment {
 
         int root;
         String Experiment;
         List<Integer> Children;
+        int iterations;
 
-        public Option() {
+        public Experiment() {
             this.root = 199;
             this.Experiment = "Simple";
         }
 
-        private Option(String xx, int i, List<Integer> children) {
+        private Experiment(String xx, int i, List<Integer> children, int iteration) {
             this.root = i;
             this.Experiment = xx;
             this.Children = children;
+            this.iterations = iteration;
         }
     }
 

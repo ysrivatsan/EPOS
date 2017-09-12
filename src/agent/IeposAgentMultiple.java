@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import data.DataType;
 import data.Vector;
-import experiment.Simple_Multiple_Exp;
+import experiment.SimpleMultipleExperiment;
 import func.DifferentiableCostFunction;
 
 /**
@@ -23,22 +23,37 @@ import func.DifferentiableCostFunction;
  * @author Peter
  * @param <V> the type of the data this agent should handle
  */
-public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAgent<V, IeposAgent_Multiple<V>.UpMessage, IeposAgent_Multiple<V>.DownMessage> {
+public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgent<V, IeposAgentMultiple<V>.UpMessage, IeposAgentMultiple<V>.DownMessage> {
 
     // agent info
     Plan<V> prevSelectedPlan;
     V aggregatedResponse;
     V prevAggregatedResponse;
+    List<Plan<V>> prevSelectedPlanMultiple = new ArrayList<>();
+    List<V> aggregatedResponseMultiple = new ArrayList<>();
+    List<V> prevAggregatedResponseMultiple = new ArrayList<>();
 
     // per child info
     private final List<V> subtreeResponses = new ArrayList<>();
     private final List<V> prevSubtreeResponses = new ArrayList<>();
     private final List<Boolean> approvals = new ArrayList<>();
-    List<Simple_Multiple_Exp.Option> options;
+    private final List<List<V>> subtreeResponsesMultiple = new ArrayList<>();
+    private final List<List<V>> prevSubtreeResponsesMultiple = new ArrayList<>();
+    private final List<List<Boolean>> approvalsMultiple = new ArrayList<>();
+    List<V> globalResponseMultiple;
+    List<Plan<V>> selectedPlanMultiple;
+//    int NumOfExperiments;
+//    boolean ParentNoPassing;
+//    boolean ParentPassing;
+//    boolean ChildNoPassing;
+//    boolean ChildPassing;
+//    int miniIterationPassing;
+//    int miniIterationNoPassing;
     // misc
     Optimization optimization;
     double lambda; // parameter for lambda-PREF local cost minimization
-    private PlanSelector<IeposAgent_Multiple<V>, V> planSelector;
+    private PlanSelector<IeposAgentMultiple<V>, V> planSelector;
+    private List<SimpleMultipleExperiment.Experiment> experiments;
 
     /**
      * Creates a new IeposAgent. Using the same RNG seed will result in the same
@@ -52,19 +67,32 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
      * writes it into its log.
      * @param seed a seed for the RNG
      */
-    public IeposAgent_Multiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent_Multiple<V>> loggingProvider, long seed) {
+    public IeposAgentMultiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgentMultiple<V>> loggingProvider, long seed) {
         super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
         this.optimization = new Optimization(random);
         this.lambda = 0;
-        this.planSelector = new IeposPlanSelector_2<>();
+        this.planSelector = new IeposPlanSelectorMultiple<>();
     }
 
-    public IeposAgent_Multiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgent_Multiple<V>> loggingProvider, long seed ,List<Simple_Multiple_Exp.Option> Options) {
+//    public IeposAgentMultiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgentMultiple<V>> loggingProvider, long seed, int NumOfExp, Boolean get, Boolean get0, Boolean get1, Boolean get2, int iterationPassing, int iterationNoPassing) {
+//        super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
+//        this.optimization = new Optimization(random);
+//        this.lambda = 0;
+//        this.planSelector = new IeposPlanSelectorMultiple<>();
+//        this.miniIterationNoPassing = iterationNoPassing;
+//        this.miniIterationPassing = iterationPassing;
+//        this.NumOfExperiments = NumOfExp;
+//        this.ParentNoPassing = get;
+//        this.ParentPassing = get0;
+//        this.ChildNoPassing = get1;
+//        this.ChildPassing = get2;
+//    }
+    public IeposAgentMultiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgentMultiple<V>> loggingProvider, long seed, List<SimpleMultipleExperiment.Experiment> Experiments) {
         super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
         this.optimization = new Optimization(random);
         this.lambda = 0;
-        this.planSelector = new IeposPlanSelector_2<>(); //To change body of generated methods, choose Tools | Templates.
-        this.options = Options;
+        this.planSelector = new IeposPlanSelectorMultiple<>();//To change body of generated methods, choose Tools | Templates.
+        this.experiments = Experiments;
     }
 
     /**
@@ -85,10 +113,11 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
      *
      * @param planSelector the plan selector
      */
-    public void setPlanSelector(PlanSelector<IeposAgent_Multiple<V>, V> planSelector) {
+    public void setPlanSelector(PlanSelector<IeposAgentMultiple<V>, V> planSelector) {
         this.planSelector = planSelector;
     }
 
+    @Override
     public V getGlobalResponse() {
         return globalResponse.cloneThis();
     }
@@ -99,6 +128,13 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
         prevAggregatedResponse = createValue();
         globalResponse = createValue();
         prevSelectedPlan = createPlan();
+
+        for (int i = 0; i < experiments.size(); i++) {
+            aggregatedResponseMultiple.add(i, createValue());
+            prevAggregatedResponseMultiple.add(i, createValue());
+            globalResponseMultiple.add(i, createValue());
+            prevSelectedPlanMultiple.add(i, createPlan());
+        }
     }
 
     @Override
@@ -114,21 +150,40 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
             subtreeResponses.clear();
             approvals.clear();
         }
+        if (iteration > 0) {
+            for (int i = 0; i < experiments.size(); i++) {
+                prevSelectedPlanMultiple.set(i, selectedPlanMultiple.get(i));
+                prevAggregatedResponseMultiple.set(i, aggregatedResponseMultiple.get(i));
+                prevSubtreeResponsesMultiple.get(i).clear();
+                prevSubtreeResponsesMultiple.add(i, subtreeResponsesMultiple.get(i));
+
+                selectedPlanMultiple.set(i, null);
+                aggregatedResponseMultiple.get(i).reset();
+                subtreeResponsesMultiple.get(i).clear();
+                approvalsMultiple.get(i).clear();
+            }
+        }
     }
 
     @Override
     UpMessage up(List<UpMessage> childMsgs) {
         for (UpMessage msg : childMsgs) {
-            subtreeResponses.add(msg.subtreeResponse);
+            subtreeResponsesMultiple.add(msg.subtreeResponseMultiple);
         }
-        aggregate();
-        selectPlan();
+        for (int i = 0; i < experiments.size(); i++) {
+            aggregateNew(i);
+            selectPlanNew(i);
+        }
         return informParent();
     }
 
     @Override
     DownMessage atRoot(UpMessage rootMsg) {
-        return new DownMessage(rootMsg.subtreeResponse, true);
+        List<Boolean> temp_list = new ArrayList<>();
+        for (int i = 0; i < experiments.size(); i++) {
+            temp_list.add(i, true);
+        }
+        return new DownMessage(rootMsg.subtreeResponseMultiple, temp_list);
     }
 
     @Override
@@ -138,23 +193,24 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
         return informChildren();
     }
 
-    private void aggregate() {
+    private void aggregateNew(int exp) {
         if (iteration == 0) {
             for (int i = 0; i < children.size(); i++) {
                 approvals.add(true);
+                approvalsMultiple.add(exp, approvals);
             }
         } else if (children.size() > 0) {
             List<List<V>> choicesPerAgent = new ArrayList<>();
             for (int i = 0; i < children.size(); i++) {
                 List<V> choices = new ArrayList<>();
-                choices.add(prevSubtreeResponses.get(i));
-                choices.add(subtreeResponses.get(i));
+                choices.add(prevSubtreeResponsesMultiple.get(exp).get(i));
+                choices.add(subtreeResponsesMultiple.get(exp).get(i));
                 choicesPerAgent.add(choices);
             }
             List<V> combinations = optimization.calcAllCombinations(choicesPerAgent);
 
-            V othersResponse = globalResponse.cloneThis();
-            for (V prevSubtreeResponce : prevSubtreeResponses) {
+            V othersResponse = globalResponseMultiple.get(exp).cloneThis();
+            for (V prevSubtreeResponce : prevSubtreeResponsesMultiple.get(exp)) {
                 othersResponse.subtract(prevSubtreeResponce);
             }
             int selectedCombination = optimization.argmin(globalCostFunc, combinations, othersResponse);
@@ -163,16 +219,18 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
             List<Integer> selections = optimization.combinationToSelections(selectedCombination, choicesPerAgent);
             for (int selection : selections) {
                 approvals.add(selection == 1);
+                approvalsMultiple.add(exp,approvals);
             }
         }
         for (int i = 0; i < children.size(); i++) {
-            V prelSubtreeResponse = approvals.get(i) ? subtreeResponses.get(i) : prevSubtreeResponses.get(i);
-            subtreeResponses.set(i, prelSubtreeResponse);
+            V prelSubtreeResponse = approvalsMultiple.get(exp).get(i) ? subtreeResponsesMultiple.get(exp).get(i) : prevSubtreeResponsesMultiple.get(exp).get(i);
+            subtreeResponsesMultiple.get(exp).set(i, prelSubtreeResponse);
             aggregatedResponse.add(prelSubtreeResponse);
         }
+        aggregatedResponseMultiple.set(exp, aggregatedResponse);
     }
 
-    void selectPlan() {
+    void selectPlanNew(int exp) {
         int selected = planSelector.selectPlan(this);
         numComputed += planSelector.getNumComputations(this);
         selectedPlan = possiblePlans.get(selected);
@@ -209,10 +267,10 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
     // message classes
     class UpMessage extends IterativeTreeAgent.UpMessage {
 
-        public V subtreeResponse;
+        public List<V> subtreeResponseMultiple;
 
-        public UpMessage(V subtreeResponse) {
-            this.subtreeResponse = subtreeResponse;
+        public UpMessage(List<V> subtreeResponseMultiple) {
+            this.subtreeResponseMultiple = subtreeResponseMultiple;
         }
 
         @Override
@@ -223,12 +281,12 @@ public class IeposAgent_Multiple<V extends DataType<V>> extends IterativeTreeAge
 
     class DownMessage extends IterativeTreeAgent.DownMessage {
 
-        public V globalResponse;
-        public boolean approved;
+        public List<V> globalResponseMultiple;
+        public List<Boolean> approvedMultiple;
 
-        public DownMessage(V globalResponse, boolean approved) {
-            this.globalResponse = globalResponse;
-            this.approved = approved;
+        public DownMessage(List<V> globalResponse, List<Boolean> approvedMultiple) {
+            this.globalResponseMultiple = globalResponse;
+            this.approvedMultiple = approvedMultiple;
         }
 
         @Override
