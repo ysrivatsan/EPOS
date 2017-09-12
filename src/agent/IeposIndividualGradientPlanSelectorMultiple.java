@@ -5,6 +5,7 @@
  */
 package agent;
 
+import data.Plan;
 import data.Vector;
 import func.DifferentiableCostFunction;
 import func.DotCostFunction;
@@ -38,9 +39,10 @@ public class IeposIndividualGradientPlanSelectorMultiple implements PlanSelector
             return agent.optimization.argmin(costFunc, agent.possiblePlans, agent.lambda);
         }
     }
-    public int selectPlanNew(int iteration) {
-        if (iteration == 0) {
-            return initialPlanSelector.selectPlanNew();
+    @Override
+    public int selectPlanMultiple(Vector globalResponse, Plan<Vector> prevSelectedPlan, Vector prevAggregatedResponse, Vector aggregatedResponse, IeposAgentMultiple<Vector> agent) {
+      if (agent.iteration == 0) {
+            return initialPlanSelector.selectPlanMultiple(globalResponse,prevSelectedPlan,prevAggregatedResponse,aggregatedResponse, agent);
         } else {
             DifferentiableCostFunction<Vector> gradientFunction = (DifferentiableCostFunction<Vector>) agent.globalCostFunc;
             Vector otherResponse = agent.globalResponse.cloneThis();
@@ -53,9 +55,12 @@ public class IeposIndividualGradientPlanSelectorMultiple implements PlanSelector
             return agent.optimization.argmin(costFunc, agent.possiblePlans, agent.lambda);
         }
     }
+    
     @Override
     public int getNumComputations(IeposAgentMultiple<Vector> agent) {
         return agent.possiblePlans.size();
     }
+
+    
 
 }

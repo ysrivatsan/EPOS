@@ -172,7 +172,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         }
         for (int i = 0; i < experiments.size(); i++) {
             aggregateNew(i);
-            selectPlanNew(i);
+            selectedPlanMultiple.set(i, selectPlanNew(i));
         }
         return informParent();
     }
@@ -188,8 +188,8 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
 
     @Override
     List<DownMessage> down(DownMessage parentMsg) {
-        updateGlobalResponse(parentMsg);
-        approveOrRejectChanges(parentMsg);
+        updateGlobalResponseMultiple(parentMsg);
+        approveOrRejectChangesMultiple(parentMsg);
         return informChildren();
     }
 
@@ -219,7 +219,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
             List<Integer> selections = optimization.combinationToSelections(selectedCombination, choicesPerAgent);
             for (int selection : selections) {
                 approvals.add(selection == 1);
-                approvalsMultiple.add(exp,approvals);
+                approvalsMultiple.add(exp, approvals);
             }
         }
         for (int i = 0; i < children.size(); i++) {
@@ -230,37 +230,49 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         aggregatedResponseMultiple.set(exp, aggregatedResponse);
     }
 
-    void selectPlanNew(int exp) {
-        int selected = planSelector.selectPlan(this);
+    Plan<V> selectPlanNew(int exp) {
+        int selected = planSelector.selectPlanMultiple(globalResponseMultiple.get(exp), prevSelectedPlanMultiple.get(exp), prevAggregatedResponseMultiple.get(exp), aggregatedResponseMultiple.get(exp), this);
         numComputed += planSelector.getNumComputations(this);
         selectedPlan = possiblePlans.get(selected);
+        return selectedPlan;
     }
 
     private UpMessage informParent() {
-        V subtreeResponse = aggregatedResponse.cloneThis();
-        subtreeResponse.add(selectedPlan.getValue());
-        return new UpMessage(subtreeResponse);
+        List<V> subtreeResponseMultiple = new ArrayList<>();
+        for (int exp = 0; exp < experiments.size(); exp++) {
+            V subtreeResponse = aggregatedResponseMultiple.get(exp).cloneThis();
+            subtreeResponse.add(selectedPlanMultiple.get(exp).getValue());
+        }
+        return new UpMessage(subtreeResponseMultiple);
     }
 
-    private void updateGlobalResponse(DownMessage parentMsg) {
-        globalResponse.set(parentMsg.globalResponse);
+//    private void updateGlobalResponse(DownMessage parentMsg) {
+//        globalResponse.set(parentMsg.globalResponse);
+//    }
+    private void updateGlobalResponseMultiple(DownMessage parentMsg) {
+        for (int i = 0; i < experiments.size(); i++) {
+            globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i));
+        }
     }
 
-    private void approveOrRejectChanges(DownMessage parentMsg) {
-        if (!parentMsg.approved) {
-            selectedPlan = prevSelectedPlan;
-            aggregatedResponse.set(prevAggregatedResponse);
-            subtreeResponses.clear();
-            subtreeResponses.addAll(prevSubtreeResponses);
-            Collections.fill(approvals, false);
+    private void approveOrRejectChangesMultiple(DownMessage parentMsg) {
+        for (int i = 0; i < experiments.size(); i++) {
+            if (!parentMsg.approvedMultiple.get(i)) {
+                selectedPlanMultiple.set(i, prevSelectedPlanMultiple.get(i));
+                aggregatedResponseMultiple.set(i, prevAggregatedResponseMultiple.get(i));
+
+                subtreeResponsesMultiple.get(i).clear();
+                subtreeResponsesMultiple.set(i, prevSubtreeResponsesMultiple.get(i));
+                Collections.fill(approvals, false);
+            }
         }
     }
 
     private List<DownMessage> informChildren() {
         List<DownMessage> msgs = new ArrayList<>();
-        for (int i = 0; i < children.size(); i++) {
-            msgs.add(new DownMessage(globalResponse, approvals.get(i)));
-        }
+            for (int i = 0; i < children.size(); i++) {
+                msgs.add(new DownMessage(globalResponseMultiple, approvalsMultiple.get(i)));//Probably wont work Think again
+            }
         return msgs;
     }
 

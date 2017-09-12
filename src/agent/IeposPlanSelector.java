@@ -6,6 +6,7 @@
 package agent;
 
 import data.DataType;
+import data.Plan;
 
 /**
  *
@@ -26,6 +27,11 @@ public class IeposPlanSelector<V extends DataType<V>> implements PlanSelector<Ie
     @Override
     public int getNumComputations(IeposAgent<V> agent) {
         return agent.possiblePlans.size();
+    }
+
+    @Override
+    public int selectPlanMultiple(V globalResponse, Plan<V> prevSelectedPlan, V prevAggregatedResponse, V aggregatedResponse, IeposAgent<V> agent) {
+        return 0;
     }
 
 }

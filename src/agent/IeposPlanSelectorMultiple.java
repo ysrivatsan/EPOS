@@ -6,12 +6,15 @@
 package agent;
 
 import data.DataType;
+import data.Plan;
 
 /**
  *
  * @author Peter
  */
 public class IeposPlanSelectorMultiple<V extends DataType<V>> implements PlanSelector<IeposAgentMultiple<V>, V> {
+
+    
 
     @Override
     public int selectPlan(IeposAgentMultiple<V> agent) {
@@ -22,12 +25,11 @@ public class IeposPlanSelectorMultiple<V extends DataType<V>> implements PlanSel
 
         return agent.optimization.argmin(agent.globalCostFunc, agent.possiblePlans, otherResponse, agent.lambda);
     }
-    public int selectPlanNew() {
-        V otherResponse = agent.globalResponse.cloneThis();
-        otherResponse.subtract(agent.prevSelectedPlan.getValue());
-        otherResponse.subtract(agent.prevAggregatedResponse);
-        otherResponse.add(agent.aggregatedResponse);
-
+    public int selectPlanMultiple(V globalResponse,Plan<V> prevSelectedPlan,V prevAggregatedResponse,V aggregatedResponse, IeposAgentMultiple<V> agent) {
+        V otherResponse = globalResponse.cloneThis();
+        otherResponse.subtract(prevSelectedPlan.getValue());
+        otherResponse.subtract(prevAggregatedResponse);
+        otherResponse.add(aggregatedResponse);
         return agent.optimization.argmin(agent.globalCostFunc, agent.possiblePlans, otherResponse, agent.lambda);
     }
 

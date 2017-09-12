@@ -5,6 +5,7 @@
  */
 package agent;
 
+import data.Plan;
 import data.Vector;
 import func.DifferentiableCostFunction;
 import func.DotCostFunction;
@@ -40,5 +41,9 @@ public class IeposGlobalGradientPlanSelector implements PlanSelector<IeposAgent<
     public int getNumComputations(IeposAgent<Vector> agent) {
         return agent.possiblePlans.size();
     }
-
+    
+    @Override
+    public int selectPlanMultiple(Vector globalResponse, Plan<Vector> prevSelectedPlan, Vector prevAggregatedResponse, Vector aggregatedResponse, IeposAgent<Vector> agent) {
+        return 0; //To change body of generated methods, choose Tools | Templates.
+    }
 }
