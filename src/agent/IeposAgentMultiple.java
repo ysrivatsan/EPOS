@@ -13,9 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import data.DataType;
-import data.Vector;
 import experiment.SimpleMultipleExperiment;
-import func.DifferentiableCostFunction;
 
 /**
  * This agent performs the I-EPOS algorithm for combinatorial optimization.
@@ -54,6 +52,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     double lambda; // parameter for lambda-PREF local cost minimization
     private PlanSelector<IeposAgentMultiple<V>, V> planSelector;
     private List<SimpleMultipleExperiment.Experiment> experiments;
+
     /**
      * Creates a new IeposAgent. Using the same RNG seed will result in the same
      * execution order in a simulation environment.
@@ -125,7 +124,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     void initPhase() {
 //        aggregatedResponse = createValue();
 //        prevAggregatedResponse = createValue();
-          globalResponse = createValue();
+        globalResponse = createValue();
 //        prevSelectedPlan = createPlan();
 
         for (int i = 0; i < experiments.size(); i++) {
@@ -202,7 +201,6 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
             approvalsMultiple.add(exp, approvalsTemp);
             approvalsTemp.clear();
         } else if (children.size() > 0) {
-            
             List<List<V>> choicesPerAgent = new ArrayList<>();
             for (int i = 0; i < children.size(); i++) {
                 List<V> choices = new ArrayList<>();
@@ -211,14 +209,12 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 choicesPerAgent.add(choices);
             }
             List<V> combinations = optimization.calcAllCombinations(choicesPerAgent);
-
             V othersResponse = globalResponseMultiple.get(exp).cloneThis();
             for (V prevSubtreeResponce : prevSubtreeResponsesMultiple.get(exp)) {
                 othersResponse.subtract(prevSubtreeResponce);
             }
             int selectedCombination = optimization.argmin(globalCostFunc, combinations, othersResponse);
             numComputed += combinations.size();
-
             List<Integer> selections = optimization.combinationToSelections(selectedCombination, choicesPerAgent);
             for (int selection : selections) {
                 approvalsTemp.add(selection == 1);
@@ -276,9 +272,8 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         List<DownMessage> msgs = new ArrayList<>();
         List<Boolean> approvedMultipleTemp = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
-            for(int exp =0;exp<experiments.size();exp++)
-            {
-                approvedMultipleTemp.add(exp,approvalsMultiple.get(exp).get(i));
+            for (int exp = 0; exp < experiments.size(); exp++) {
+                approvedMultipleTemp.add(exp, approvalsMultiple.get(exp).get(i));
             }
             msgs.add(new DownMessage(globalResponseMultiple, approvedMultipleTemp));
         }
