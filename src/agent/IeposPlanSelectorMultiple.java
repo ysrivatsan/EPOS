@@ -11,21 +11,22 @@ import data.Plan;
 /**
  *
  * @author Peter
+ * @param <V>
  */
 public class IeposPlanSelectorMultiple<V extends DataType<V>> implements PlanSelector<IeposAgentMultiple<V>, V> {
 
-    
-
     @Override
     public int selectPlan(IeposAgentMultiple<V> agent) {
-        V otherResponse = agent.globalResponse.cloneThis();
-        otherResponse.subtract(agent.prevSelectedPlan.getValue());
-        otherResponse.subtract(agent.prevAggregatedResponse);
-        otherResponse.add(agent.aggregatedResponse);
-
-        return agent.optimization.argmin(agent.globalCostFunc, agent.possiblePlans, otherResponse, agent.lambda);
+//        V otherResponse = agent.globalResponse.cloneThis();
+//        otherResponse.subtract(agent.prevSelectedPlan.getValue());
+//        otherResponse.subtract(agent.prevAggregatedResponse);
+//        otherResponse.add(agent.aggregatedResponse);
+//        return agent.optimization.argmin(agent.globalCostFunc, agent.possiblePlans, otherResponse, agent.lambda);
+        return 0;
     }
-    public int selectPlanMultiple(V globalResponse,Plan<V> prevSelectedPlan,V prevAggregatedResponse,V aggregatedResponse, IeposAgentMultiple<V> agent) {
+
+    @Override
+    public int selectPlanMultiple(V globalResponse, Plan<V> prevSelectedPlan, V prevAggregatedResponse, V aggregatedResponse, IeposAgentMultiple<V> agent) {
         V otherResponse = globalResponse.cloneThis();
         otherResponse.subtract(prevSelectedPlan.getValue());
         otherResponse.subtract(prevAggregatedResponse);
@@ -37,5 +38,4 @@ public class IeposPlanSelectorMultiple<V extends DataType<V>> implements PlanSel
     public int getNumComputations(IeposAgentMultiple<V> agent) {
         return agent.possiblePlans.size();
     }
-
 }
