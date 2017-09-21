@@ -120,7 +120,7 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         loggingProvider.print();
     }
     
-        public static void exp(boolean isMiniParent, int miniParent,int miniIterations,String out,String dir) {   
+        public static void exp(boolean isMiniParent, int miniParent,int miniIterations,String out,String dir, double lamb) {   
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
@@ -132,7 +132,7 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         int numAgents = new File(dir + "/Plans").list().length;
 
         // optimization functions
-        double lambda = 0;
+        double lambda = lamb;
         DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
 
@@ -195,7 +195,7 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         loggingProvider.print();
     }
 
-    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail) throws IOException {
+    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail, double lamb) throws IOException {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
@@ -208,7 +208,7 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
 
         // optimization functions
-        double lambda = 0;
+        double lambda = lamb;
         DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
 

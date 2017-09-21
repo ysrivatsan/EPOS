@@ -93,7 +93,7 @@ public class Subtree_Experiment {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), numChildren, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), numChildren, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                     update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                                 cost = false;
@@ -136,7 +136,7 @@ public class Subtree_Experiment {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                     update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                                 cost = false;
@@ -179,7 +179,7 @@ public class Subtree_Experiment {
                                         List<List<Plan<Vector>>> possible = new ArrayList<>();
                                         HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                         possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                        SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                        SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                         update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                     }
                                     cost = false;
@@ -225,7 +225,7 @@ public class Subtree_Experiment {
                                             List<List<Plan<Vector>>> possible = new ArrayList<>();
                                             HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                             possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                            SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                            SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                             update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                         }
                                         cost = false;
@@ -315,7 +315,7 @@ public class Subtree_Experiment {
                                                         List<List<Plan<Vector>>> possible = new ArrayList<>();
                                                         HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                                         possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                                        SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                                        SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                                         update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                                     }
                                                     cost = false;
@@ -410,7 +410,7 @@ public class Subtree_Experiment {
                                                             List<List<Plan<Vector>>> possible = new ArrayList<>();
                                                             HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                                             possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                                            SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                                            SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                                             update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                                         }
                                                         cost = false;
@@ -486,7 +486,7 @@ public class Subtree_Experiment {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,0);
                                     update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                             }
@@ -499,7 +499,7 @@ public class Subtree_Experiment {
                             for (int val = full_subtree_start; val < numAgents - 1; val++) {
                                 iteration = iter;
                                 String out2 = out + "_" + Setting + "_Iterations_" + iteration + "_" + val;
-                                SimpleExperiment.exp(true, val, iteration, out2, dir);
+                                SimpleExperiment.exp(true, val, iteration, out2, dir,0);
                             }
                         }
                     }
