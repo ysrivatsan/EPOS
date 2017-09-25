@@ -59,7 +59,7 @@ public class TestExpFinal {
             for (String Setting : Settings_List) {
                 switch (Setting) {
                     case "No_Passing": {
-                        int[] Iteration_list = {2, 3, 5, 10, 15, 20};
+                        int[] Iteration_list = {Integer.parseInt(args[4])};
                         for (int iter : Iteration_list) {
                             for (int val3 = full_subtree_start; val3 < numAgents - 1; val3++) {
                                 iteration = iter;
@@ -101,7 +101,7 @@ public class TestExpFinal {
                     }
                     break;
                     case "Holarchy": {
-                        int[] Iteration_list = {2, 3, 5, 10, 15, 20};
+                        int[] Iteration_list = {Integer.parseInt(args[4])};
                         for (int iter : Iteration_list) {
                             List<Integer> half_tree_list = new ArrayList<>();
                             for (int val5 = full_subtree_start; val5 < numAgents; val5++) {
@@ -152,7 +152,7 @@ public class TestExpFinal {
                     }
                     break;
                     case "Passing": {
-                        int[] Iteration_list = {2, 3, 5, 10, 15, 20};
+                        int[] Iteration_list = {Integer.parseInt(args[4])};
                         for (int iter : Iteration_list) {
                             for (int val = full_subtree_start; val < numAgents - 1; val++) {
                                 iteration = iter;

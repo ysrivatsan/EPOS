@@ -51,7 +51,7 @@ public class SimpleExperiment {
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
-static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+    static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         exp();
@@ -75,7 +75,7 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
 
         // network
         int numChildren = 5;
-        
+
         // logging
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
@@ -119,8 +119,8 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         }
         loggingProvider.print();
     }
-    
-        public static void exp(boolean isMiniParent, int miniParent,int miniIterations,String out,String dir, double lamb) {   
+
+    public static void exp(boolean isMiniParent, int miniParent, int miniIterations, String out, String dir, double lamb) {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
@@ -138,17 +138,17 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
 
         // network
         int numChildren = 2;
-        
+
         // logging
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
-        loggingProvider.add(new CostViewer(false,true,out));
+        loggingProvider.add(new CostViewer(false, true, out));
         //loggingProvider.add();
-        loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
+        //loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
         //loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Change));
-        loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
+        //loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
         //loggingProvider.add(new agent.logging.DistributionLogger());
         //loggingProvider.add(new agent.logging.FileWriter(dir+"\\Output\\simple.log"));
         int numSimulations = 1;
@@ -162,23 +162,22 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
                 List<Plan<Vector>> possiblePlans = dataset.getPlans(agentIdx);
                 AgentLoggingProvider agentLP = loggingProvider.getAgentLoggingProvider(agentIdx, simulationId);
                 IeposAgent newAgent = null;
-                if(!(agentIdx == miniParent)){
-                newAgent = new IeposAgent(
-                        numIterations,
-                        possiblePlans,
-                        globalCostFunc,
-                        localCostFunc,
-                        agentLP,
-                        random.nextLong());
-                }
-                else{
+                if (!(agentIdx == miniParent)) {
                     newAgent = new IeposAgent(
-                        numIterations,
-                        possiblePlans,
-                        globalCostFunc,
-                        localCostFunc,
-                        agentLP,
-                        random.nextLong(),isMiniParent,miniIterations);
+                            numIterations,
+                            possiblePlans,
+                            globalCostFunc,
+                            localCostFunc,
+                            agentLP,
+                            random.nextLong());
+                } else {
+                    newAgent = new IeposAgent(
+                            numIterations,
+                            possiblePlans,
+                            globalCostFunc,
+                            localCostFunc,
+                            agentLP,
+                            random.nextLong(), isMiniParent, miniIterations);
                 }
                 newAgent.setLambda(lambda);
                 newAgent.setPlanSelector(planSelector);
@@ -219,16 +218,17 @@ static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\d
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
         loggingProvider.add(new TerminationLogger());
-        loggingProvider.add(new CostViewer(false,cost,out2));
-        if(detail)
-        loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
-        else
-        loggingProvider.add(new DetailLogger(output + "/Plan_Output",true));
-        if(graph) {
-            loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));
-        }
-        loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
-        loggingProvider.add(new agent.logging.DistributionLogger());
+        loggingProvider.add(new CostViewer(false, cost, out2));
+//        if (detail) {
+//            loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
+//        } else {
+//            loggingProvider.add(new DetailLogger(output + "/Plan_Output", true));
+//        }
+//        if (graph){
+//            loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Index));
+//        }
+//        loggingProvider.add(new agent.logging.GlobalResponseLogger(output + "/Global_Response"));
+//        loggingProvider.add(new agent.logging.DistributionLogger());
         //loggingProvider.add(new agent.logging.FileWriter(dir+"\\Output\\simple.log"));
         int numSimulations = 1;
         for (int sim = 0; sim < numSimulations; sim++) {
