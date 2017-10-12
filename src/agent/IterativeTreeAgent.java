@@ -134,7 +134,6 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
 
         if (iteration == 0) {
             if(!numAgentsGiven) numAgents = 1 + orderedMsgs.stream().map(msg -> msg.numAgents).reduce(0, (a, b) -> a + b);
-            //System.out.println(getPeer().getIndexNumber()+"   "+numAgents);
         }
         numTransmitted = orderedMsgs.stream().map(msg -> msg.getNumTransmitted()).reduce(0, (a, b) -> a + b);
         numComputed = 0;

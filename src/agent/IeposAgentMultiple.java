@@ -115,9 +115,8 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
             numAgents = numofAgents;
             selectedPlan = null;
             prevSubtreeResponsesMultiple.clear();
-            prevSubtreeResponsesMultiple.addAll(subtreeResponsesMultiple);
-
             for (int i = 0; i < numResponses; i++) {
+                prevSubtreeResponsesMultiple.add(new ArrayList(subtreeResponsesMultiple.get(i)));
                 prevSelectedPlanMultiple.set(i, selectedPlanMultiple.get(i));
                 prevAggregatedResponseMultiple.set(i, aggregatedResponseMultiple.get(i));
                 aggregatedResponseMultiple.get(i).reset();
@@ -130,12 +129,10 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
 
     @Override
     UpMessage up(List<UpMessage> childMsgs) {
-
         for (UpMessage msg : childMsgs) {
             subtreeResponsesMultiple.add(msg.subtreeResponseMultiple);
-
-        }
-        for (int i = 0; i < numResponses; i++) {
+        }        
+        for (int i = 0; i < numResponses; i++) { //selected plan = 0 for agents not participating
             aggregateNew(i);
             selectedPlanMultiple.add(i, selectPlanNew(i));
         }
@@ -161,7 +158,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     private void aggregateNew(int exp) {
         List<Boolean> approvalsTemp = new ArrayList<>();
         V aggregatedResponseTemp = createValue();
-        if (iteration == 0) {
+        if (iteration == 0) {// approve for after every sub iteration
             for (int i = 0; i < children.size(); i++) {
                 approvalsTemp.add(true);
             }
@@ -170,6 +167,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         } else if (children.size() > 0) {
             List<V> prevSubtreeResponseTemp = new ArrayList<>();
             List<List<V>> choicesPerAgent = new ArrayList<>();
+            // choosing best to be added here
             for (int i = 0; i < children.size(); i++) {
                 List<V> choices = new ArrayList<>();
                 choices.add(prevSubtreeResponsesMultiple.get(i).get(exp));
@@ -180,8 +178,8 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
             List<V> combinations = optimization.calcAllCombinations(choicesPerAgent);
             V othersResponse = globalResponseMultiple.get(exp).cloneThis();
 
-            for (V prevSubtreeResponce : prevSubtreeResponseTemp) {
-                othersResponse.subtract(prevSubtreeResponce);
+            for (V prevSubtreeResponse : prevSubtreeResponseTemp) {
+                othersResponse.subtract(prevSubtreeResponse);
             }
             int selectedCombination = optimization.argmin(globalCostFunc, combinations, othersResponse);
             numComputed += combinations.size();
@@ -219,9 +217,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
             V subtreeResponse = aggregatedResponseMultiple.get(exp).cloneThis();
             subtreeResponse.add(selectedPlanMultiple.get(exp).getValue());
 
-            int peerIndex = getPeer().getIndexNumber();
-
-            if ((!ex.Children.contains(peerIndex) || ex.root == peerIndex) && ex.Experiment.equals("NoPassing") && ex.iterations >= iteration) {
+            if (true) { // agent has to pass 0 to its parents
                 subtreeResponse.reset();
                 subtreeResponseMultiple.add(exp, subtreeResponse);
             } else {
@@ -232,12 +228,10 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     }
 
     private void updateGlobalResponseMultiple(DownMessage parentMsg) {
-        if (getPeer().getIndexNumber() == 100) {
-            System.out.println("updateGlobalResponse");
-        }
+        
         for (int i = 0; i < numResponses; i++) {
-            int peerIndex = getPeer().getIndexNumber();
-            if (ex.Experiment.contains("Passing") && peerIndex == ex.root && ex.iterations >= iteration) {
+            
+            if (true) { // agent has to make global response as its subtree response
                 globalResponseMultiple.set(i, subtreeResponseMultiple.get(i));
             } else {
                 globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i));
@@ -264,8 +258,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         List<Boolean> approvedMultipleTemp = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
             for (int exp = 0; exp < numResponses; exp++) {
-                int peerIndex = getPeer().getIndexNumber();
-                if (ex.Experiment.contains("Passing") && peerIndex == ex.root && ex.iterations >= iteration) {
+                if (true) { //agent approves all childens messages
                     approvedMultipleTemp.add(exp, true);
                 } else {
                     approvedMultipleTemp.add(exp, approvalsMultiple.get(exp).get(i));

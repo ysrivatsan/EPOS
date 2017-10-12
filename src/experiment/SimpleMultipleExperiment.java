@@ -50,6 +50,7 @@ public class SimpleMultipleExperiment {
         Map<Integer, Integer> heightMap = new HashMap<>();
         int numChildren = 5;
         int depthOfTree = depthoftree(numAgents, numChildren);
+        int maxHeight = 0;
         for (int i = 0; i < numAgents; i++) {
             depthMap.put(i, depthCalc(i, numChildren, numAgents));
         }
