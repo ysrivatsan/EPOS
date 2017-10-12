@@ -31,7 +31,7 @@ public class SimpleMultipleExperiment {
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
 
-    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\EPOS\\datasets\\bicycle";
+    static String dir = "C:\\Users\\syadhuna\\workspace\\NetBeansProjects\\EPOS-Master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         Random random = new Random(0);
@@ -48,7 +48,7 @@ public class SimpleMultipleExperiment {
         int numResponses = 2;
         Map<Integer, Integer> depthMap = new HashMap<>();
         Map<Integer, Integer> heightMap = new HashMap<>();
-        int numChildren = 5;
+        int numChildren = 2;
         int depthOfTree = depthoftree(numAgents, numChildren);
         int maxHeight = 0;
         for (int i = 0; i < numAgents; i++) {
