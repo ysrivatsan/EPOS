@@ -33,12 +33,12 @@ import java.time.Clock;
 public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends IterativeTreeAgent.UpMessage, DOWN extends IterativeTreeAgent.DownMessage> extends TreeAgent<V> {
 
     int numAgents;
-
     int numIterations;
     int iteration;
     int numMiniIterations;
 
     private final Map<Finger, UP> messageBuffer = new HashMap<>();
+    private boolean numAgentsGiven;
 
     /**
      * Initializes the agent with the given combinatorial optimization problem
@@ -52,12 +52,18 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
      * @param seed the seed for the RNG used by this agent
      */
     public IterativeTreeAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IterativeTreeAgent<V, UP, DOWN>> loggingProvider, long seed) {
-        super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);   
+        super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
         this.numIterations = numIterations;
         this.iteration = numIterations;
         this.numMiniIterations = 0;
     }
-
+    public IterativeTreeAgent(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IterativeTreeAgent<V, UP, DOWN>> loggingProvider, long seed,boolean numAgentsGiven) {
+        super(possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed);
+        this.numIterations = numIterations;
+        this.iteration = numIterations;
+        this.numMiniIterations = 0;
+        this.numAgentsGiven = numAgentsGiven;
+    }
     @Override
     public int getIteration() {
         return iteration;
@@ -70,10 +76,6 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
 
     @Override
     void runActiveState() {
-//        if(getPeer().getIndexNumber() == 151)
-//        {
-//        setMiniParent();
-//        }
         if (iteration < numIterations - 1) {
             Timer loadAgentTimer = getPeer().getClock().createNewTimer();
             loadAgentTimer.addTimerListener((Timer timer) -> {
@@ -116,10 +118,10 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
                 goUp();
             }
         } else if (message instanceof DownMessage) {
-            if (!(isMiniParent()&&iteration<=numMiniIterations)) {
-            goDown((DOWN) message);
-        }
-              
+            if (!(isMiniParent() && iteration <= numMiniIterations)) {
+                goDown((DOWN) message);
+            }
+
         }
     }
 
@@ -131,7 +133,8 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
         messageBuffer.clear();
 
         if (iteration == 0) {
-            numAgents = 1 + orderedMsgs.stream().map(msg -> msg.numAgents).reduce(0, (a, b) -> a + b);
+            if(!numAgentsGiven) numAgents = 1 + orderedMsgs.stream().map(msg -> msg.numAgents).reduce(0, (a, b) -> a + b);
+            //System.out.println(getPeer().getIndexNumber()+"   "+numAgents);
         }
         numTransmitted = orderedMsgs.stream().map(msg -> msg.getNumTransmitted()).reduce(0, (a, b) -> a + b);
         numComputed = 0;
@@ -153,7 +156,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
             cumTransmitted += msg.getNumTransmitted();
             getPeer().sendMessage(parent.getNetworkAddress(), msg);
         }
-        if ((isMiniParent()&&iteration<=numMiniIterations)) {
+        if ((isMiniParent() && iteration <= numMiniIterations)) {
             goDown(atRoot(msg));
         }
     }

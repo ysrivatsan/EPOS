@@ -120,7 +120,7 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
 
             // compute output directory
             String printDir = outputDir + "/" + title + "_" + label;
-            new File(printDir).mkdirs();
+           // new File(printDir).mkdirs();
 
             // output the selected plan at each iteration for each agent
             Map<Integer, PrintStream> outStreams = new HashMap<>();
@@ -130,24 +130,26 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
                 List<Entry> entries = log.getTagsOfType(Entry.class).stream().map(x -> (Entry) x).collect(Collectors.toList());
                 entries.sort((a, b) -> Integer.compare(a.iteration, b.iteration));
                 PrintStream out3 = new PrintStream(new FileOutputStream(outputDir + "/Plan_Selections.txt", false));
+                PrintStream out4 = new PrintStream(new FileOutputStream(outputDir + "/Plan_Indices.txt", false));
                 for (Entry entry : entries) {
-                    PrintStream out = outStreams.get(entry.agentId);
-                    PrintStream out2 = outStreams2.get(entry.agentId);
-                    if (out == null) {
-                        out = new PrintStream(printDir + "/" + "Agent_" + entry.agentId + "_all_iterations.txt");
-                        outStreams.put(entry.agentId, out);
-                    }
-                    if (out2 == null) {
-                        out2 = new PrintStream(printDir + "/" + "Agent_" + entry.agentId + "_final_iteration_selected_plan.txt");
-                        outStreams2.put(entry.agentId, out2);
-                    }
+                    //PrintStream out = outStreams.get(entry.agentId);
+                    //PrintStream out2 = outStreams2.get(entry.agentId);
+//                    if (out == null) {
+//                        out = new PrintStream(printDir + "/" + "Agent_" + entry.agentId + "_all_iterations.txt");
+//                        outStreams.put(entry.agentId, out);
+//                    }
+//                    if (out2 == null) {
+//                        out2 = new PrintStream(printDir + "/" + "Agent_" + entry.agentId + "_final_iteration_selected_plan.txt");
+//                        outStreams2.put(entry.agentId, out2);
+//                    }
 //                Vector out2 = (Vector)entry.selectedPlan.getValue();
 //                String plan2 = out2.toString();
-                    out.println(entry.iteration + ":" + entry.selectedPlan.getValue());
+                   // out.println(entry.iteration + ":" + entry.selectedPlan.getValue());
 
                     if (entry.iteration == entry.numIteration - 1) {
-                        out2.println("Index:" + entry.selectedPlan.getIndex() + "\tPlan:" + entry.selectedPlan.getValue());
+                     //   out2.println("Index:" + entry.selectedPlan.getIndex() + "\tPlan:" + entry.selectedPlan.getValue());
                         out3.println(entry.agentId + ":" + entry.selectedPlan.getIndex());
+                        out4.println(entry.agentId + ":" +entry.selectedPlan.getScore());
                         //System.out.println("Im here");
                     }
                 }
@@ -163,27 +165,27 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
             }
 
             // output the global cost, the global response and the cumulated global response
-            try (PrintStream outRoot = new PrintStream(printDir + "/root.txt")) {
-                TreeSet<Object> entryObjs = new TreeSet<>((a, b) -> Integer.compare(((RootEntry) a).iteration, ((RootEntry) b).iteration));
-                entryObjs.addAll(log.getTagsOfType(RootEntry.class));
-
-                Vector prevIterCost = ((RootEntry) entryObjs.first()).globalResponse.cloneThis();
-                prevIterCost.set(0);
-
-                for (Object entryObj : entryObjs) {
-                    RootEntry entry = (RootEntry) entryObj;
-
-                    if (prevIterCost.max() != 0.0) {
-                        double avg = prevIterCost.avg() + 0.00001;
-                        double std = prevIterCost.std() + 0.00001;
-                        prevIterCost.multiply(88 / Math.max(avg, std));
-                    }
-                    outRoot.println(entry.iteration + ": " + String.format(Locale.US, "%.3g", entry.globalCost) + "," + entry.globalResponse.toString("%.0f") + "," + prevIterCost.toString("%.0f"));
-                    prevIterCost = entry.cumulatedResponse;
-                }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try (PrintStream outRoot = new PrintStream(printDir + "/root.txt")) {
+//                TreeSet<Object> entryObjs = new TreeSet<>((a, b) -> Integer.compare(((RootEntry) a).iteration, ((RootEntry) b).iteration));
+//                entryObjs.addAll(log.getTagsOfType(RootEntry.class));
+//
+//                Vector prevIterCost = ((RootEntry) entryObjs.first()).globalResponse.cloneThis();
+//                prevIterCost.set(0);
+//
+//                for (Object entryObj : entryObjs) {
+//                    RootEntry entry = (RootEntry) entryObj;
+//
+//                    if (prevIterCost.max() != 0.0) {
+//                        double avg = prevIterCost.avg() + 0.00001;
+//                        double std = prevIterCost.std() + 0.00001;
+//                        prevIterCost.multiply(88 / Math.max(avg, std));
+//                    }
+//                    outRoot.println(entry.iteration + ": " + String.format(Locale.US, "%.3g", entry.globalCost) + "," + entry.globalResponse.toString("%.0f") + "," + prevIterCost.toString("%.0f"));
+//                    prevIterCost = entry.cumulatedResponse;
+//                }
+//            } catch (FileNotFoundException ex) {
+//                Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         } else {
             Set<Object> info = (Set<Object>) log.getTagsOfType(String.class);
             String title = "Min";
@@ -227,27 +229,27 @@ public class DetailLogger extends AgentLogger<Agent<Vector>> {
             }
 
             // output the global cost, the global response and the cumulated global response
-            try (PrintStream outRoot = new PrintStream(printDir + "/root.txt")) {
-                TreeSet<Object> entryObjs = new TreeSet<>((a, b) -> Integer.compare(((RootEntry) a).iteration, ((RootEntry) b).iteration));
-                entryObjs.addAll(log.getTagsOfType(RootEntry.class));
-
-                Vector prevIterCost = ((RootEntry) entryObjs.first()).globalResponse.cloneThis();
-                prevIterCost.set(0);
-
-                for (Object entryObj : entryObjs) {
-                    RootEntry entry = (RootEntry) entryObj;
-
-                    if (prevIterCost.max() != 0.0) {
-                        double avg = prevIterCost.avg() + 0.00001;
-                        double std = prevIterCost.std() + 0.00001;
-                        prevIterCost.multiply(88 / Math.max(avg, std));
-                    }
-                    outRoot.println(entry.iteration + ": " + String.format(Locale.US, "%.3g", entry.globalCost) + "," + entry.globalResponse.toString("%.0f") + "," + prevIterCost.toString("%.0f"));
-                    prevIterCost = entry.cumulatedResponse;
-                }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try (PrintStream outRoot = new PrintStream(printDir + "/root.txt")) {
+//                TreeSet<Object> entryObjs = new TreeSet<>((a, b) -> Integer.compare(((RootEntry) a).iteration, ((RootEntry) b).iteration));
+//                entryObjs.addAll(log.getTagsOfType(RootEntry.class));
+//
+//                Vector prevIterCost = ((RootEntry) entryObjs.first()).globalResponse.cloneThis();
+//                prevIterCost.set(0);
+//
+//                for (Object entryObj : entryObjs) {
+//                    RootEntry entry = (RootEntry) entryObj;
+//
+//                    if (prevIterCost.max() != 0.0) {
+//                        double avg = prevIterCost.avg() + 0.00001;
+//                        double std = prevIterCost.std() + 0.00001;
+//                        prevIterCost.multiply(88 / Math.max(avg, std));
+//                    }
+//                    outRoot.println(entry.iteration + ": " + String.format(Locale.US, "%.3g", entry.globalCost) + "," + entry.globalResponse.toString("%.0f") + "," + prevIterCost.toString("%.0f"));
+//                    prevIterCost = entry.cumulatedResponse;
+//                }
+//            } catch (FileNotFoundException ex) {
+//                Logger.getLogger(DetailLogger.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         }
     }
 

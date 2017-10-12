@@ -17,7 +17,7 @@ import data.DataType;
 
 /**
  * An agent that performs combinatorial optimization in a tree network.
- * 
+ *
  * @author Peter
  * @param <V> the type of the data this agent should handle
  */
@@ -26,7 +26,7 @@ public abstract class TreeAgent<V extends DataType<V>> extends Agent<V> implemen
     // tree properties
     Finger parent = null;
     final List<Finger> children = new ArrayList<>();
-    boolean miniParent= false;
+    boolean miniParent = false;
 
     /**
      * Initializes the agent with the given combinatorial optimization problem
@@ -97,12 +97,12 @@ public abstract class TreeAgent<V extends DataType<V>> extends Agent<V> implemen
     public boolean isRepresentative() {
         return isRoot();
     }
-    public boolean isMiniParent()
-    {
-    return miniParent;
+
+    public boolean isMiniParent() {
+        return miniParent;
     }
-    public void setMiniParent()
-    {
-    miniParent =true;
+
+    public void setMiniParent() {
+        miniParent = true;
     }
 }

@@ -22,6 +22,10 @@ import agent.Agent;
 import protopeer.measurement.Aggregate;
 import protopeer.measurement.MeasurementLog;
 import data.DataType;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Determines when the algorithm terminates. The termination is defined at the
@@ -34,12 +38,17 @@ public class TerminationLogger<V extends DataType<V>> extends AgentLogger<Agent<
     private CostFunction<V> globalCostFunc;
     private int index;
     private V prevGlobalResponse;
+    private String out;
 
     /**
      * Creates a TerminationLogger that detects termination based on the global
      * cost function.
      */
     public TerminationLogger() {
+    }
+
+    public TerminationLogger(String out) {
+        this.out = out;
     }
 
     /**
@@ -85,9 +94,19 @@ public class TerminationLogger<V extends DataType<V>> extends AgentLogger<Agent<
         for (Object t : log.getTagsOfType(String.class)) {
             if (t.equals(TerminationLogger.class.getName())) {
                 Aggregate a = log.getAggregate(t);
-                System.out.print("Termination after " + a.getAverage() + "+-" + a.getStdDev() + " iterations, " + a.getMin() + "/" + a.getMax());
+                System.out.print("Termination after " + a.getAverage() + " iterations, " + a.getMin());
+                try {
+                    PrintWriter out2 = new PrintWriter(out);
+                    out2.println(a.getAverage() + " iterations");
+                    out2.close();
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(TerminationLogger.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+
         }
-        System.out.println();
+
+        System.out.println("crap");
+
     }
 }

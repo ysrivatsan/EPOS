@@ -1,6 +1,7 @@
 package experiment;
 
 import agent.dataset.Dataset;
+import agent.dataset.GaussianDataset;
 import java.io.FileReader;
 import data.Plan;
 import data.Vector;
@@ -17,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 
 /**
  *
@@ -31,7 +33,7 @@ public class TestExpFinal {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
 
-        String dir1 = "datasets\\"+args[0];
+        String dir1 = args[0];
 
         int numChildren = Integer.parseInt(args[1]);
         int iteration = 5;
@@ -39,6 +41,7 @@ public class TestExpFinal {
         boolean graph = false;
         boolean detail = true;
         boolean cost = false;
+        boolean indexCost = args[5].contains("true");
 
         //full_subtree_start = numAgents - 1;
         List<String> Settings_List = Arrays.asList(args[3]);
@@ -48,17 +51,19 @@ public class TestExpFinal {
             HashMap<Integer, Integer> selection_map = new HashMap<>();
             Map<Integer, Integer> level_map = new HashMap<>();
             List<Integer> half_tree_list_mod = new ArrayList<>();
-
+            //System.out.println(dir);
             int numAgents = new File(dir + "/Plans").list().length;
-            int full_subtree_start = ((numAgents / numChildren) * (numChildren - 1)) + 1;
+            float numagents = numAgents;
+            float numchildren = numChildren;
+            int full_subtree_start = (int)((numagents / numchildren) * (numchildren - 1)) + 1;
             graph_create(numAgents, numChildren);
             level_map = Level_Identifier(full_subtree_start, numAgents, numChildren);
             Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
-            String out = dir + "/New_Results/Output_" + numChildren;
+            String out = dir + "/New_Results/Output_" + numChildren+"_"+lambda;
 
             for (String Setting : Settings_List) {
                 switch (Setting) {
-                    case "No_Passing": {
+                    case "NoPassing": {
                         int[] Iteration_list = {Integer.parseInt(args[4])};
                         for (int iter : Iteration_list) {
                             for (int val3 = full_subtree_start; val3 < numAgents - 1; val3++) {
@@ -91,8 +96,8 @@ public class TestExpFinal {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda);
-                                    update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda,indexCost);
+                                    update_Selection_map(out2 + "/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                                 cost = false;
                                 detail = true;
@@ -144,8 +149,8 @@ public class TestExpFinal {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda);
-                                    update_Selection_map(out2 + "/Plan_Output/Plan_Selections.txt", selection_map, agent_id_map);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda,indexCost);
+                                    update_Selection_map(out2 + "/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                             }
                         }
@@ -157,9 +162,15 @@ public class TestExpFinal {
                             for (int val = full_subtree_start; val < numAgents - 1; val++) {
                                 iteration = iter;
                                 String out2 = out + "_" + Setting + "_Iterations_" + iteration + "_" + val;
-                                SimpleExperiment.exp(true, val, iteration, out2, dir,lambda);
+                                SimpleExperiment.exp(true, val, iteration, out2, dir,lambda,indexCost);
                             }
                         }
+                    }
+                    break;
+                    case "gaussian": {
+                    Random random = new Random(0);
+                    GaussianDataset dataset2 = new GaussianDataset(16, 100, 0, 1, random);
+                    dataset2.writeDataset("E:\\Gaussian_1000", 1000);
                     }
                 }
             }

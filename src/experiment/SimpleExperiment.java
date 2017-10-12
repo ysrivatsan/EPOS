@@ -51,7 +51,7 @@ public class SimpleExperiment {
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\energy";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\gaussian";
 //static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
-    static String dir = "C:\\Users\\syadhuna\\Downloads\\EPOS-master\\EPOS-master\\datasets\\bicycle";
+    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\EPOS\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         exp();
@@ -69,7 +69,7 @@ public class SimpleExperiment {
         int numAgents = new File(dir + "/Plans").list().length;
 
         // optimization functions
-        double lambda = 0;
+        double lambda = 1;
         DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
 
@@ -120,7 +120,7 @@ public class SimpleExperiment {
         loggingProvider.print();
     }
 
-    public static void exp(boolean isMiniParent, int miniParent, int miniIterations, String out, String dir, double lamb) {
+    public static void exp(boolean isMiniParent, int miniParent, int miniIterations, String out, String dir, double lamb,boolean index) {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
@@ -133,9 +133,14 @@ public class SimpleExperiment {
 
         // optimization functions
         double lambda = lamb;
-        DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
-        PlanCostFunction localCostFunc = new PlanScoreCostFunction();
-
+        DifferentiableCostFunction globalCostFunc = new VarCostFunction();
+        PlanCostFunction localCostFunc;
+       
+         if (index) {
+            localCostFunc = new IndexCostFunction();
+        } else {
+            localCostFunc = new PlanScoreCostFunction();
+        }
         // network
         int numChildren = 2;
 
@@ -143,8 +148,9 @@ public class SimpleExperiment {
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
-        loggingProvider.add(new TerminationLogger());
+        loggingProvider.add(new TerminationLogger(output + "/TerminationLog.txt"));
         loggingProvider.add(new CostViewer(false, true, out));
+        loggingProvider.add(new DetailLogger(out));
         //loggingProvider.add();
         //loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
         //loggingProvider.add(new GraphLogger<>(GraphLogger.Type.Change));
@@ -194,22 +200,28 @@ public class SimpleExperiment {
         loggingProvider.print();
     }
 
-    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail, double lamb) throws IOException {
+    public static void exp(String out2, int numAgents, int numChildren, boolean mychoice, List<List<Plan<Vector>>> possiblePlans_input, boolean selected_given, HashMap<Integer, Integer> selection_map, int iteration, boolean graph, boolean cost, boolean detail, double lamb, boolean index) throws IOException {
         //Dataset<Vector> dataset2 = new GaussianDataset(16, 100, 0, 1, random);
         // String targetFile = dir+".txt";
         //DifferentiableCostFunction globalCostFunc = new SqrDistCostFunction(VectorIO.readVector(new File(targetFile)));
         //Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir+"/Plans");
         //File output = new File(dir+"/Output");
         //int numAgents =  new File(dir+"/Plans").list().length;
+        
         File output = new File(out2);
         Random random = new Random(0);
         output.mkdir();
         Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
-
+        PlanCostFunction localCostFunc;
         // optimization functions
         double lambda = lamb;
-        DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
-        PlanCostFunction localCostFunc = new PlanScoreCostFunction();
+        DifferentiableCostFunction globalCostFunc = new VarCostFunction();
+
+        if (index) {
+            localCostFunc = new IndexCostFunction();
+        } else {
+            localCostFunc = new PlanScoreCostFunction();
+        }
 
         // network
         //int numChildren = 4;
@@ -217,10 +229,9 @@ public class SimpleExperiment {
         LoggingProvider<IeposAgent<Vector>> loggingProvider = new LoggingProvider<>();
         loggingProvider.add(new GlobalCostLogger(output + "/Global_Cost.txt"));
         loggingProvider.add(new LocalCostLogger(output + "/Local_Cost.txt"));
-        loggingProvider.add(new TerminationLogger());
+        loggingProvider.add(new TerminationLogger(output + "/TerminationLog.txt"));
         loggingProvider.add(new CostViewer(false, cost, out2));
-//        if (detail) {
-//            loggingProvider.add(new DetailLogger(output + "/Plan_Output"));
+        loggingProvider.add(new DetailLogger(out2));
 //        } else {
 //            loggingProvider.add(new DetailLogger(output + "/Plan_Output", true));
 //        }

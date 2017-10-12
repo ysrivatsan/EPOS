@@ -11,6 +11,7 @@ import data.Plan;
 /**
  *
  * @author Peter
+ * @param <V>
  */
 public class IeposPlanSelector<V extends DataType<V>> implements PlanSelector<IeposAgent<V>, V> {
 
