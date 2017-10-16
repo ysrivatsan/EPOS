@@ -44,51 +44,21 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     int height;
     boolean agentParticipating = true;
 
-    /**
-     * Creates a new IeposAgent. Using the same RNG seed will result in the same
-     * execution order in a simulation environment.
-     *
-     * @param numIterations the number of iterations
-     * @param possiblePlans the plans this agent can choose from
-     * @param globalCostFunc the global cost function
-     * @param localCostFunc the local cost function
-     * @param loggingProvider the object that extracts data from the agent and
-     * writes it into its log.
-     * @param seed a seed for the RNG
-     * @param numofAgents
-     * @param height the height of the agent in the tree
-     * @param subIterations number of iterations of each local optimizations
-     * @param numResponses number of responses sent per message
-     */
-    public IeposAgentMultiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgentMultiple<V>> loggingProvider, long seed, int numofAgents, int height, int subIterations, int numResponses) {
+    public IeposAgentMultiple(int numIterations, List<Plan<V>> possiblePlans, CostFunction<V> globalCostFunc, PlanCostFunction<V> localCostFunc, AgentLoggingProvider<? extends IeposAgentMultiple<V>> loggingProvider, long seed, int numofAgents, int height, int subIterations, int numResponses, double lambda) {
         super(numIterations, possiblePlans, globalCostFunc, localCostFunc, loggingProvider, seed, true);
         this.optimization = new Optimization(random);
-        this.lambda = 0;
-        this.planSelector = new IeposPlanSelectorMultiple<>();//To change body of generated methods, choose Tools | Templates.
+        this.lambda = lambda;
+        this.planSelector = new IeposPlanSelectorMultiple<>();
         this.numofAgents = numofAgents;
         this.numResponses = numResponses;
         this.height = height;
         this.subIterations = subIterations;
     }
 
-    /**
-     * Sets lambda, the traidoff between global and local cost minimization. A
-     * value of 0 indicates pure global cost minimization, while a value of 1
-     * indicates pure local cost minimization.
-     *
-     * @param lambda traidoff between global and local cost minimization
-     */
     public void setLambda(double lambda) {
         this.lambda = lambda;
     }
 
-    /**
-     * An I-EPOS agent can have different strategies for plan selection. The
-     * plan selector decides which plan to select given the current state of the
-     * system.
-     *
-     * @param planSelector the plan selector
-     */
     public void setPlanSelector(PlanSelector<IeposAgentMultiple<V>, V> planSelector) {
         this.planSelector = planSelector;
     }
@@ -100,7 +70,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
 
     @Override
     void initPhase() {
-        globalResponse = createValue();
+        // globalResponse = createValue();
         V temp = createValue();
         Plan<V> temp2 = createPlan();
         for (int i = 0; i < numResponses; i++) {
@@ -114,16 +84,18 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
     @Override
     void initIteration() {
         if (iteration > 0) {
-            if (height * subIterations >= iteration && height >=3) {
+            if ((height - 1) * subIterations >= iteration && height >= 3) {
                 agentParticipating = false;
+            } else {
+                agentParticipating = true;
             }
             numAgents = numofAgents;
-            selectedPlan = null;
             prevSubtreeResponsesMultiple.clear();
+
+            for (int j = 0; j < children.size(); j++) {
+                prevSubtreeResponsesMultiple.add(new ArrayList(subtreeResponsesMultiple.get(j)));
+            }
             for (int i = 0; i < numResponses; i++) {
-                System.out.println(getPeer().getIndexNumber() + "---" + children.size());
-                System.out.println(subtreeResponsesMultiple.size());
-//              prevSubtreeResponsesMultiple.add(new ArrayList(subtreeResponsesMultiple.get(i)));
                 prevSelectedPlanMultiple.set(i, selectedPlanMultiple.get(i));
                 prevAggregatedResponseMultiple.set(i, aggregatedResponseMultiple.get(i));
                 aggregatedResponseMultiple.get(i).reset();
@@ -139,14 +111,11 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         for (UpMessage msg : childMsgs) {
             subtreeResponsesMultiple.add(msg.subtreeResponseMultiple);
         }
-
-        if (height > 2 && iteration == ((height - 1) * 2) + 1) {//finding combinations
+        if (height > 2 && iteration == ((height - 1) * subIterations) + 1) { // works only for 2 children
             List<Double> SDs = new ArrayList<>();
             List<Integer> selecfinal = new ArrayList<>();
-
             for (int i = 0; i <= 3; i++) {
                 V aggResp = createValue();
-                V subResp = createValue();
                 if (i == 0) {
                     aggResp.add(subtreeResponsesMultiple.get(0).get(0));
                     aggResp.add(subtreeResponsesMultiple.get(1).get(0));
@@ -167,6 +136,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 int selec = 0;
                 double minSD = 0;
                 for (int j = 0; j < possiblePlans.size(); j++) {
+                    V subResp = createValue();
                     subResp.add(aggResp);
                     subResp.add(possiblePlans.get(j).getValue());
                     Vector v = (Vector) subResp;
@@ -181,6 +151,7 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 selecfinal.add(i, selec);
                 SDs.add(i, minSD);
             }
+
             int minindex1 = 0;
             int minindex2 = 1;
             double minSd1 = SDs.get(0);
@@ -213,17 +184,18 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 approvalsMultiple.add(exp, new ArrayList(approvalsTemp));
                 approvalsTemp.clear();
             }
-            selectedPlanMultiple.add(0, possiblePlans.get(minindex1));
-            selectedPlanMultiple.add(1, possiblePlans.get(minindex2));
+            selectedPlanMultiple.add(0, possiblePlans.get(selecfinal.get(minindex1)));
+            selectedPlanMultiple.add(1, possiblePlans.get(selecfinal.get(minindex2)));
         } else {
-            for (int i = 0; i < numResponses; i++) { //selected plan = 0 for agents not participating
-                System.out.println("njdfbd");
+            for (int i = 0; i < numResponses; i++) {
+                // if(getPeer().getIndexNumber() == 100) System.out.println(iteration + " Im here 1");
                 aggregateNew(i);
+                //if(getPeer().getIndexNumber() == 100) System.out.println(iteration + " Im here 2");
                 selectedPlanMultiple.add(i, selectPlanNew(i));
             }
             if (!agentParticipating || (height == 2 && iteration <= subIterations)) {
                 for (int i = 0; i < selectedPlanMultiple.size(); i++) {
-                    if(height == 2 && i != 0){
+                    if (height == 2 && i != 0) {
                         continue;
                     }
                     selectedPlanMultiple.set(i, createPlan());
@@ -244,27 +216,31 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
 
     @Override
     List<DownMessage> down(DownMessage parentMsg) {
+        
         updateGlobalResponseMultiple(parentMsg);
         approveOrRejectChangesMultiple(parentMsg);
+
         return informChildren();
     }
 
     private void aggregateNew(int exp) {
         List<Boolean> approvalsTemp = new ArrayList<>();
         V aggregatedResponseTemp = createValue();
-        if (iteration == 0 || (iteration < numIterations - 20 && (iteration - 1 % 5) == 0) || !agentParticipating || height == 2 && iteration <= subIterations && exp == 0) {// approve for after every sub iteration
+        if (iteration == 0 || (iteration < numIterations - 20 && (iteration - 1 % subIterations) == 0) || !agentParticipating || height == 2 && iteration <= subIterations && exp == 0) {
             for (int i = 0; i < children.size(); i++) {
                 approvalsTemp.add(true);
             }
             approvalsMultiple.add(exp, new ArrayList(approvalsTemp));
             approvalsTemp.clear();
         } else if (children.size() > 0) {
+            //if(getPeer().getIndexNumber() == 100) System.out.println("--- Here now --- ");
             List<V> prevSubtreeResponseTemp = new ArrayList<>();
             List<List<V>> choicesPerAgent = new ArrayList<>();
-            // choosing best to be added here
             for (int i = 0; i < children.size(); i++) {
                 List<V> choices = new ArrayList<>();
+//                if(getPeer().getIndexNumber() == 100) System.out.println("...." );
                 choices.add(prevSubtreeResponsesMultiple.get(i).get(exp));
+//                if(getPeer().getIndexNumber() == 100) System.out.println(";;;;" );
                 choices.add(subtreeResponsesMultiple.get(i).get(exp));
                 choicesPerAgent.add(choices);
                 prevSubtreeResponseTemp.add(prevSubtreeResponsesMultiple.get(i).get(exp));
@@ -292,12 +268,11 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 prelSubtreeResponse = subtreeResponsesMultiple.get(i).get(exp);
             }
             subtreeResponsesMultiple.get(i).set(exp, prelSubtreeResponse);
-            if(getPeer().getIndexNumber() == 0 ) System.out.println("Im Here"+subtreeResponsesMultiple.size());
             aggregatedResponseTemp.add(prelSubtreeResponse);
         }
 
-        aggregatedResponseMultiple.set(exp, aggregatedResponseTemp);
-        if(height == 2)  System.out.println(aggregatedResponseMultiple);
+        aggregatedResponseMultiple.set(exp, aggregatedResponseTemp.cloneThis());
+        // if(height == 4)  System.out.println(aggregatedResponseMultiple);
         aggregatedResponseTemp.reset();
     }
 
@@ -305,45 +280,56 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         int selected = planSelector.selectPlanMultiple(globalResponseMultiple.get(exp), prevSelectedPlanMultiple.get(exp), prevAggregatedResponseMultiple.get(exp), aggregatedResponseMultiple.get(exp), this);
         numComputed += planSelector.getNumComputations(this);
         selectedPlan = possiblePlans.get(selected);
+        // if(getPeer().getIndexNumber() == 194) System.out.println("Agent: "+getPeer().getIndexNumber()+" "+iteration + " :: " + selected );
         return selectedPlan;
     }
 
     private UpMessage informParent() {
         subtreeResponseMultiple = new ArrayList<>();
+        List<V> upmsg = new ArrayList<>();
         for (int exp = 0; exp < numResponses; exp++) {
             V subtreeResponse = aggregatedResponseMultiple.get(exp).cloneThis();
             subtreeResponse.add(selectedPlanMultiple.get(exp).getValue());
-
-            if ((height == 1 && iteration <= 5 && exp == 0) || !agentParticipating || (height >= 2 && iteration <= height * subIterations)) { // agent has to pass 0 to its parents
+            subtreeResponseMultiple.add(exp, subtreeResponse.cloneThis());
+            if ((height == 1 && iteration <= subIterations && exp == 0) || !agentParticipating || (height >= 2 && iteration <= (height - 1) * subIterations)) { // agent has to pass 0 to its parents
                 subtreeResponse.reset();
-                subtreeResponseMultiple.add(exp, subtreeResponse);
+                upmsg.add(subtreeResponse.cloneThis());
             } else {
-                subtreeResponseMultiple.add(exp, subtreeResponse);
+                upmsg.add(exp, subtreeResponse.cloneThis());
             }
         }
-        return new UpMessage(subtreeResponseMultiple);
+        return new UpMessage(upmsg);
     }
 
     private void updateGlobalResponseMultiple(DownMessage parentMsg) {
 
         for (int i = 0; i < numResponses; i++) {
-            if ((height == 1 && iteration <= 5 && i == 0) || height >= 2 && iteration <= height * subIterations) { // agent has to make global response as its subtree response
-                globalResponseMultiple.set(i, subtreeResponseMultiple.get(i));
+            if ((height == 1 && iteration <= subIterations && i == 0) || height >= 2 && iteration <= (height - 1) * subIterations) {
+                globalResponseMultiple.set(i, subtreeResponseMultiple.get(i).cloneThis());
             } else {
-                globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i));
+                globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i).cloneThis());
             }
+        }
+        if (getPeer().getIndexNumber() == 199 ) {
+            System.out.println(iteration + " glob resp - 0 - " + globalCostFunc.calcCost(globalResponseMultiple.get(0)));
+        }
+        if (getPeer().getIndexNumber() == 199 ) {
+            System.out.println("glob resp- 1 - " + globalCostFunc.calcCost(globalResponseMultiple.get(1)));
         }
     }
 
     private void approveOrRejectChangesMultiple(DownMessage parentMsg) {
-
         for (int i = 0; i < numResponses; i++) {
             if (!parentMsg.approvedMultiple.get(i)) {
                 selectedPlanMultiple.set(i, prevSelectedPlanMultiple.get(i));
                 aggregatedResponseMultiple.set(i, prevAggregatedResponseMultiple.get(i));
-                subtreeResponsesMultiple.get(i).clear();
-                subtreeResponsesMultiple.set(i, prevSubtreeResponsesMultiple.get(i));
+
+                for (int j = 0; j < children.size(); j++) {
+                    subtreeResponsesMultiple.get(j).set(i, prevSubtreeResponsesMultiple.get(j).get(i));
+                }
+
                 Collections.fill(approvalsMultiple.get(i), false);
+
             }
         }
     }
@@ -354,10 +340,11 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
         List<Boolean> approvedMultipleTemp = new ArrayList<>();
         for (int i = 0; i < children.size(); i++) {
             for (int exp = 0; exp < numResponses; exp++) {
-                    approvedMultipleTemp.add(exp, approvalsMultiple.get(exp).get(i));                
+                approvedMultipleTemp.add(exp, approvalsMultiple.get(exp).get(i));
             }
             msgs.add(new DownMessage(globalResponseMultiple, approvedMultipleTemp));
         }
+
         return msgs;
     }
 

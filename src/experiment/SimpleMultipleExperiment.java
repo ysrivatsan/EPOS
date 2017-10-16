@@ -7,9 +7,11 @@ import agent.*;
 import data.Plan;
 import data.Vector;
 import func.DifferentiableCostFunction;
+import func.IndexCostFunction;
 import func.PlanCostFunction;
 import func.PlanScoreCostFunction;
 import func.StdDevCostFunction;
+import func.VarCostFunction;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -31,17 +33,17 @@ public class SimpleMultipleExperiment {
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
 
-    static String dir = "C:\\Users\\syadhuna\\workspace\\NetBeansProjects\\EPOS-Master\\datasets\\bicycle";
+    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\EPOS-master\\datasets\\bicycle";
 
     public static void main(String[] args) throws FileNotFoundException {
         Random random = new Random(0);
         Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
-        File output = new File(dir + "/Output");
-        output.mkdir();
+       // File output = new File(dir + "/Output");
+       // output.mkdir();
         int numAgents = new File(dir + "/Plans").list().length;
         // optimization functions
         double lambda = 0;
-        DifferentiableCostFunction globalCostFunc = new StdDevCostFunction();
+        DifferentiableCostFunction globalCostFunc = new VarCostFunction();
         PlanCostFunction localCostFunc = new PlanScoreCostFunction();
         // Options
         int subIterations = 5;
@@ -50,7 +52,6 @@ public class SimpleMultipleExperiment {
         Map<Integer, Integer> heightMap = new HashMap<>();
         int numChildren = 2;
         int depthOfTree = depthoftree(numAgents, numChildren);
-        int maxHeight = 0;
         for (int i = 0; i < numAgents; i++) {
             depthMap.put(i, depthCalc(i, numChildren, numAgents));
         }
@@ -63,7 +64,7 @@ public class SimpleMultipleExperiment {
         }
         int numIterations = (depthOfTree * subIterations) + 20;
 
-        System.out.println("Agents:  " + numAgents + " Children " + numChildren + " depthoftree " + depthOfTree + " depthMap " + depthMap + " heightMap " + heightMap + " iterations " + numIterations);
+        //System.out.println("Agents:  " + numAgents + " Children " + numChildren + " depthoftree " + depthOfTree + " depthMap " + depthMap + " heightMap " + heightMap + " iterations " + numIterations);
 
         // logging
         LoggingProvider<IeposAgentMultiple<Vector>> loggingProvider = new LoggingProvider<>();
@@ -84,7 +85,7 @@ public class SimpleMultipleExperiment {
                         globalCostFunc,
                         localCostFunc,
                         agentLP,
-                        random.nextLong(), numAgents, heightMap.get(agentIdx), subIterations, numResponses);
+                        random.nextLong(), numAgents, heightMap.get(agentIdx), subIterations, numResponses, lambda);
                 newAgent.setLambda(lambda);
                 newAgent.setPlanSelector(planSelector);
                 return newAgent;
@@ -121,8 +122,8 @@ public class SimpleMultipleExperiment {
         while (true) {
 
             if (numAgents > nodes_count) {
-                count++;
-                nodes_count += nodes_count * numChildren;
+                count++;                
+                nodes_count += Math.pow(numChildren,count);
             } else {
                 break;
             }

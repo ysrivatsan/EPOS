@@ -169,9 +169,10 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
         }
 
         cumComputed -= numComputed;
+       
         List<DOWN> msgs = down(parentMsg);
         cumComputed += numComputed;
-
+       // if (getPeer().getIndexNumber() == 100 ) System.out.println(iteration + " --- Here2 ---");
         for (int i = 0; i < msgs.size(); i++) {
             DOWN msg = msgs.get(i);
             msg.numAgents = numAgents;
@@ -179,6 +180,7 @@ public abstract class IterativeTreeAgent<V extends DataType<V>, UP extends Itera
             msg.cumComputed = cumComputed;
             numTransmitted += msg.getNumTransmitted();
             cumTransmitted += msg.getNumTransmitted();
+          //  if (getPeer().getIndexNumber() == 100 ) System.out.println(iteration + " --- Here3 ---");
             getPeer().sendMessage(children.get(i).getNetworkAddress(), msg);
         }
     }
