@@ -3,14 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/logging/DetailLogger.java</file>
-            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/logging/DistributionLogger.java</file>
+            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/data/Vector.java</file>
             <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/IeposAgentMultiple.java</file>
-            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/data/Plan.java</file>
-            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/Agent.java</file>
-            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/func/CostFunction.java</file>
             <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/experiment/SimpleMultipleExperiment.java</file>
             <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/IeposAgent.java</file>
+            <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/data/DataType.java</file>
             <file>file:/E:/Java_Workspace/NetBeansProjects/EPOS/src/agent/IterativeTreeAgent.java</file>
         </group>
     </open-files>
