@@ -33,7 +33,7 @@ public class SimpleMultipleExperiment {
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
 
-    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\datasets\\energy_random";
+    static String dir = "C:\\Users\\syadhuna\\workspace\\NetBeansProjects\\EPOS-Master\\datasets\\energy";
 
     public static void main(String[] args) throws FileNotFoundException {
         Random random = new Random(0);
@@ -62,7 +62,7 @@ public class SimpleMultipleExperiment {
             }
             heightMap.put(i, height);
         }
-        int numIterations = ((depthOfTree-2) * subIterations) + 20;
+        int numIterations = ((depthOfTree-1) * subIterations) + 22;
 
         //System.out.println("Agents:  " + numAgents + " Children " + numChildren + " depthoftree " + depthOfTree + " depthMap " + depthMap + " heightMap " + heightMap + " iterations " + numIterations);
 
