@@ -12,8 +12,11 @@ import func.PlanCostFunction;
 import func.PlanScoreCostFunction;
 import func.StdDevCostFunction;
 import func.VarCostFunction;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
@@ -33,14 +36,16 @@ public class SimpleMultipleExperiment {
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
 
-    static String dir = "C:\\Users\\syadhuna\\workspace\\NetBeansProjects\\EPOS-Master\\datasets\\energy";
+    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\datasets\\Gaussian_1000";
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        
         Random random = new Random(0);
         Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
        // File output = new File(dir + "/Output");
        // output.mkdir();
-        int numAgents = new File(dir + "/Plans").list().length;
+       int numAgents = new File(dir + "/Plans").list().length;
+       //int numAgents = 30;
         // optimization functions
         double lambda = 0;
         DifferentiableCostFunction globalCostFunc = new VarCostFunction();
