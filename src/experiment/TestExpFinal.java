@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.TreeMap;
 
 /**
  *
@@ -55,11 +56,11 @@ public class TestExpFinal {
             int numAgents = new File(dir + "/Plans").list().length;
             float numagents = numAgents;
             float numchildren = numChildren;
-            int full_subtree_start = (int)((numagents / numchildren) * (numchildren - 1)) + 1;
+            int full_subtree_start = (int) ((numagents / numchildren) * (numchildren - 1)) + 1;
             graph_create(numAgents, numChildren);
             level_map = Level_Identifier(full_subtree_start, numAgents, numChildren);
             Dataset<Vector> dataset = new agent.dataset.FileVectorDataset(dir + "/Plans");
-            String out = dir + "/New_Results/Output_" + numChildren+"_"+lambda;
+            String out = dir + "/New_Results/Output_" + numChildren + "_" + lambda;
 
             for (String Setting : Settings_List) {
                 switch (Setting) {
@@ -96,7 +97,7 @@ public class TestExpFinal {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda,indexCost);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail, lambda, indexCost);
                                     update_Selection_map(out2 + "/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                                 cost = false;
@@ -149,7 +150,7 @@ public class TestExpFinal {
                                     List<List<Plan<Vector>>> possible = new ArrayList<>();
                                     HashMap<Integer, Integer> agent_id_map = new HashMap<>();
                                     possible = Create_Possible_Plans_Selection_Map(subtree_list, dataset, agent_id_map, numAgents, selection_map_tmp, selection_map);
-                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail,lambda,indexCost);
+                                    SimpleExperiment.exp(out2, subtree_list.size(), 2, true, possible, true, selection_map_tmp, iteration, graph, cost, detail, lambda, indexCost);
                                     update_Selection_map(out2 + "/Plan_Selections.txt", selection_map, agent_id_map);
                                 }
                             }
@@ -162,15 +163,31 @@ public class TestExpFinal {
                             for (int val = full_subtree_start; val < numAgents - 1; val++) {
                                 iteration = iter;
                                 String out2 = out + "_" + Setting + "_Iterations_" + iteration + "_" + val;
-                                SimpleExperiment.exp(true, val, iteration, out2, dir,lambda,indexCost);
+                                SimpleExperiment.exp(true, val, iteration, out2, dir, lambda, indexCost);
                             }
                         }
                     }
                     break;
                     case "gaussian": {
-                    Random random = new Random(0);
-                    GaussianDataset dataset2 = new GaussianDataset(16, 100, 0, 1, random);
-                    dataset2.writeDataset("E:\\Gaussian_1000", 1000);
+                        Random random = new Random(0);
+                        GaussianDataset dataset2 = new GaussianDataset(16, 100, 0, 1, random);
+                        dataset2.writeDataset("E:\\Gaussian_1000", 1000);
+                    }
+                    break;
+                    case "tree": {
+                        Map<Integer, String> tree_map = new HashMap<>();
+                        tree_map.put(numAgents - 1, numAgents - 1 + "");
+                        for (int i = numAgents - 1; i >= 0; i--) {
+                            if (g.get(i) == null) {
+                                break;
+                            }
+                            for (int j = 0; j < g.get(i).size(); j++) {
+                                tree_map.put(g.get(i).get(j), tree_map.get(i) + "/" + g.get(i).get(j));
+                               
+                            }
+                        }
+                        for(int i = 0;i<tree_map.size();i++)
+                            System.out.println(i+"-"+tree_map.get(i));
                     }
                 }
             }

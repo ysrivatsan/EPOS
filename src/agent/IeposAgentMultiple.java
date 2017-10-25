@@ -332,9 +332,9 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i).cloneThis());
             }
         }
-        if (getPeer().getIndexNumber() == numAgents - 1 && iteration >= numIterations - 20) {
-            System.out.println(iteration + " glob resp -0- " + globalCostFunc.calcCost(globalResponseMultiple.get(0)));
-            System.out.println(iteration + " glob resp -1- " + globalCostFunc.calcCost(globalResponseMultiple.get(1)));
+        if (getPeer().getIndexNumber() == numAgents - 1 && iteration == numIterations-1) {
+            System.out.println(iteration + " glob resp -0- " + globalResponseMultiple.get(0));
+            System.out.println(iteration + " glob resp -1- " + globalResponseMultiple.get(1));
         }
     }
 
