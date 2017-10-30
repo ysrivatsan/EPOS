@@ -36,7 +36,7 @@ public class SimpleMultipleExperiment {
     static LinkedList<Integer> result = new LinkedList<Integer>();
     public static int node;
 
-    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\datasets\\Tesla_Random";
+    static String dir = "E:\\Java_Workspace\\NetBeansProjects\\datasets\\energy_Random";
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
         

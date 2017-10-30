@@ -180,6 +180,17 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                     minSd2 = SDs.get(i);
                 }
             }
+            String binaryString1 = Integer.toBinaryString(minindex1);
+            String binaryString2 = Integer.toBinaryString(minindex2);
+            if (binaryString1.length() == 1) {
+                binaryString1 += "0";
+            }
+            if (binaryString2.length() == 1) {
+                binaryString2 += "0";
+            }
+            for (int i = 0; i < children.size(); i++) {
+                System.out.println(children.get(i).getNetworkAddress() + "::" + binaryString1.charAt(i) + "::" + binaryString2.charAt(i)+"::"+ height);
+            }
             V aggtemp1 = createValue();
             V aggtemp2 = createValue();
             List<Boolean> approvalsTemp = new ArrayList<>();
@@ -332,10 +343,13 @@ public class IeposAgentMultiple<V extends DataType<V>> extends IterativeTreeAgen
                 globalResponseMultiple.set(i, parentMsg.globalResponseMultiple.get(i).cloneThis());
             }
         }
-        if (getPeer().getIndexNumber() == numAgents - 1 && iteration == numIterations-1) {
-            System.out.println(iteration + " glob resp -0- " + globalResponseMultiple.get(0));
-            System.out.println(iteration + " glob resp -1- " + globalResponseMultiple.get(1));
-        }
+//        if (getPeer().getIndexNumber() == numAgents - 1 && iteration == numIterations -1) {
+//            System.out.println(iteration + " glob resp -0- " + globalResponseMultiple.get(0));   
+//        }
+//        if (getPeer().getIndexNumber() == numAgents - 1) {
+//            System.out.println(iteration + " glob resp -0- " + globalCostFunc.calcCost(globalResponseMultiple.get(0)));
+//            System.out.println(iteration + " glob resp -1- " + globalCostFunc.calcCost(globalResponseMultiple.get(1)));
+//        }
     }
 
     private void approveOrRejectChangesMultiple(DownMessage parentMsg) {

@@ -176,19 +176,35 @@ public class TestExpFinal {
                     break;
                     case "tree": {
                         Map<Integer, String> tree_map = new HashMap<>();
-                        tree_map.put(numAgents - 1, numAgents - 1 + "");
+                        tree_map.put(numAgents, numAgents + "");
                         for (int i = numAgents - 1; i >= 0; i--) {
                             if (g.get(i) == null) {
                                 break;
                             }
                             for (int j = 0; j < g.get(i).size(); j++) {
-                                tree_map.put(g.get(i).get(j), tree_map.get(i) + "/" + g.get(i).get(j));
-                               
+
+                                int one = g.get(i).get(j) + 1;
+                                tree_map.put(one, tree_map.get(i + 1) + "/" + one);
+
                             }
                         }
-                        for(int i = 0;i<tree_map.size();i++)
-                            System.out.println(i+"-"+tree_map.get(i));
+                        for (int i = 1; i <= tree_map.size(); i++) {
+                            System.out.println(i + "-" + tree_map.get(i));
+                        }
                     }
+                    break;
+                    case "igraph": {
+                        for (int i = numAgents - 1; i >= 0; i--) {
+                            if (g.get(i) == null) {
+                                break;
+                            }
+                            for (int j = 0; j < g.get(i).size(); j++) {
+                                System.out.println(i+ ","+g.get(i).get(j));                                 
+                            }
+                        }
+                        
+                    }
+
                 }
             }
         }
